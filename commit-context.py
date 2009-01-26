@@ -12,6 +12,10 @@ if __name__ == "__main__":
     import os
 
     zone = os.environ.get("TZ")
+    if None == zone:
+        zone_file = open('/etc/timezone')
+        zone = zone_file.read()
+    zone = zone.replace("_", " ")
     print 'Current time zone is ', zone
 
     tokens = zone.split("/")
