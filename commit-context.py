@@ -148,6 +148,8 @@ def go():
     # dictionary
     print 'Current weather is %(condition)s (%(temp_f)sF/%(temp_c)sC) %(humidity)s' % weather
     print 'System has been up %s ' % uptime
+    # TODO make feed url configurable
+    # TODO get title from feed
     print 'Last 3 entries from a feed:'
     for item in last_items:
       # edit the '%s' if you want to add a label, like 'Title %s' to the output
@@ -155,4 +157,8 @@ def go():
       print '%s' % item['link']
 
 # call go() when this module is executed as the main script
-if __name__ == "__main__": go()
+if __name__ == "__main__":
+#    if sys.argc != 2:
+#        print "Must provide a feed url!"
+#        sys.exit(1)
+    go()
