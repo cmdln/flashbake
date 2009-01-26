@@ -7,8 +7,34 @@
 
 if __name__ == "__main__":
     import sys
+    import urllib, urllib2
+    import xml.dom.minidom
+    import os
 
-    print "time zone"
-    print "weather for time zone"
+    zone = os.environ.get("TZ")
+    print 'Current time zone is ', zone
+
+    tokens = zone.split("/")
+    city = tokens[1]
+
+    print 'Weather for', city
+
+    baseurl = 'http://www.google.com/ig/api?'
+    for_city = baseurl + urllib.urlencode({'weather': city})
+
+    print for_city
+
+    opener = urllib2.build_opener(urllib2.HTTPCookieProcessor())
+
+    weather = opener.open(urllib2.Request(for_city)).read()
+
+    print weather
+
+    doc = xml.dom.minidom.parseString(weather)
+
+    current = doc.getElementsByTagName("current_conditions")
+    for child in current.childNodes:
+       print child.localName, child.nodeValue
+    
     print "system up time"
     print "last 3 entries from a feed"
