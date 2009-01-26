@@ -75,6 +75,40 @@ def get_weather(city):
 
     return weather
 
+def get_text(nodelist):
+    text_value = ""
+    for node in nodelist:
+        if node.nodeType == node.TEXT_NODE:
+            text_value = text_value + node.data
+    return text_value
+
+def get_rss(url, limit, creator):
+    """ Fetch up to the limit number of items from the specified feed with the specified
+        creator. """
+
+    # necessary machinery to fetch a web page
+    opener = urllib2.build_opener(urllib2.HTTPCookieProcessor())
+
+    # open the raw RSS XML
+    rss_xml = opener.open(urllib2.Request(url)).read()
+
+    # build a mini-dom so we can scrape out titles, descriptions
+    rss_dom = xml.dom.minidom.parseString(rss_xml)
+
+    # just interested in the conditions at the moment
+    items = rss_dom.getElementsByTagName("item")
+
+    by_creator = []
+    for child in items:
+       item_creator = child.getElementsByTagName("dc:creator")[0]
+       item_creator = get_text(item_creator.childNodes).strip()
+       if item_creator != creator:
+           continue
+       title = getText(child.getElementsByTagName("title")[0].childNodes)
+       print title
+
+    return by_creator
+
 def go():
     # check the environment for the zone value
     zone = os.environ.get("TZ")
@@ -101,6 +135,9 @@ def go():
 
     # with thanks to Dave Smith
     uptime = get_uptime()
+    
+    # last n items for m creator
+    last_items = get_rss("http://feeds.boingboing.net/boingboing/iBag", 3, "Cory Doctorow")
 
     print 'Current time zone is %s' % zone
     # there is also an entry for the key, wind_condition, in the weather
