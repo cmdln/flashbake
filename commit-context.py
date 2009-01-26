@@ -2,8 +2,9 @@
 #  commit-context.py
 #  Build up some descriptive context for automatic commit to git
 #
-#  Created by Thomas Gideon on 1/25/2009
-#  TODO add license block
+#  Created by Thomas Gideon (cmdln@thecommandline.net) on 1/25/2009
+#  Provided as-is, with no warranties
+#  License: http://creativecommons.org/licenses/by-nc-sa/3.0/us/ 
 
 import sys
 import urllib, urllib2
@@ -104,8 +105,11 @@ def get_rss(url, limit, creator):
        item_creator = get_text(item_creator.childNodes).strip()
        if item_creator != creator:
            continue
-       title = getText(child.getElementsByTagName("title")[0].childNodes)
-       print title
+       title = get_text(child.getElementsByTagName("title")[0].childNodes)
+       link = get_text(child.getElementsByTagName("link")[0].childNodes)
+       by_creator.append({"title" : title, "link" : link})
+       if len(by_creator) >= limit:
+           break
 
     return by_creator
 
@@ -144,7 +148,11 @@ def go():
     # dictionary
     print 'Current weather is %(condition)s (%(temp_f)sF/%(temp_c)sC) %(humidity)s' % weather
     print 'System has been up %s ' % uptime
-    print 'Last 3 entries from a feed'
+    print 'Last 3 entries from a feed:'
+    for item in last_items:
+      # edit the '%s' if you want to add a label, like 'Title %s' to the output
+      print '%s' % item['title']
+      print '%s' % item['link']
 
 # call go() when this module is executed as the main script
 if __name__ == "__main__": go()
