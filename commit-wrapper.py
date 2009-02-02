@@ -16,7 +16,8 @@ def go(project_dir):
     os.chdir(project_dir)
     control_file = open('.control', 'r')
     git_status = commands.getoutput('git status')
-    print git_status
+    for line in git_status.splitlines():
+        print line
     try:
         for line in control_file:
             print line
