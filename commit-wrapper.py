@@ -9,6 +9,7 @@
 
 import os
 import sys
+import re
 # this import is only valid for Linux
 import commands
 
@@ -16,8 +17,10 @@ def go(project_dir):
     os.chdir(project_dir)
     control_file = open('.control', 'r')
     git_status = commands.getoutput('git status')
+    pending_re = re.compile('#\s*(renamed|copied|modified):.*')
     for line in git_status.splitlines():
-        print line
+        if pending_re.match(line):
+            print line
     try:
         for line in control_file:
             print line
