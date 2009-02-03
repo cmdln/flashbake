@@ -150,6 +150,10 @@ def send_orphans(notice_to, notice_from, project_dir, orphans, not_exists):
 
 # call go() when this module is executed as the main script
 if __name__ == "__main__":
+    if len(sys.argv) != 3:
+        print "%s <project directory> <quiet period>" % sys.argv[0]
+        sys.exit(1)
+
     project_dir = sys.argv[1]
     quiet_period = int(sys.argv[2])
     go(project_dir, quiet_period)

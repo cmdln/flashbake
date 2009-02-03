@@ -147,7 +147,12 @@ def build_message_file(feed_url, item_limit, by_line):
     # last n items for m creator
     (title,last_items) = get_rss(feed_url, item_limit, by_line)
 
-    msg_filename = '/tmp/git_msg_%d' % random.randint(0,100)
+    msg_filename = '/tmp/git_msg_%d' % random.randint(0,1000)
+
+    # try to avoid clobbering another process running this script
+    while os.path.exists(msg_filename):
+        msg_filename = '/tmp/git_msg_%d' % random.randint(0,1000)
+
     message_file = open(msg_filename, 'w')
     try:
         message_file.write('Current time zone is %s\n' % zone)
