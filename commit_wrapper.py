@@ -21,7 +21,7 @@ import smtplib
 from email.mime.text import MIMEText
 
 
-def go(project_dir):
+def go(project_dir, quiet_mins):
     print 'Checking %s' % project_dir
     # change to the project directory, necessary to find the .control file and
     # to correctly refer to the project files by relative paths
@@ -68,10 +68,10 @@ def go(project_dir):
     git_status = commands.getoutput('git status')
 
     # in particular find the existing entries that need a commit
-    pending_re = re.compile('#\s*(renamed|copied|modified):.*')
+    pending_re = re.compile('#\s*(renamed|copied|modified|new file):.*')
 
     now = datetime.datetime.today()
-    quiet_period = datetime.timedelta(minutes=5)
+    quiet_period = datetime.timedelta(minutes=quiet_mins)
 
     # first look in the files git already knows about
     for line in git_status.splitlines():
@@ -93,14 +93,22 @@ def go(project_dir):
 
     # find the control files that aren't in the project directory to notify that
     # they need to be added
+    not_exists = set()
     to_add = set()
     for control_file in control_files:
         if os.path.exists(control_file):
-            print '%s is unchanged since last check.' % control_file
+            status_output = commands.getoutput('git status ' + control_file)
+
+            if status_output.startswith('error'):
+                to_add.add(control_file)
+                print '%s exists but is unknown by git.' % control_file
+            else:
+                print '%s is unchanged since last check.' % control_file
         else:
             print '%s does not exist yet.' % control_file
-            to_add.add(control_file)
-    send_orphans(notice_to, notice_from, project_dir, to_add)
+            not_exists.add(control_file)
+    if len(to_add) > 0 or len(not_exists) > 0:
+        send_orphans(notice_to, notice_from, project_dir, to_add, not_exists)
 
 def trim_git(status_line):
     if status_line.find('->') >= 0:
@@ -110,16 +118,25 @@ def trim_git(status_line):
     tokens = status_line.split(':')
     return tokens[1].strip()
 
-def send_orphans(notice_to, notice_from, project_dir, orphans):
-    body = 'The following files do not exist:\n'
+def send_orphans(notice_to, notice_from, project_dir, orphans, not_exists):
+    body = ''
+    
+    if len(not_exists) > 0:
+        body += 'The following files do not exist:\n'
 
-    for file in orphans:
-       body += '\t' + file + '\n'
+        for file in not_exists:
+           body += '\t' + file + '\n'
+    
+    if len(orphans) > 0:
+        body += 'The following files exist but must be added:\n'
+
+        for file in orphans:
+           body += '\t' + file + '\n'
 
     # Create a text/plain message
     msg = MIMEText(body, 'plain')
 
-    msg['Subject'] = 'Some files in %s do not exist' % project_dir
+    msg['Subject'] = 'Some files in %s do not exist or must be added with "git add"' % project_dir
     msg['From'] = notice_from
     msg['To'] = notice_to
 
@@ -134,4 +151,5 @@ def send_orphans(notice_to, notice_from, project_dir, orphans):
 # call go() when this module is executed as the main script
 if __name__ == "__main__":
     project_dir = sys.argv[1]
-    go(project_dir)
+    quiet_period = int(sys.argv[2])
+    go(project_dir, quiet_period)
