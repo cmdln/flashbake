@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 #
 #  commit-wrapper.py
 #  Parses a project's control file and wraps git operations, calling the context
