@@ -3,6 +3,7 @@
 #  commit-wrapper.py
 #  Parses a project's control file and wraps git operations, calling the context
 #  script to build automatic commit messages as needed.
+#  version 0.3
 #
 #  Created by Thomas Gideon (cmdln@thecommandline.net) on 1/25/2009
 #  Provided as-is, with no warranties

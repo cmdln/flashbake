@@ -1,6 +1,8 @@
+#!/usr/bin/env python
 #
 #  commit-context.py
 #  Build up some descriptive context for automatic commit to git
+#  version 0.2
 #
 #  Created by Thomas Gideon (cmdln@thecommandline.net) on 1/25/2009
 #  Provided as-is, with no warranties
