@@ -31,12 +31,14 @@ def go(project_dir, quiet_mins):
     # script
     control_file = open('.control', 'r')
     control_files = set()
+    # TODO replace these with a config object
     feed = None
     limit = None
     author = None
     email = None
     notice_to = None
     notice_from = None
+    smtp_port = None
     try:
         for line in control_file:
             if line.startswith('#'):
@@ -51,6 +53,10 @@ def go(project_dir, quiet_mins):
                 notice_from = line.split(':')[1].strip()
             elif line.startswith('notice_to:'):
                 notice_to = line.split(':')[1].strip()
+            elif line.startswith('smtp_port:'):
+                smtp_port = int(line.split(':')[1].strip())
+            elif len(line.strip()) == 0:
+                continue
             else:
                 control_files.add(line.strip())
     finally:
@@ -108,7 +114,7 @@ def go(project_dir, quiet_mins):
             print '%s does not exist yet.' % control_file
             not_exists.add(control_file)
     if len(to_add) > 0 or len(not_exists) > 0:
-        send_orphans(notice_to, notice_from, project_dir, to_add, not_exists)
+        send_orphans(notice_to, notice_from, smtp_port, project_dir, to_add, not_exists)
 
 def trim_git(status_line):
     if status_line.find('->') >= 0:
@@ -118,32 +124,37 @@ def trim_git(status_line):
     tokens = status_line.split(':')
     return tokens[1].strip()
 
-def send_orphans(notice_to, notice_from, project_dir, orphans, not_exists):
-    body = ''
+def send_orphans(notice_to, notice_from, smtp_port, project_dir, orphans, not_exists):
+    body = 'Use "git status" to check whether git knows about these files.\n'
     
     if len(not_exists) > 0:
-        body += 'The following files do not exist:\n'
+        body += '\nThe following files do not exist:\n\n'
 
         for file in not_exists:
            body += '\t' + file + '\n'
+
+        body += '\nMake sure there is not a typo in .control and that you created/saved the file.\n'
     
     if len(orphans) > 0:
-        body += 'The following files exist but must be added:\n'
+        body += '\nThe following files exist but must be added:\n\n'
 
         for file in orphans:
            body += '\t' + file + '\n'
 
+        body += '\nUse "git add <file>" to add a file that does exist but is unknown to git.\n'
+
     # Create a text/plain message
     msg = MIMEText(body, 'plain')
 
-    msg['Subject'] = 'Some files in %s do not exist or must be added with "git add"' % project_dir
+    msg['Subject'] = 'Some files in %s do not exist' % project_dir
     msg['From'] = notice_from
     msg['To'] = notice_to
 
     # Send the message via our own SMTP server, but don't include the
     # envelope header.
+    print 'Connecting to SMTP port %d' % smtp_port
     s = smtplib.SMTP()
-    s.connect()
+    s.connect(port=smtp_port)
     print 'Sending notice to %s.' % notice_to
     s.sendmail(notice_from, [notice_to], msg.as_string())
     s.close()

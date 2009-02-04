@@ -27,8 +27,8 @@ def send_orphans(notice_to, notice_from):
 
     # Send the message via our own SMTP server, but don't include the
     # envelope header.
-    s = smtplib.SMTP(port=25)
-    s.connect()
+    s = smtplib.SMTP()
+    s.connect('localhost', 5002)
     print 'Sending notice to %s.' % notice_to
     s.sendmail(notice_from, [notice_to], msg.as_string())
     s.close()
