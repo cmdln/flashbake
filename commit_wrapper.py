@@ -4,9 +4,10 @@
 #  Parses a project's control file and wraps git operations, calling the context
 #  script to build automatic commit messages as needed.
 #
-#  version 0.4 - Added quotes to git call for filenames with spaces
+#  version 0.5 - consolidate commits
 #
 #  history:
+#  version 0.4 - Added quotes to git call for filenames with spaces
 #  version 0.3 - SMTP port, she-bang
 #  version 0.2 - email notification
 #  version 0.1 - git functionality complete
