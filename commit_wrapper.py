@@ -4,9 +4,10 @@
 #  Parses a project's control file and wraps git operations, calling the context
 #  script to build automatic commit messages as needed.
 #
-#  version 0.5 - consolidate commits
+#  version 0.6 - improved logging, more quoting of arguments to shell
 #
 #  history:
+#  version 0.5 - consolidate commits
 #  version 0.4 - Added quotes to git call for filenames with spaces
 #  version 0.3 - SMTP port, she-bang
 #  version 0.2 - email notification
@@ -97,7 +98,8 @@ def go(project_dir, quiet_mins):
             pending_file = trim_git(line)
             if not (pending_file in control_files):
                 continue
-            # remove files that will be committed
+            print 'Parsing status line %s to determine commit action' % line
+            # remove files that will be considered for commit
             control_files.remove(pending_file)
             last_mod = os.path.getmtime(pending_file)
             pending_mod = datetime.datetime.fromtimestamp(last_mod)
@@ -105,29 +107,42 @@ def go(project_dir, quiet_mins):
             # add the file to the list to include in the commit
             if pending_mod < now:
                 to_commit += file_template % pending_file
+                print 'Flagging file, %s, for commit.' % pending_file
             else:
                 print 'Change for file, %s, is too recent.' % pending_file
     # consolidate the commit to be friendly to how git normally works
     git_commit = git_commit % {'msg_filename' : message_file, 'filenames' : to_commit}
     print git_commit
-    commit_status = commands.getoutput(git_commit)
-    print commit_status
+    commit_output = commands.getoutput(git_commit)
+    #print commit_output
+    print 'Commit complete.'
+
     # find the control files that aren't in the project directory to notify that
     # they need to be added
+    print '\nExamining files that were not committed.'
+    git_status = 'git status "%s"'
     not_exists = set()
     to_add = set()
     for control_file in control_files:
-        if os.path.exists(control_file):
-            status_output = commands.getoutput('git status ' + control_file)
+        if not os.path.exists(control_file):
+            print '%s does not exist yet.' % control_file
+            not_exists.add(control_file)
+            continue;
 
-            if status_output.startswith('error'):
+        status_output = commands.getoutput(git_status % control_file)
+
+        if status_output.startswith('error'):
+            if status_output.find('did not match') > 0:
                 to_add.add(control_file)
                 print '%s exists but is unknown by git.' % control_file
             else:
-                print '%s is unchanged since last check.' % control_file
+                print 'Unknown error occurred!'
+                print status_output
+            continue
+        if status_output.find(control_file) < 0:
+            print '%s has no uncommitted changes.' % control_file
         else:
-            print '%s does not exist yet.' % control_file
-            not_exists.add(control_file)
+            print status_output
     if len(to_add) > 0 or len(not_exists) > 0:
         send_orphans(notice_to, notice_from, smtp_port, project_dir, to_add, not_exists)
 
@@ -167,7 +182,7 @@ def send_orphans(notice_to, notice_from, smtp_port, project_dir, orphans, not_ex
 
     # Send the message via our own SMTP server, but don't include the
     # envelope header.
-    print 'Connecting to SMTP port %d' % smtp_port
+    print '\nConnecting to SMTP port %d' % smtp_port
     s = smtplib.SMTP()
     s.connect(port=smtp_port)
     print 'Sending notice to %s.' % notice_to
