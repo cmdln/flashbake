@@ -87,7 +87,9 @@ def go(project_dir, quiet_mins):
     now = datetime.datetime.today()
     quiet_period = datetime.timedelta(minutes=quiet_mins)
 
-    git_commit = 'git commit -F %(msg_filename)s "%(pending_filename)s"'
+    git_commit = 'git commit -F %(msg_filename)s %(filenames)s'
+    file_template = ' "%s"'
+    to_commit = ''
     # first look in the files git already knows about
     for line in git_status.splitlines():
         if pending_re.match(line):
@@ -99,13 +101,16 @@ def go(project_dir, quiet_mins):
             last_mod = os.path.getmtime(pending_file)
             pending_mod = datetime.datetime.fromtimestamp(last_mod)
             pending_mod += quiet_period
+            # add the file to the list to include in the commit
             if pending_mod < now:
-                commit_status = commands.getoutput(git_commit % \
-                        {'msg_filename' : message_file, 'pending_filename' : pending_file})
-                print commit_status
+                to_commit += file_template % pending_file
             else:
                 print 'Change for file, %s, is too recent.' % pending_file
-
+    # consolidate the commit to be friendly to how git normally works
+    git_commit = git_commit % {'msg_filename' : message_file, 'filenames' : to_commit}
+    print git_commit
+    commit_status = commands.getoutput(git_commit)
+    print commit_status
     # find the control files that aren't in the project directory to notify that
     # they need to be added
     not_exists = set()
