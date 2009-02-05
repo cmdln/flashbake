@@ -2,7 +2,11 @@
 #
 #  commit-context.py
 #  Build up some descriptive context for automatic commit to git
-#  version 0.2
+#
+#  version 0.2 - added she-bang
+#
+#  history
+#  versio 0.1 - functionally complete
 #
 #  Created by Thomas Gideon (cmdln@thecommandline.net) on 1/25/2009
 #  Provided as-is, with no warranties

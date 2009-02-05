@@ -3,7 +3,13 @@
 #  commit-wrapper.py
 #  Parses a project's control file and wraps git operations, calling the context
 #  script to build automatic commit messages as needed.
-#  version 0.3
+#
+#  version 0.4 - Added quotes to git call for filenames with spaces
+#
+#  history:
+#  version 0.3 - SMTP port, she-bang
+#  version 0.2 - email notification
+#  version 0.1 - git functionality complete
 #
 #  Created by Thomas Gideon (cmdln@thecommandline.net) on 1/25/2009
 #  Provided as-is, with no warranties
@@ -81,6 +87,7 @@ def go(project_dir, quiet_mins):
     now = datetime.datetime.today()
     quiet_period = datetime.timedelta(minutes=quiet_mins)
 
+    git_commit = 'git commit -F %(msg_filename)s "%(pending_filename)s"'
     # first look in the files git already knows about
     for line in git_status.splitlines():
         if pending_re.match(line):
@@ -93,8 +100,8 @@ def go(project_dir, quiet_mins):
             pending_mod = datetime.datetime.fromtimestamp(last_mod)
             pending_mod += quiet_period
             if pending_mod < now:
-                commit_status = commands.getoutput('git commit -F ' + 
-                        message_file + ' ' + pending_file)
+                commit_status = commands.getoutput(git_commit % \
+                        {'msg_filename' : message_file, 'pending_filename' : pending_file})
                 print commit_status
             else:
                 print 'Change for file, %s, is too recent.' % pending_file
