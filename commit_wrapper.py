@@ -4,9 +4,10 @@
 #  Parses a project's control file and wraps git operations, calling the context
 #  script to build automatic commit messages as needed.
 #
-#  version 0.6 - improved logging, more quoting of arguments to shell
+#  version 0.7 - more logging changes
 #
 #  history:
+#  version 0.6 - improved logging, more quoting of arguments to shell
 #  version 0.5 - consolidate commits
 #  version 0.4 - Added quotes to git call for filenames with spaces
 #  version 0.3 - SMTP port, she-bang
@@ -32,6 +33,7 @@ from email.mime.text import MIMEText
 
 
 def go(project_dir, quiet_mins):
+    print 'flashbake version 0.7'
     print 'Checking %s' % project_dir
     # change to the project directory, necessary to find the .control file and
     # to correctly refer to the project files by relative paths
@@ -127,7 +129,7 @@ def go(project_dir, quiet_mins):
         if not os.path.exists(control_file):
             print '%s does not exist yet.' % control_file
             not_exists.add(control_file)
-            continue;
+            continue
 
         status_output = commands.getoutput(git_status % control_file)
 
@@ -141,10 +143,14 @@ def go(project_dir, quiet_mins):
             continue
         if status_output.find(control_file) < 0:
             print '%s has no uncommitted changes.' % control_file
+        # if anything hits this block, we need to figure out why
         else:
-            print status_output
+            print '%s is in the status message but failed other tests.' % control_file
+            print 'Try \'git status "%s"\' for more info.' % control_file
     if len(to_add) > 0 or len(not_exists) > 0:
         send_orphans(notice_to, notice_from, smtp_port, project_dir, to_add, not_exists)
+    else:
+        print 'No missing or untracked files found, not sending email notice.'
 
 def trim_git(status_line):
     if status_line.find('->') >= 0:
@@ -186,7 +192,9 @@ def send_orphans(notice_to, notice_from, smtp_port, project_dir, orphans, not_ex
     s = smtplib.SMTP()
     s.connect(port=smtp_port)
     print 'Sending notice to %s.' % notice_to
+    print body
     s.sendmail(notice_from, [notice_to], msg.as_string())
+    print 'Notice sent.'
     s.close()
 
 # call go() when this module is executed as the main script
