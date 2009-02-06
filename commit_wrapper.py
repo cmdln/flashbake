@@ -4,9 +4,10 @@
 #  Parses a project's control file and wraps git operations, calling the context
 #  script to build automatic commit messages as needed.
 #
-#  version 0.7 - more logging changes
+#  version 0.8 - more logging changes
 #
 #  history:
+#  version 0.7 - more logging changes
 #  version 0.6 - improved logging, more quoting of arguments to shell
 #  version 0.5 - consolidate commits
 #  version 0.4 - Added quotes to git call for filenames with spaces
@@ -33,7 +34,7 @@ from email.mime.text import MIMEText
 
 
 def go(project_dir, quiet_mins):
-    print 'flashbake version 0.7'
+    print 'flashbake version 0.8'
     print 'Checking %s' % project_dir
     # change to the project directory, necessary to find the .control file and
     # to correctly refer to the project files by relative paths
