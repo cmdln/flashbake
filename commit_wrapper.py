@@ -4,9 +4,10 @@
 #  Parses a project's control file and wraps git operations, calling the context
 #  script to build automatic commit messages as needed.
 #
-#  version 0.9 - added a trap for a fatal error from git
+#  version 0.10 - added link check, added logic to add files
 #
 #  history:
+#  version 0.9 - added a trap for a fatal error from git
 #  version 0.8 - more logging changes
 #  version 0.7 - more logging changes
 #  version 0.6 - improved logging, more quoting of arguments to shell
@@ -45,6 +46,8 @@ def go(project_dir, quiet_mins):
     # script
     control_file = open('.control', 'r')
     control_files = set()
+    # TODO add to capture object, see TODO below
+    linked_files = dict()
     # TODO replace these with a config object
     feed = None
     limit = None
@@ -72,7 +75,12 @@ def go(project_dir, quiet_mins):
             elif len(line.strip()) == 0:
                 continue
             else:
-                control_files.add(line.strip())
+                filename = line.strip()
+                link = check_link(filename)
+                if link != None:
+                    linked_files[filename] = link
+                else:
+                    control_files.add(filename)
     finally:
         control_file.close()
 
@@ -83,7 +91,6 @@ def go(project_dir, quiet_mins):
         print 'Make sure that feed:, limit:, author:, and notice_to: are in the .control file'
         sys.sys.exit(1)
 
-    message_file = commit_context.build_message_file(feed, limit, author)
     # get the git status for the project
     git_status = commands.getoutput('git status')
 
@@ -120,12 +127,14 @@ def go(project_dir, quiet_mins):
             else:
                 print 'Change for file, %s, is too recent.' % pending_file
     if len(to_commit.strip()) > 0:
-        print 'Commiting %s.' % to_commit
+        print 'Committing %s.' % to_commit
+        message_file = commit_context.build_message_file(feed, limit, author)
         # consolidate the commit to be friendly to how git normally works
         git_commit = git_commit % {'msg_filename' : message_file, 'filenames' : to_commit}
         print git_commit
         commit_output = commands.getoutput(git_commit)
         #print commit_output
+        os.remove(message_file)
         print 'Commit complete.'
     else:
         print 'No changes found to commit.'
@@ -134,8 +143,13 @@ def go(project_dir, quiet_mins):
     # they need to be added
     print '\nExamining files that were not committed.'
     git_status = 'git status "%s"'
+    # TODO add a capture object for files that need additional processing
     not_exists = set()
     to_add = set()
+    # print warnings for linked files
+    for (filename, link) in linked_files.iteritems():
+        print '%s is a link or its directory path contains a link.' % filename
+
     for control_file in control_files:
         if not os.path.exists(control_file):
             print '%s does not exist yet.' % control_file
@@ -158,10 +172,45 @@ def go(project_dir, quiet_mins):
         else:
             print '%s is in the status message but failed other tests.' % control_file
             print 'Try \'git status "%s"\' for more info.' % control_file
-    if len(to_add) > 0 or len(not_exists) > 0:
-        send_orphans(notice_to, notice_from, smtp_port, project_dir, to_add, not_exists)
+
+    if len(to_add) > 0:
+        message_file = commit_context.build_message_file(feed, limit, author)
+        add_orphans(to_add, message_file)
+        os.remove(message_file)
+
+    if len(not_exists) > 0 or len(linked_files) > 0:
+        send_notice(notice_to, notice_from, smtp_port, project_dir, not_exists, linked_files)
     else:
         print 'No missing or untracked files found, not sending email notice.'
+
+def check_link(filename):
+    if os.path.islink(filename):
+       return filename
+    directory = os.path.dirname(filename)
+    while (len(directory) > 0):
+        if os.path.islink(directory):
+            return directory
+        directory = os.path.dirname(directory)
+    return None
+
+def add_orphans(orphans, message_file):
+    if len(orphans) == 0:
+        return
+    add_template = 'git add "%s"'
+    git_commit = 'git commit -F %(msg_filename)s %(filenames)s'
+    file_template = ' "%s"'
+    to_commit = ''
+    for orphan in orphans:
+        print 'Adding %s.' % orphan
+        add_output = commands.getoutput(add_template % orphan)
+        to_commit += file_template % orphan
+
+    print 'Committing %s.' % to_commit
+    # consolidate the commit to be friendly to how git normally works
+    git_commit = git_commit % {'msg_filename' : message_file, 'filenames' : to_commit}
+    print git_commit
+    commit_output = commands.getoutput(git_commit)
+        
 
 def trim_git(status_line):
     if status_line.find('->') >= 0:
@@ -171,8 +220,8 @@ def trim_git(status_line):
     tokens = status_line.split(':')
     return tokens[1].strip()
 
-def send_orphans(notice_to, notice_from, smtp_port, project_dir, orphans, not_exists):
-    body = 'Use "git status" to check whether git knows about these files.\n'
+def send_notice(notice_to, notice_from, smtp_port, project_dir, not_exists, linked_files):
+    body = ''
     
     if len(not_exists) > 0:
         body += '\nThe following files do not exist:\n\n'
@@ -182,13 +231,16 @@ def send_orphans(notice_to, notice_from, smtp_port, project_dir, orphans, not_ex
 
         body += '\nMake sure there is not a typo in .control and that you created/saved the file.\n'
     
-    if len(orphans) > 0:
-        body += '\nThe following files exist but must be added:\n\n'
+    if len(linked_files) > 0:
+        body += '\nThe following files in .control are links or have a link in their directory path.\n'
 
-        for file in orphans:
-           body += '\t' + file + '\n'
+        for (file, link) in linked_files.iteritems():
+            if file == link:
+                body += '\t' + file + ' is a link\n'
+            else:
+                body += '\t' + link + ' is a link on the way to ' + file + '\n'
 
-        body += '\nUse "git add <file>" to add a file that does exist but is unknown to git.\n'
+        body += '\nMake sure the physical file and its parent directories reside in the git project directory.\n'
 
     # Create a text/plain message
     msg = MIMEText(body, 'plain')
