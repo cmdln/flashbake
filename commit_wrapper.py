@@ -112,12 +112,16 @@ def go(project_dir, quiet_mins):
                 print 'Flagging file, %s, for commit.' % pending_file
             else:
                 print 'Change for file, %s, is too recent.' % pending_file
-    # consolidate the commit to be friendly to how git normally works
-    git_commit = git_commit % {'msg_filename' : message_file, 'filenames' : to_commit}
-    print git_commit
-    commit_output = commands.getoutput(git_commit)
-    #print commit_output
-    print 'Commit complete.'
+    if len(to_commit.strip()) > 0:
+        print 'Commiting %s.' % to_commit
+        # consolidate the commit to be friendly to how git normally works
+        git_commit = git_commit % {'msg_filename' : message_file, 'filenames' : to_commit}
+        print git_commit
+        commit_output = commands.getoutput(git_commit)
+        #print commit_output
+        print 'Commit complete.'
+    else:
+        print 'No changes found to commit.'
 
     # find the control files that aren't in the project directory to notify that
     # they need to be added
