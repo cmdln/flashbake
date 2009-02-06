@@ -36,7 +36,7 @@ from email.mime.text import MIMEText
 
 
 def go(project_dir, quiet_mins):
-    print 'flashbake version 0.9'
+    print 'flashbake version 0.10'
     print 'Checking %s' % project_dir
     # change to the project directory, necessary to find the .control file and
     # to correctly refer to the project files by relative paths
