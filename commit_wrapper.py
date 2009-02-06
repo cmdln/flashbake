@@ -4,9 +4,10 @@
 #  Parses a project's control file and wraps git operations, calling the context
 #  script to build automatic commit messages as needed.
 #
-#  version 0.8 - more logging changes
+#  version 0.9 - added a trap for a fatal error from git
 #
 #  history:
+#  version 0.8 - more logging changes
 #  version 0.7 - more logging changes
 #  version 0.6 - improved logging, more quoting of arguments to shell
 #  version 0.5 - consolidate commits
@@ -34,7 +35,7 @@ from email.mime.text import MIMEText
 
 
 def go(project_dir, quiet_mins):
-    print 'flashbake version 0.8'
+    print 'flashbake version 0.9'
     print 'Checking %s' % project_dir
     # change to the project directory, necessary to find the .control file and
     # to correctly refer to the project files by relative paths
@@ -80,11 +81,16 @@ def go(project_dir, quiet_mins):
 
     if feed == None or limit == None or author == None or notice_to == None:
         print 'Make sure that feed:, limit:, author:, and notice_to: are in the .control file'
-        sys.exit(1)
+        sys.sys.exit(1)
 
     message_file = commit_context.build_message_file(feed, limit, author)
     # get the git status for the project
     git_status = commands.getoutput('git status')
+
+    if git_status.startswith('fatal'):
+        print 'Fatal error from git.'
+        print git_status
+        os.sys.exit(1)
 
     # in particular find the existing entries that need a commit
     pending_re = re.compile('#\s*(renamed|copied|modified|new file):.*')
