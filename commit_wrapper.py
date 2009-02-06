@@ -4,9 +4,10 @@
 #  Parses a project's control file and wraps git operations, calling the context
 #  script to build automatic commit messages as needed.
 #
-#  version 0.10 - added link check, added logic to add files
+#  version 0.11 - use a regex to fix trailing tweedle causing false reports
 #
 #  history:
+#  version 0.10 - added link check, added logic to add files
 #  version 0.9 - added a trap for a fatal error from git
 #  version 0.8 - more logging changes
 #  version 0.7 - more logging changes
@@ -36,7 +37,7 @@ from email.mime.text import MIMEText
 
 
 def go(project_dir, quiet_mins):
-    print 'flashbake version 0.10'
+    print 'flashbake version 0.11'
     print 'Checking %s' % project_dir
     # change to the project directory, necessary to find the .control file and
     # to correctly refer to the project files by relative paths
@@ -166,7 +167,11 @@ def go(project_dir, quiet_mins):
                 print 'Unknown error occurred!'
                 print status_output
             continue
-        if status_output.find(control_file) < 0:
+        # use a regex to match so we can enforce whole word rather than
+        # substring matchs, otherwise 'foo.txt~' causes a false report of an
+        # error
+        control_re = re.compile('\<' + re.escape(control_file) + '\>')
+        if control_re.search(status_output) == None:
             print '%s has no uncommitted changes.' % control_file
         # if anything hits this block, we need to figure out why
         else:
