@@ -4,9 +4,10 @@
 #  Parses a project's control file and wraps git operations, calling the context
 #  script to build automatic commit messages as needed.
 #
-#  version 0.11 - use a regex to fix trailing tweedle causing false reports
+#  version 0.12 - added error checks to network calls
 #
 #  history:
+#  version 0.11 - use a regex to fix trailing tweedle causing false reports
 #  version 0.10 - added link check, added logic to add files
 #  version 0.9 - added a trap for a fatal error from git
 #  version 0.8 - more logging changes
@@ -37,7 +38,7 @@ from email.mime.text import MIMEText
 
 
 def go(project_dir, quiet_mins):
-    print 'flashbake version 0.11'
+    print 'flashbake version 0.12'
     print 'Checking %s' % project_dir
     # change to the project directory, necessary to find the .control file and
     # to correctly refer to the project files by relative paths
@@ -90,7 +91,7 @@ def go(project_dir, quiet_mins):
 
     if feed == None or limit == None or author == None or notice_to == None:
         print 'Make sure that feed:, limit:, author:, and notice_to: are in the .control file'
-        sys.sys.exit(1)
+        sys.exit(1)
 
     # get the git status for the project
     git_status = commands.getoutput('git status')
@@ -98,7 +99,7 @@ def go(project_dir, quiet_mins):
     if git_status.startswith('fatal'):
         print 'Fatal error from git.'
         print git_status
-        os.sys.exit(1)
+        sys.exit(1)
 
     # in particular find the existing entries that need a commit
     pending_re = re.compile('#\s*(renamed|copied|modified|new file):.*')
@@ -257,13 +258,16 @@ def send_notice(notice_to, notice_from, smtp_port, project_dir, not_exists, link
     # Send the message via our own SMTP server, but don't include the
     # envelope header.
     print '\nConnecting to SMTP port %d' % smtp_port
-    s = smtplib.SMTP()
-    s.connect(port=smtp_port)
-    print 'Sending notice to %s.' % notice_to
-    print body
-    s.sendmail(notice_from, [notice_to], msg.as_string())
-    print 'Notice sent.'
-    s.close()
+    try:
+        s = smtplib.SMTP()
+        s.connect(port=smtp_port)
+        print 'Sending notice to %s.' % notice_to
+        print body
+        s.sendmail(notice_from, [notice_to], msg.as_string())
+        print 'Notice sent.'
+        s.close()
+    except:
+        print 'Couldn\'t connect, will send later.'
 
 # call go() when this module is executed as the main script
 if __name__ == "__main__":

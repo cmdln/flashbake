@@ -3,10 +3,11 @@
 #  commit-context.py
 #  Build up some descriptive context for automatic commit to git
 #
-#  version 0.2 - added she-bang
+#  version 0.3 - added checks for errors on network calls
 #
 #  history
-#  versio 0.1 - functionally complete
+#  version 0.2 - added she-bang
+#  version 0.1 - functionally complete
 #
 #  Created by Thomas Gideon (cmdln@thecommandline.net) on 1/25/2009
 #  Provided as-is, with no warranties
@@ -16,6 +17,7 @@ import sys
 import urllib, urllib2
 import xml.dom.minidom
 import os
+import os.path
 import string
 import random
 
@@ -28,7 +30,7 @@ def get_uptime():
          contents = f.read().split()
          f.close()
     except:
-        return "Cannot open uptime file: /proc/uptime"
+        return None
 
     total_seconds = float(contents[0])
 
@@ -66,22 +68,25 @@ def get_weather(city):
     # necessary machinery to fetch a web page
     opener = urllib2.build_opener(urllib2.HTTPCookieProcessor())
 
-    # open the weather API page
-    weather_xml = opener.open(urllib2.Request(for_city)).read()
+    try:
+        # open the weather API page
+        weather_xml = opener.open(urllib2.Request(for_city)).read()
 
-    # the weather API returns some nice, parsable XML
-    weather_dom = xml.dom.minidom.parseString(weather_xml)
+        # the weather API returns some nice, parsable XML
+        weather_dom = xml.dom.minidom.parseString(weather_xml)
 
-    # just interested in the conditions at the moment
-    current = weather_dom.getElementsByTagName("current_conditions")
+        # just interested in the conditions at the moment
+        current = weather_dom.getElementsByTagName("current_conditions")
 
-    weather = {}
-    for child in current[0].childNodes:
-       if child.localName == 'icon':
-           continue
-       weather[child.localName] = child.getAttribute('data').strip()
+        weather = {}
+        for child in current[0].childNodes:
+           if child.localName == 'icon':
+               continue
+           weather[child.localName] = child.getAttribute('data').strip()
 
-    return weather
+        return weather
+    except:
+        return {}
 
 def get_text(nodelist):
     text_value = ""
@@ -97,31 +102,34 @@ def get_rss(url, limit, creator):
     # necessary machinery to fetch a web page
     opener = urllib2.build_opener(urllib2.HTTPCookieProcessor())
 
-    # open the raw RSS XML
-    rss_xml = opener.open(urllib2.Request(url)).read()
+    try:
+        # open the raw RSS XML
+        rss_xml = opener.open(urllib2.Request(url)).read()
 
-    # build a mini-dom so we can scrape out titles, descriptions
-    rss_dom = xml.dom.minidom.parseString(rss_xml)
+        # build a mini-dom so we can scrape out titles, descriptions
+        rss_dom = xml.dom.minidom.parseString(rss_xml)
 
-    titles = rss_dom.getElementsByTagName("title")
+        titles = rss_dom.getElementsByTagName("title")
 
-    feed_title = get_text(titles[0].childNodes)
+        feed_title = get_text(titles[0].childNodes)
 
-    items = rss_dom.getElementsByTagName("item")
+        items = rss_dom.getElementsByTagName("item")
 
-    by_creator = []
-    for child in items:
-       item_creator = child.getElementsByTagName("dc:creator")[0]
-       item_creator = get_text(item_creator.childNodes).strip()
-       if item_creator != creator:
-           continue
-       title = get_text(child.getElementsByTagName("title")[0].childNodes)
-       link = get_text(child.getElementsByTagName("link")[0].childNodes)
-       by_creator.append({"title" : title, "link" : link})
-       if limit <= len(by_creator):
-           break
+        by_creator = []
+        for child in items:
+           item_creator = child.getElementsByTagName("dc:creator")[0]
+           item_creator = get_text(item_creator.childNodes).strip()
+           if item_creator != creator:
+               continue
+           title = get_text(child.getElementsByTagName("title")[0].childNodes)
+           link = get_text(child.getElementsByTagName("link")[0].childNodes)
+           by_creator.append({"title" : title, "link" : link})
+           if limit <= len(by_creator):
+               break
 
-    return (feed_title, by_creator)
+        return (feed_title, by_creator)
+    except:
+        return (None, {})
 
 def build_message_file(feed_url, item_limit, by_line):
     # check the environment for the zone value
@@ -130,6 +138,9 @@ def build_message_file(feed_url, item_limit, by_line):
     # some desktops don't set the env var but /etc/timezone should
     # have the value regardless
     if None == zone:
+        if not os.path.exists('/etc/timezone'):
+            print 'Could not get TZ from env var or /etc/timezone.'
+            sys.exit(1)
         zone_file = open('/etc/timezone')
         zone = zone_file.read()
         zone = zone.replace("\n", "")
@@ -162,15 +173,28 @@ def build_message_file(feed_url, item_limit, by_line):
     message_file = open(msg_filename, 'w')
     try:
         message_file.write('Current time zone is %s\n' % zone)
-        # there is also an entry for the key, wind_condition, in the weather
-        # dictionary
-        message_file.write('Current weather is %(condition)s (%(temp_f)sF/%(temp_c)sC) %(humidity)s\n' % weather)
-        message_file.write('System has been up %s\n' % uptime)
-        message_file.write('Last %(item_count)d entries from %(feed_title)s:\n' % {'item_count' : len(last_items), 'feed_title' : title})
-        for item in last_items:
-          # edit the '%s' if you want to add a label, like 'Title %s' to the output
-          message_file.write('%s\n' % item['title'])
-          message_file.write('%s\n' % item['link'])
+        if len(weather) > 0:
+            # there is also an entry for the key, wind_condition, in the weather
+            # dictionary
+            message_file.write('Current weather is %(condition)s (%(temp_f)sF/%(temp_c)sC) %(humidity)s\n'\
+                    % weather)
+        else:
+            message_file.write('Couldn\'t fetch current weather.\n')
+        if uptime == None:
+            message_file.write('Couldn\'t determine up time.\n')
+        else:
+            message_file.write('System has been up %s\n' % uptime)
+        if len(last_items) > 0:
+            message_file.write('Last %(item_count)d entries from %(feed_title)s:\n'\
+                % {'item_count' : len(last_items), 'feed_title' : title})
+            for item in last_items:
+              # edit the '%s' if you want to add a label, like 'Title %s' to the output
+              message_file.write('%s\n' % item['title'])
+              message_file.write('%s\n' % item['link'])
+        else:
+            message_file.write('Couldn\'t fetch entries from feed, %s.\n' % feed_url)
+        if len(weather) == 0 and len(last_items) == 0:
+            message_file.write('System is most likely offline.')
     finally:
         message_file.close()
     return msg_filename
