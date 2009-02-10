@@ -3,9 +3,10 @@
 #  commit-context.py
 #  Build up some descriptive context for automatic commit to git
 #
-#  version 0.3 - added checks for errors on network calls
+#  version 0.4 - re-factored out ControlConfig
 #
 #  history
+#  version 0.3 - added checks for errors on network calls
 #  version 0.2 - added she-bang
 #  version 0.1 - functionally complete
 #
@@ -21,7 +22,60 @@ import os.path
 import string
 import random
 
-def get_uptime():
+class ControlConfig:
+    """
+    Gather control options parsed out of the dot-control file in a project.
+    """
+
+    def __init__(self):
+        self.feed = None
+        self.limit = 3
+        self.author = None
+        self.email = None
+        self.notice_to = None
+        self.notice_from = None
+        self.smtp_port = 25
+        self.int_props = ('limit', 'smtp_port')
+
+    def capture(self, line):
+        # grab comments but don't do anything
+        if line.startswith('#'):
+            return True
+
+        # grab blanks but don't do anything
+        if len(line.strip()) == 0:
+            return True
+
+        if line.find(':') > 0:
+            prop_tokens = line.split(':', 1)
+            prop_name = prop_tokens[0].strip()
+
+            # only capture explicitly initialized attributes
+            if not prop_name in self.__dict__:
+                return False
+
+            prop_value = prop_tokens[1].strip()
+            if prop_name in self.int_props:
+                prop_value = int(prop_value)
+            self.__dict__[prop_name] = prop_value
+
+            return True
+
+        return False
+
+    def fix(self):
+        """
+        Do any property clean up, after parsing but before use
+        """
+
+        if self.notice_from == None and self.notice_to != None:
+            self.notice_from = self.notice_to
+
+        if self.feed == None or self.author == None or self.notice_to == None:
+            print 'Make sure that feed:, author:, and notice_to: are in the .control file'
+            sys.exit(1)
+
+def calcuptime():
     """ copied with blanket permission from
         http://thesmithfam.org/blog/2005/11/19/python-uptime-script/ """
 
@@ -57,7 +111,7 @@ def get_uptime():
 
     return string
 
-def get_weather(city):
+def getweather(city):
     """ This relies on Google's unpublished weather API which may change without notice. """
 
     # unpublished API that iGoogle uses for its weather widget
@@ -88,14 +142,15 @@ def get_weather(city):
     except:
         return {}
 
-def get_text(nodelist):
+def filtertext(nodelist):
+    """ Filter out all but the text node children. """
     text_value = ""
     for node in nodelist:
         if node.nodeType == node.TEXT_NODE:
             text_value = text_value + node.data
     return text_value
 
-def get_rss(url, limit, creator):
+def fetchfeed(control_config):
     """ Fetch up to the limit number of items from the specified feed with the specified
         creator. """
 
@@ -104,34 +159,36 @@ def get_rss(url, limit, creator):
 
     try:
         # open the raw RSS XML
-        rss_xml = opener.open(urllib2.Request(url)).read()
+        rss_xml = opener.open(urllib2.Request(control_config.feed)).read()
 
         # build a mini-dom so we can scrape out titles, descriptions
         rss_dom = xml.dom.minidom.parseString(rss_xml)
 
         titles = rss_dom.getElementsByTagName("title")
 
-        feed_title = get_text(titles[0].childNodes)
+        feed_title = filtertext(titles[0].childNodes)
 
         items = rss_dom.getElementsByTagName("item")
 
         by_creator = []
         for child in items:
            item_creator = child.getElementsByTagName("dc:creator")[0]
-           item_creator = get_text(item_creator.childNodes).strip()
-           if item_creator != creator:
+           item_creator = filtertext(item_creator.childNodes).strip()
+           if item_creator != control_config.author:
                continue
-           title = get_text(child.getElementsByTagName("title")[0].childNodes)
-           link = get_text(child.getElementsByTagName("link")[0].childNodes)
+           title = filtertext(child.getElementsByTagName("title")[0].childNodes)
+           link = filtertext(child.getElementsByTagName("link")[0].childNodes)
            by_creator.append({"title" : title, "link" : link})
-           if limit <= len(by_creator):
+           if control_config.limit <= len(by_creator):
                break
 
         return (feed_title, by_creator)
     except:
         return (None, {})
 
-def build_message_file(feed_url, item_limit, by_line):
+def buildmessagefile(control_config):
+    """ Build a commit message that uses the provided ControlConfig object and
+        return a reference to the resulting file. """
     # check the environment for the zone value
     zone = os.environ.get("TZ")
 
@@ -156,13 +213,13 @@ def build_message_file(feed_url, item_limit, by_line):
     city = city.replace("_", " ")
 
     # call the Google weather API with the city
-    weather = get_weather(city)
+    weather = getweather(city)
 
     # with thanks to Dave Smith
-    uptime = get_uptime()
+    uptime = calcuptime()
     
     # last n items for m creator
-    (title,last_items) = get_rss(feed_url, item_limit, by_line)
+    (title,last_items) = fetchfeed(control_config)
 
     msg_filename = '/tmp/git_msg_%d' % random.randint(0,1000)
 
@@ -192,7 +249,7 @@ def build_message_file(feed_url, item_limit, by_line):
               message_file.write('%s\n' % item['title'])
               message_file.write('%s\n' % item['link'])
         else:
-            message_file.write('Couldn\'t fetch entries from feed, %s.\n' % feed_url)
+            message_file.write('Couldn\'t fetch entries from feed, %s.\n' % control_config.feed)
         if len(weather) == 0 and len(last_items) == 0:
             message_file.write('System is most likely offline.')
     finally:
@@ -204,7 +261,12 @@ if __name__ == "__main__":
     if len(sys.argv) != 4:
         print '%s <feed url> <item limit> <author name>' % sys.argv[0]
         sys.exit(1)
-    msg_filename = build_message_file(sys.argv[1], int(sys.argv[2]), sys.argv[3])
+    control_config = ControlConfig()
+    control_config.feed = sys.argv[1]
+    control_config.limit = int(sys.argv[2])
+    control_config.author = sys.argv[3]
+
+    msg_filename = buildmessagefile(control_config)
     message_file = open(msg_filename, 'r')
 
     try:
