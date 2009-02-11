@@ -137,6 +137,8 @@ def findtimezone():
     return zone
 
 def parsecity(zone):
+    if None == zone:
+        return None
     tokens = zone.split("/")
     if len(tokens) != 2:
         logging.warning('Zone id, "%s", doesn''t appear to contain a city.' % zone)

@@ -17,6 +17,10 @@ connectable = True
 def addcontext(message_file, control_config):
     """ Add weather information, based in the TZ, to the commit message. """
     zone = findtimezone()
+    if None == zone:
+        message_file.write('Couldn\'t fetch current weather.\n')
+        return False
+
     city = parsecity(zone)
 
     # call the Google weather API with the city
