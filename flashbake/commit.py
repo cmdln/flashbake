@@ -4,9 +4,10 @@
 #  Parses a project's control file and wraps git operations, calling the context
 #  script to build automatic commit messages as needed.
 #
-#  version 0.13 - code clean up
+#  version 0.14 - packaging and setup
 #
 #  history:
+#  version 0.13 - code clean up
 #  version 0.12 - added error checks to network calls
 #  version 0.11 - use a regex to fix trailing tweedle causing false reports
 #  version 0.10 - added link check, added logic to add files
@@ -29,7 +30,7 @@ import sys
 import re
 import datetime
 import time
-import commit_context
+import context
 # this import is only valid for Linux
 import commands
 # Import smtplib for the actual sending function
@@ -88,7 +89,7 @@ class ParseResults:
         if len(self.to_add) == 0:
             return
 
-        message_file = commit_context.buildmessagefile(control_config)
+        message_file = context.buildmessagefile(control_config)
 
         add_template = 'git add "%s"'
         git_commit = 'git commit -F %(msg_filename)s %(filenames)s'
@@ -110,8 +111,7 @@ class ParseResults:
     def needsnotice(self):
         return len(self.not_exists) > 0 or len(self.linked_files) > 0
 
-def go(project_dir, quiet_mins):
-    print 'flashbake version 0.12'
+def commit(project_dir, quiet_mins):
     print 'Checking %s' % project_dir
     # change to the project directory, necessary to find the .control file and
     # to correctly refer to the project files by relative paths
@@ -121,7 +121,7 @@ def go(project_dir, quiet_mins):
     # script
     control_file = open('.control', 'r')
     parse_results = ParseResults()
-    control_config = commit_context.ControlConfig()
+    control_config = context.ControlConfig()
     try:
         for line in control_file:
             # skip anything else if the config consumed the line
@@ -178,7 +178,7 @@ def go(project_dir, quiet_mins):
                 print 'Change for file, %s, is too recent.' % pending_file
     if len(to_commit.strip()) > 0:
         print 'Committing %s.' % to_commit
-        message_file = commit_context.buildmessagefile(control_config)
+        message_file = context.buildmessagefile(control_config)
         # consolidate the commit to be friendly to how git normally works
         git_commit = git_commit % {'msg_filename' : message_file, 'filenames' : to_commit}
         print git_commit
@@ -279,13 +279,3 @@ def sendnotice(control_config, project_dir, parse_results):
         s.close()
     except:
         print 'Couldn\'t connect, will send later.'
-
-# call go() when this module is executed as the main script
-if __name__ == "__main__":
-    if len(sys.argv) != 3:
-        print "%s <project directory> <quiet period>" % sys.argv[0]
-        sys.exit(1)
-
-    project_dir = sys.argv[1]
-    quiet_period = int(sys.argv[2])
-    go(project_dir, quiet_period)
