@@ -14,20 +14,41 @@ if exists(join(source_tree_flashbake, "commit.py")):
     logging.info("Running from source tree; adjusting path")
     sys.path.insert(0, realpath(dirname(source_tree_flashbake)))
     try:
-        from flashbake.commit import commit
+        from flashbake.commit import commit, parsecontrol
+        from flashbake.context import buildmessagefile
     finally:
         del sys.path[0]
 else:
     logging.debug("Assuming path is correct")
-    from flashbake.commit import commit
+    from flashbake.commit import commit, parsecontrol
+    from flashbake.context import buildmessagefile
 
 # just provide the command line hook into the flashbake.commit module
 if __name__ == "__main__":
-    if len(sys.argv) != 3:
+    if len(sys.argv) < 3 or len(sys.argv) > 4:
         print "%s <project directory> <quiet period>" % sys.argv[0]
         sys.exit(1)
 
     project_dir = sys.argv[1]
     quiet_period = int(sys.argv[2])
+
     print 'flashbake version 0.14'
-    commit(project_dir, quiet_period)
+
+    if len(sys.argv) == 4:
+        command = sys.argv[3]
+
+        if 'context' == command:
+            (parse_results, control_config) = parsecontrol(project_dir)
+            msg_filename = buildmessagefile(control_config)
+            message_file = open(msg_filename, 'r')
+
+            try:
+                for line in message_file:
+                    print line.strip()
+            finally:
+                message_file.close()
+        else:
+            print 'Unrecognized command: %s' % command
+            print "%s <project directory> <quiet period> [command]" % sys.argv[0]
+    else:
+        commit(project_dir, quiet_period)

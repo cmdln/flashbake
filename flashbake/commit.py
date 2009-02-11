@@ -111,7 +111,9 @@ class ParseResults:
     def needsnotice(self):
         return len(self.not_exists) > 0 or len(self.linked_files) > 0
 
-def commit(project_dir, quiet_mins):
+def parsecontrol(project_dir):
+    """ Parse the dot-control file in the project directory. """
+
     print 'Checking %s' % project_dir
     # change to the project directory, necessary to find the .control file and
     # to correctly refer to the project files by relative paths
@@ -133,6 +135,11 @@ def commit(project_dir, quiet_mins):
         control_file.close()
 
     control_config.fix()
+
+    return (parse_results, control_config)
+
+def commit(project_dir, quiet_mins):
+    (parse_results, control_config) = parsecontrol(project_dir)
 
     # get the git status for the project
     git_status = commands.getoutput('git status')

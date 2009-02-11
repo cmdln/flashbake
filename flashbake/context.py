@@ -112,37 +112,6 @@ def calcuptime():
 
     return string
 
-def getweather(city):
-    """ This relies on Google's unpublished weather API which may change without notice. """
-
-    # unpublished API that iGoogle uses for its weather widget
-    baseurl = 'http://www.google.com/ig/api?'
-    # encode the sole paramtere
-    for_city = baseurl + urllib.urlencode({'weather': city})
-
-    # necessary machinery to fetch a web page
-    opener = urllib2.build_opener(urllib2.HTTPCookieProcessor())
-
-    try:
-        # open the weather API page
-        weather_xml = opener.open(urllib2.Request(for_city)).read()
-
-        # the weather API returns some nice, parsable XML
-        weather_dom = xml.dom.minidom.parseString(weather_xml)
-
-        # just interested in the conditions at the moment
-        current = weather_dom.getElementsByTagName("current_conditions")
-
-        weather = {}
-        for child in current[0].childNodes:
-           if child.localName == 'icon':
-               continue
-           weather[child.localName] = child.getAttribute('data').strip()
-
-        return weather
-    except:
-        return {}
-
 def filtertext(nodelist):
     """ Filter out all but the text node children. """
     text_value = ""
@@ -191,31 +160,9 @@ def fetchfeed(control_config):
 def buildmessagefile(control_config):
     """ Build a commit message that uses the provided ControlConfig object and
         return a reference to the resulting file. """
-    # check the environment for the zone value
-    zone = os.environ.get("TZ")
 
-    # some desktops don't set the env var but /etc/timezone should
-    # have the value regardless
-    if None == zone:
-        if not os.path.exists('/etc/timezone'):
-            print 'Could not get TZ from env var or /etc/timezone.'
-            sys.exit(1)
-        zone_file = open('/etc/timezone')
-        zone = zone_file.read()
-        zone = zone.replace("\n", "")
-
-    tokens = zone.split("/")
-    if len(tokens) != 2:
-        print 'Zone id, "', zone, '", doesn''t appear to contain a city.'
-        # return non-zero so calling shell script can catch
-        return 1
-
-    city = tokens[1]
-    # ISO id's have underscores, convert to spaces for the Google API
-    city = city.replace("_", " ")
-
-    # call the Google weather API with the city
-    weather = getweather(city)
+    zone = findtimezone()
+    city = parsecity(zone)
 
     # with thanks to Dave Smith
     uptime = calcuptime()
@@ -230,15 +177,11 @@ def buildmessagefile(control_config):
         msg_filename = '/tmp/git_msg_%d' % random.randint(0,1000)
 
     message_file = open(msg_filename, 'w')
+    __import__('flashbake.plugins.weather')
+    plugin = sys.modules['flashbake.plugins.weather']
     try:
         message_file.write('Current time zone is %s\n' % zone)
-        if len(weather) > 0:
-            # there is also an entry for the key, wind_condition, in the weather
-            # dictionary
-            message_file.write('Current weather is %(condition)s (%(temp_f)sF/%(temp_c)sC) %(humidity)s\n'\
-                    % weather)
-        else:
-            message_file.write('Couldn\'t fetch current weather.\n')
+        weather_success = plugin.addcontext(message_file, control_config)
         if uptime == None:
             message_file.write('Couldn\'t determine up time.\n')
         else:
@@ -252,27 +195,35 @@ def buildmessagefile(control_config):
               message_file.write('%s\n' % item['link'])
         else:
             message_file.write('Couldn\'t fetch entries from feed, %s.\n' % control_config.feed)
-        if len(weather) == 0 and len(last_items) == 0:
+        if not weather_success and len(last_items) == 0:
             message_file.write('System is most likely offline.')
     finally:
         message_file.close()
     return msg_filename
 
-# call go() when this module is executed as the main script
-if __name__ == "__main__":
-    if len(sys.argv) != 4:
-        print '%s <feed url> <item limit> <author name>' % sys.argv[0]
-        sys.exit(1)
-    control_config = ControlConfig()
-    control_config.feed = sys.argv[1]
-    control_config.limit = int(sys.argv[2])
-    control_config.author = sys.argv[3]
+def findtimezone():
+    # check the environment for the zone value
+    zone = os.environ.get("TZ")
 
-    msg_filename = buildmessagefile(control_config)
-    message_file = open(msg_filename, 'r')
+    # some desktops don't set the env var but /etc/timezone should
+    # have the value regardless
+    if None == zone:
+        if not os.path.exists('/etc/timezone'):
+            print 'Could not get TZ from env var or /etc/timezone.'
+            zone = None
+        else:
+            zone_file = open('/etc/timezone')
+            zone = zone_file.read()
+            zone = zone.replace("\n", "")
+    return zone
 
-    try:
-        for line in message_file:
-            print line.strip()
-    finally:
-        message_file.close()
+def parsecity(zone):
+    tokens = zone.split("/")
+    if len(tokens) != 2:
+        print 'Zone id, "', zone, '", doesn''t appear to contain a city.'
+        # return non-zero so calling shell script can catch
+        return None
+
+    city = tokens[1]
+    # ISO id's have underscores, convert to spaces for the Google API
+    return city.replace("_", " ")
