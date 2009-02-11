@@ -78,7 +78,8 @@ class ControlConfig:
     def initplugins(self, plugin_names):
         for plugin_name in plugin_names:
             __import__(plugin_name)
-            self.plugins.append(sys.modules[plugin_name])
+            plugin_module = sys.modules[plugin_name]
+            self.plugins.append(plugin_module)
 
 def calcuptime():
     """ copied with blanket permission from
