@@ -116,8 +116,12 @@ def buildmessagefile(control_config):
         msg_filename = '/tmp/git_msg_%d' % random.randint(0,1000)
 
     plugins = list()
+    __import__('flashbake.plugins.timezone')
+    plugins.append(sys.modules['flashbake.plugins.timezone'])
     __import__('flashbake.plugins.weather')
     plugins.append(sys.modules['flashbake.plugins.weather'])
+    __import__('flashbake.plugins.uptime')
+    plugins.append(sys.modules['flashbake.plugins.uptime'])
     __import__('flashbake.plugins.feed')
     plugins.append(sys.modules['flashbake.plugins.feed'])
 
@@ -125,16 +129,10 @@ def buildmessagefile(control_config):
 
     message_file = open(msg_filename, 'w')
     try:
-        message_file.write('Current time zone is %s\n' % zone)
-        if uptime == None:
-            message_file.write('Couldn\'t determine up time.\n')
-        else:
-            message_file.write('System has been up %s\n' % uptime)
         for plugin in plugins:
             plugin_success = plugin.addcontext(message_file, control_config)
             # TODO track this only for connected plugins
-            if plugin_success:
-               connected = True
+            connected = connected and plugin_success
         if not connected:
             message_file.write('System is most likely offline.')
     finally:
