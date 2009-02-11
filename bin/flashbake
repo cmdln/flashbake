@@ -1,54 +1,82 @@
 #!/usr/bin/env python
+
+# wrapper script that will get installed by setup.py into the execution path
+
 import sys, logging
+from optparse import OptionParser
+import os
 from os.path import join, dirname, exists, realpath, abspath
-
-######################################################################
-# Setup path (borrowed directly from gwibber)
-LAUNCH_DIR = abspath(sys.path[0])
-logging.debug("Launched from %s", LAUNCH_DIR)
-source_tree_flashbake = join(LAUNCH_DIR, "..", "flashbake")
-
-# If we were invoked from a flashbake source directory add that as the
-# preferred module path ...
-if exists(join(source_tree_flashbake, "commit.py")):
-    logging.info("Running from source tree; adjusting path")
-    sys.path.insert(0, realpath(dirname(source_tree_flashbake)))
-    try:
-        from flashbake.commit import commit, parsecontrol
-        from flashbake.context import buildmessagefile
-    finally:
-        del sys.path[0]
-else:
-    logging.debug("Assuming path is correct")
-    from flashbake.commit import commit, parsecontrol
-    from flashbake.context import buildmessagefile
 
 # just provide the command line hook into the flashbake.commit module
 if __name__ == "__main__":
-    if len(sys.argv) < 3 or len(sys.argv) > 4:
-        print "%s <project directory> <quiet period>" % sys.argv[0]
+    usage = "usage: %prog [options] <project_dir> <quiet_min>"
+
+    parser = OptionParser(usage=usage, version='%prog 0.15')
+    parser.add_option('-c', '--context', dest='context_only',
+            action='store_true', default=False,
+            help='Dry run and show the context message for potentail commits only.')
+    parser.add_option('-v', '--verbose', dest='verbose',
+            action='store_true', default=False)
+
+    (options, args) = parser.parse_args()
+
+    level = logging.INFO
+    if options.verbose:
+        level = logging.DEBUG
+
+    logging.basicConfig(level=level,
+            format='%(message)s')
+
+    ######################################################################
+    # Setup path (borrowed directly from gwibber)
+    LAUNCH_DIR = abspath(sys.path[0])
+    logging.debug("Launched from %s", LAUNCH_DIR)
+    source_tree_flashbake = join(LAUNCH_DIR, "..", "flashbake")
+
+    # If we were invoked from a flashbake source directory add that as the
+    # preferred module path ...
+    if exists(join(source_tree_flashbake, "commit.py")):
+        logging.info("Running from source tree; adjusting path")
+        sys.path.insert(0, realpath(dirname(source_tree_flashbake)))
+        try:
+            from flashbake.commit import commit, parsecontrol
+            from flashbake.context import buildmessagefile
+        finally:
+            del sys.path[0]
+    else:
+        logging.debug("Assuming path is correct")
+        from flashbake.commit import commit, parsecontrol
+        from flashbake.context import buildmessagefile
+    
+    # TODO look for plugin directory
+
+    if options.context_only:
+        if len(args) < 1:
+            parser.error('Must specify project directory.')
+            sys.exit(1)
+
+        project_dir = args[0]
+        (parse_results, control_config) = parsecontrol(project_dir)
+        msg_filename = buildmessagefile(control_config)
+        message_file = open(msg_filename, 'r')
+
+        try:
+            for line in message_file:
+                print line.strip()
+        finally:
+            message_file.close()
+            os.remove(msg_filename)            
+        sys.exit(0)
+
+    if len(args) != 2:
+        parser.error('Must specicy both project directory and quiet yime.')
         sys.exit(1)
 
-    project_dir = sys.argv[1]
-    quiet_period = int(sys.argv[2])
+    project_dir = args[0]
+    try:
+        quiet_period = int(args[1])
+    except:
+        parser.error('Quiet minutes must be a valid number.')
+        sys.exit(1)
 
-    print 'flashbake version 0.14'
-
-    if len(sys.argv) == 4:
-        command = sys.argv[3]
-
-        if 'context' == command:
-            (parse_results, control_config) = parsecontrol(project_dir)
-            msg_filename = buildmessagefile(control_config)
-            message_file = open(msg_filename, 'r')
-
-            try:
-                for line in message_file:
-                    print line.strip()
-            finally:
-                message_file.close()
-        else:
-            print 'Unrecognized command: %s' % command
-            print "%s <project directory> <quiet period> [command]" % sys.argv[0]
-    else:
-        commit(project_dir, quiet_period)
+    commit(project_dir, quiet_period)

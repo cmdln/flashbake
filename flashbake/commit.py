@@ -4,9 +4,10 @@
 #  Parses a project's control file and wraps git operations, calling the context
 #  script to build automatic commit messages as needed.
 #
-#  version 0.14 - packaging and setup
+#  version 0.15 - groundwork for 3rd party plugins
 #
 #  history:
+#  version 0.14 - packaging and setup
 #  version 0.13 - code clean up
 #  version 0.12 - added error checks to network calls
 #  version 0.11 - use a regex to fix trailing tweedle causing false reports
@@ -30,6 +31,7 @@ import sys
 import re
 import datetime
 import time
+import logging
 import context
 # this import is only valid for Linux
 import commands
@@ -61,7 +63,7 @@ class ParseResults:
         if os.path.islink(filename):
            return filename
         directory = os.path.dirname(filename)
-        # TODO use visitor function
+
         while (len(directory) > 0):
             if os.path.islink(directory):
                 return directory
@@ -83,7 +85,7 @@ class ParseResults:
     def warnlinks(self):
         # print warnings for linked files
         for (filename, link) in self.linked_files.iteritems():
-            print '%s is a link or its directory path contains a link.' % filename
+            logging.info('%s is a link or its directory path contains a link.' % filename)
 
     def addorphans(self, control_config):
         if len(self.to_add) == 0:
@@ -96,14 +98,14 @@ class ParseResults:
         file_template = ' "%s"'
         to_commit = ''
         for orphan in self.to_add:
-            print 'Adding %s.' % orphan
+            logging.debug('Adding %s.' % orphan)
             add_output = commands.getoutput(add_template % orphan)
             to_commit += file_template % orphan
 
-        print 'Committing %s.' % to_commit
+        logging.info('Adding new files, %s.' % to_commit)
         # consolidate the commit to be friendly to how git normally works
         git_commit = git_commit % {'msg_filename' : message_file, 'filenames' : to_commit}
-        print git_commit
+        logging.debug(git_commit)
         commit_output = commands.getoutput(git_commit)
 
         os.remove(message_file)
@@ -114,7 +116,7 @@ class ParseResults:
 def parsecontrol(project_dir):
     """ Parse the dot-control file in the project directory. """
 
-    print 'Checking %s' % project_dir
+    logging.debug('Checking %s' % project_dir)
     # change to the project directory, necessary to find the .control file and
     # to correctly refer to the project files by relative paths
     os.chdir(project_dir)
@@ -145,8 +147,8 @@ def commit(project_dir, quiet_mins):
     git_status = commands.getoutput('git status')
 
     if git_status.startswith('fatal'):
-        print 'Fatal error from git.'
-        print git_status
+        logging.error('Fatal error from git.')
+        logging.error(git_status)
         sys.exit(1)
 
     # in particular find the existing entries that need a commit
@@ -167,7 +169,7 @@ def commit(project_dir, quiet_mins):
             if not (parse_results.contains(pending_file)):
                 continue
 
-            print 'Parsing status line %s to determine commit action' % line
+            logging.debug('Parsing status line %s to determine commit action' % line)
 
             # remove files that will be considered for commit
             parse_results.remove(pending_file)
@@ -180,22 +182,11 @@ def commit(project_dir, quiet_mins):
             # add the file to the list to include in the commit
             if pending_mod < now:
                 to_commit += file_template % pending_file
-                print 'Flagging file, %s, for commit.' % pending_file
+                logging.debug('Flagging file, %s, for commit.' % pending_file)
             else:
-                print 'Change for file, %s, is too recent.' % pending_file
-    if len(to_commit.strip()) > 0:
-        print 'Committing %s.' % to_commit
-        message_file = context.buildmessagefile(control_config)
-        # consolidate the commit to be friendly to how git normally works
-        git_commit = git_commit % {'msg_filename' : message_file, 'filenames' : to_commit}
-        print git_commit
-        commit_output = commands.getoutput(git_commit)
-        os.remove(message_file)
-        print 'Commit complete.'
-    else:
-        print 'No changes found to commit.'
+                logging.debug('Change for file, %s, is too recent.' % pending_file)
 
-    print '\nExamining files that were not committed.'
+    logging.debug('\nExamining unknown files.')
 
     parse_results.warnlinks()
 
@@ -203,7 +194,7 @@ def commit(project_dir, quiet_mins):
     git_status = 'git status "%s"'
     for control_file in parse_results.control_files:
         if not os.path.exists(control_file):
-            print '%s does not exist yet.' % control_file
+            logging.debug('%s does not exist yet.' % control_file)
             parse_results.putabsent(control_file)
             continue
 
@@ -212,28 +203,41 @@ def commit(project_dir, quiet_mins):
         if status_output.startswith('error'):
             if status_output.find('did not match') > 0:
                 parse_results.putneedsadd(control_file)
-                print '%s exists but is unknown by git.' % control_file
+                logging.debug('%s exists but is unknown by git.' % control_file)
             else:
-                print 'Unknown error occurred!'
-                print status_output
+                logging.error('Unknown error occurred!')
+                logging.error(status_output)
             continue
         # use a regex to match so we can enforce whole word rather than
         # substring matchs, otherwise 'foo.txt~' causes a false report of an
         # error
         control_re = re.compile('\<' + re.escape(control_file) + '\>')
         if control_re.search(status_output) == None:
-            print '%s has no uncommitted changes.' % control_file
+            logging.debug('%s has no uncommitted changes.' % control_file)
         # if anything hits this block, we need to figure out why
         else:
-            print '%s is in the status message but failed other tests.' % control_file
-            print 'Try \'git status "%s"\' for more info.' % control_file
+            logging.error('%s is in the status message but failed other tests.' % control_file)
+            logging.error('Try \'git status "%s"\' for more info.' % control_file)
 
     parse_results.addorphans(control_config)
+
+    if len(to_commit.strip()) > 0:
+        logging.info('Committing changes to known files, %s.' % to_commit)
+        message_file = context.buildmessagefile(control_config)
+        # consolidate the commit to be friendly to how git normally works
+        git_commit = git_commit % {'msg_filename' : message_file, 'filenames' : to_commit}
+        logging.debug(git_commit)
+        commit_output = commands.getoutput(git_commit)
+        os.remove(message_file)
+        logging.debug(commit_output)
+        logging.info('Commit for known files complete.')
+    else:
+        logging.info('No changes to known files found to commit.')
 
     if parse_results.needsnotice():
         sendnotice(control_config, project_dir, parse_results)
     else:
-        print 'No missing or untracked files found, not sending email notice.'
+        logging.info('No missing or untracked files found, not sending email notice.')
         
 
 def trimgit(status_line):
@@ -275,14 +279,14 @@ def sendnotice(control_config, project_dir, parse_results):
 
     # Send the message via our own SMTP server, but don't include the
     # envelope header.
-    print '\nConnecting to SMTP port %d' % control_config.smtp_port
+    logging.debug('\nConnecting to SMTP port %d' % control_config.smtp_port)
     try:
         s = smtplib.SMTP()
         s.connect(port=control_config.smtp_port)
-        print 'Sending notice to %s.' % control_config.notice_to
-        print body
+        logging.info('Sending notice to %s.' % control_config.notice_to)
+        logging.debug(body)
         s.sendmail(control_config.notice_from, [control_config.notice_to], msg.as_string())
-        print 'Notice sent.'
+        logging.info('Notice sent.')
         s.close()
     except:
-        print 'Couldn\'t connect, will send later.'
+        logging.error('Couldn\'t connect, will send later.')

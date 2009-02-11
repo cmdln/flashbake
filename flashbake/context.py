@@ -7,6 +7,7 @@ import os
 import os.path
 import string
 import random
+import logging
 
 class ControlConfig:
     """
@@ -44,7 +45,7 @@ class ControlConfig:
 
             # only capture explicitly initialized attributes
             if not prop_name in self.__dict__:
-                print 'Ignoring unkown property, %s' % prop_name
+                logging.debug('Ignoring unkown property, %s' % prop_name)
                 return True
 
             if prop_name in self.int_props:
@@ -64,14 +65,14 @@ class ControlConfig:
             self.notice_from = self.notice_to
 
         if len(self.plugins) == 0:
-            print 'No plugins configured, enabling the stock set.'
+            logging.debug('No plugins configured, enabling the stock set.')
             self.initplugins(('flashbake.plugins.timezone',
                     'flashbake.plugins.weather',
                     'flashbake.plugins.uptime',
                     'flashbake.plugins.feed'))
 
         if self.feed == None or self.author == None or self.notice_to == None:
-            print 'Make sure that feed:, author:, and notice_to: are in the .control file'
+            logging.error('Make sure that feed:, author:, and notice_to: are in the .control file')
             sys.exit(1)
 
     def initplugins(self, plugin_names):
@@ -79,13 +80,13 @@ class ControlConfig:
             try:
                 __import__(plugin_name)
             except ImportError:
-                print 'Invalid module, %1s' % plugin_name
+                logging.warn('Invalid module, %1s' % plugin_name)
                 continue
 
             plugin_module = sys.modules[plugin_name]
 
             if plugin_module.addcontext == None:
-                print 'Plugin, %s, doesn\' provide the addcontext function.' % plugin_name
+                logging.warn('Plugin, %s, doesn\' provide the addcontext function.' % plugin_name)
                 continue
 
             self.plugins.append(plugin_module)
@@ -94,12 +95,6 @@ def buildmessagefile(control_config):
     """ Build a commit message that uses the provided ControlConfig object and
         return a reference to the resulting file. """
 
-    zone = findtimezone()
-    city = parsecity(zone)
-
-    # with thanks to Dave Smith
-    uptime = calcuptime()
-    
     msg_filename = '/tmp/git_msg_%d' % random.randint(0,1000)
 
     # try to avoid clobbering another process running this script
@@ -112,8 +107,9 @@ def buildmessagefile(control_config):
     try:
         for plugin in control_config.plugins:
             plugin_success = plugin.addcontext(message_file, control_config)
-            # TODO track this only for connected plugins
-            connected = connected or plugin_success
+            # let each plugin say which ones attempt network connections
+            if plugin.connectable:
+                connected = connected or plugin_success
         if not connected:
             message_file.write('System is most likely offline.')
     finally:
@@ -128,18 +124,22 @@ def findtimezone():
     # have the value regardless
     if None == zone:
         if not os.path.exists('/etc/timezone'):
-            print 'Could not get TZ from env var or /etc/timezone.'
-            zone = None
-        else:
-            zone_file = open('/etc/timezone')
+            logging.warn('Could not get TZ from env var or /etc/timezone.')
+            return None
+        zone_file = open('/etc/timezone')
+
+        try:
             zone = zone_file.read()
-            zone = zone.replace("\n", "")
+        finally:
+            zone_file.close()
+        zone = zone.replace("\n", "")
+
     return zone
 
 def parsecity(zone):
     tokens = zone.split("/")
     if len(tokens) != 2:
-        print 'Zone id, "', zone, '", doesn''t appear to contain a city.'
+        logging.warning('Zone id, "%s", doesn''t appear to contain a city.' % zone)
         # return non-zero so calling shell script can catch
         return None
 

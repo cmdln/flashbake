@@ -9,7 +9,10 @@ import xml.dom.minidom
 import os
 import os.path
 import string
+import logging
 from flashbake.context import findtimezone, parsecity
+
+connectable = True
 
 def addcontext(message_file, control_config):
     """ Add weather information, based in the TZ, to the commit message. """
@@ -57,8 +60,8 @@ def getweather(city):
 
         return weather
     except HttpError, e:
-        print e.code
+        logging.error('Failed with HTTP status code %d' % e.code)
         return {}
     except UrlError, e:
-        print e.reason
+        logging.error('Failed with reason %s.' % e.reason)
         return {}
