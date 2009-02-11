@@ -3,9 +3,10 @@
 #  commit-context.py
 #  Build up some descriptive context for automatic commit to git
 #
-#  version 0.4 - re-factored out ControlConfig
+#  version 0.5 - fixed unsafe unicode handling
 #
 #  history
+#  version 0.4 - re-factored out ControlConfig
 #  version 0.3 - added checks for errors on network calls
 #  version 0.2 - added she-bang
 #  version 0.1 - functionally complete
@@ -177,6 +178,7 @@ def fetchfeed(control_config):
            if item_creator != control_config.author:
                continue
            title = filtertext(child.getElementsByTagName("title")[0].childNodes)
+           title = title.encode('ascii', 'replace')
            link = filtertext(child.getElementsByTagName("link")[0].childNodes)
            by_creator.append({"title" : title, "link" : link})
            if control_config.limit <= len(by_creator):
