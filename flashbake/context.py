@@ -3,8 +3,6 @@
 #  Build up some descriptive context for automatic commit to git
 
 import sys
-import urllib, urllib2
-import xml.dom.minidom
 import os
 import os.path
 import string
@@ -66,6 +64,7 @@ class ControlConfig:
             self.notice_from = self.notice_to
 
         if len(self.plugins) == 0:
+            print 'No plugins configured, enabling the stock set.'
             self.initplugins(('flashbake.plugins.timezone',
                     'flashbake.plugins.weather',
                     'flashbake.plugins.uptime',
@@ -77,45 +76,19 @@ class ControlConfig:
 
     def initplugins(self, plugin_names):
         for plugin_name in plugin_names:
-            __import__(plugin_name)
+            try:
+                __import__(plugin_name)
+            except ImportError:
+                print 'Invalid module, %1s' % plugin_name
+                continue
+
             plugin_module = sys.modules[plugin_name]
+
+            if plugin_module.addcontext == None:
+                print 'Plugin, %s, doesn\' provide the addcontext function.' % plugin_name
+                continue
+
             self.plugins.append(plugin_module)
-
-def calcuptime():
-    """ copied with blanket permission from
-        http://thesmithfam.org/blog/2005/11/19/python-uptime-script/ """
-
-    try:
-         f = open( "/proc/uptime" )
-         contents = f.read().split()
-         f.close()
-    except:
-        return None
-
-    total_seconds = float(contents[0])
-
-    # Helper vars:
-    MINUTE  = 60
-    HOUR    = MINUTE * 60
-    DAY     = HOUR * 24
-
-    # Get the days, hours, etc:
-    days    = int( total_seconds / DAY )
-    hours   = int( ( total_seconds % DAY ) / HOUR )
-    minutes = int( ( total_seconds % HOUR ) / MINUTE )
-    seconds = int( total_seconds % MINUTE )
-
-    # Build up the pretty string (like this: "N days, N hours, N minutes, N seconds")
-    string = ""
-    if days> 0:
-        string += str(days) + " " + (days == 1 and "day" or "days" ) + ", "
-    if len(string)> 0 or hours> 0:
-        string += str(hours) + " " + (hours == 1 and "hour" or "hours" ) + ", "
-    if len(string)> 0 or minutes> 0:
-        string += str(minutes) + " " + (minutes == 1 and "minute" or "minutes" ) + ", "
-    string += str(seconds) + " " + (seconds == 1 and "second" or "seconds" )
-
-    return string
 
 def buildmessagefile(control_config):
     """ Build a commit message that uses the provided ControlConfig object and
