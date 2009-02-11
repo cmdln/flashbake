@@ -24,6 +24,8 @@ class ControlConfig:
         self.notice_from = None
         self.smtp_port = 25
         self.int_props = ('limit', 'smtp_port')
+        self.plugins = ('' ,
+                '')
 
     def capture(self, line):
         # grab comments but don't do anything
