@@ -1,7 +1,7 @@
 from distutils.core import setup
 
 setup(name='flashbake',
-        version='0.16',
+        version='0.17',
         author="Thomas Gideon",
         author_email="cmdln@thecommandline.net",
         url="http://thecommandline.net",

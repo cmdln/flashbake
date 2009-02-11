@@ -4,9 +4,11 @@
 #  Parses a project's control file and wraps git operations, calling the context
 #  script to build automatic commit messages as needed.
 #
-#  version 0.15 - groundwork for 3rd party plugins
+#  version 0.17 - installation fixes
 #
 #  history:
+#  version 0.16 - installation fixes
+#  version 0.15 - groundwork for 3rd party plugins
 #  version 0.14 - packaging and setup
 #  version 0.13 - code clean up
 #  version 0.12 - added error checks to network calls
