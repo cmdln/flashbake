@@ -24,8 +24,7 @@ class ControlConfig:
         self.notice_from = None
         self.smtp_port = 25
         self.int_props = ('limit', 'smtp_port')
-        self.plugins = ('' ,
-                '')
+        self.plugins = list()
 
     def capture(self, line):
         # grab comments but don't do anything
@@ -39,12 +38,17 @@ class ControlConfig:
         if line.find(':') > 0:
             prop_tokens = line.split(':', 1)
             prop_name = prop_tokens[0].strip()
+            prop_value = prop_tokens[1].strip()
+
+            if 'plugins' == prop_name:
+               self.initplugins(prop_value.split(','))
+               return True
 
             # only capture explicitly initialized attributes
             if not prop_name in self.__dict__:
-                return False
+                print 'Ignoring unkown property, %s' % prop_name
+                return True
 
-            prop_value = prop_tokens[1].strip()
             if prop_name in self.int_props:
                 prop_value = int(prop_value)
             self.__dict__[prop_name] = prop_value
@@ -61,9 +65,20 @@ class ControlConfig:
         if self.notice_from == None and self.notice_to != None:
             self.notice_from = self.notice_to
 
+        if len(self.plugins) == 0:
+            self.initplugins(('flashbake.plugins.timezone',
+                    'flashbake.plugins.weather',
+                    'flashbake.plugins.uptime',
+                    'flashbake.plugins.feed'))
+
         if self.feed == None or self.author == None or self.notice_to == None:
             print 'Make sure that feed:, author:, and notice_to: are in the .control file'
             sys.exit(1)
+
+    def initplugins(self, plugin_names):
+        for plugin_name in plugin_names:
+            __import__(plugin_name)
+            self.plugins.append(sys.modules[plugin_name])
 
 def calcuptime():
     """ copied with blanket permission from
@@ -117,21 +132,11 @@ def buildmessagefile(control_config):
     while os.path.exists(msg_filename):
         msg_filename = '/tmp/git_msg_%d' % random.randint(0,1000)
 
-    plugins = list()
-    __import__('flashbake.plugins.timezone')
-    plugins.append(sys.modules['flashbake.plugins.timezone'])
-    __import__('flashbake.plugins.weather')
-    plugins.append(sys.modules['flashbake.plugins.weather'])
-    __import__('flashbake.plugins.uptime')
-    plugins.append(sys.modules['flashbake.plugins.uptime'])
-    __import__('flashbake.plugins.feed')
-    plugins.append(sys.modules['flashbake.plugins.feed'])
-
     connected = False
 
     message_file = open(msg_filename, 'w')
     try:
-        for plugin in plugins:
+        for plugin in control_config.plugins:
             plugin_success = plugin.addcontext(message_file, control_config)
             # TODO track this only for connected plugins
             connected = connected or plugin_success
