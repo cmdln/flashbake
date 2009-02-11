@@ -132,7 +132,7 @@ def buildmessagefile(control_config):
         for plugin in plugins:
             plugin_success = plugin.addcontext(message_file, control_config)
             # TODO track this only for connected plugins
-            connected = connected and plugin_success
+            connected = connected or plugin_success
         if not connected:
             message_file.write('System is most likely offline.')
     finally:
