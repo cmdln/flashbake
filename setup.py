@@ -1,3 +1,7 @@
+#!/usr/bin/env python
+#
+# setup.py for flashbake
+
 from distutils.core import setup
 
 setup(name='flashbake',
