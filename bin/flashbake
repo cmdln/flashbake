@@ -1,0 +1,33 @@
+#!/usr/bin/env python
+import sys, logging
+from os.path import join, dirname, exists, realpath, abspath
+
+######################################################################
+# Setup path (borrowed directly from gwibber)
+LAUNCH_DIR = abspath(sys.path[0])
+logging.debug("Launched from %s", LAUNCH_DIR)
+source_tree_flashbake = join(LAUNCH_DIR, "..", "flashbake")
+
+# If we were invoked from a flashbake source directory add that as the
+# preferred module path ...
+if exists(join(source_tree_flashbake, "commit.py")):
+    logging.info("Running from source tree; adjusting path")
+    sys.path.insert(0, realpath(dirname(source_tree_flashbake)))
+    try:
+        from flashbake.commit import commit
+    finally:
+        del sys.path[0]
+else:
+    logging.debug("Assuming path is correct")
+    from flashbake.commit import commit
+
+# just provide the command line hook into the flashbake.commit module
+if __name__ == "__main__":
+    if len(sys.argv) != 3:
+        print "%s <project directory> <quiet period>" % sys.argv[0]
+        sys.exit(1)
+
+    project_dir = sys.argv[1]
+    quiet_period = int(sys.argv[2])
+    print 'flashbake version 0.14'
+    commit(project_dir, quiet_period)
