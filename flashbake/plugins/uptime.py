@@ -4,6 +4,7 @@
 
 import string
 import os.path
+import logging
 
 connectable = False
 
