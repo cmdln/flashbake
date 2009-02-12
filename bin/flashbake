@@ -9,14 +9,15 @@ from os.path import join, dirname, exists, realpath, abspath
 
 # just provide the command line hook into the flashbake.commit module
 if __name__ == "__main__":
-    usage = "usage: %prog [options] <project_dir> <quiet_min>"
+    usage = "usage: %prog [options] <project_dir> [quiet_min]"
 
     parser = OptionParser(usage=usage, version='%prog 0.18')
     parser.add_option('-c', '--context', dest='context_only',
             action='store_true', default=False,
-            help='Dry run and show the context message for potentail commits only.')
+            help='just generate and show the commit message, don\'t check for changes')
     parser.add_option('-v', '--verbose', dest='verbose',
-            action='store_true', default=False)
+            action='store_true', default=False,
+            help='include debug information in the output')
 
     (options, args) = parser.parse_args()
 
@@ -50,12 +51,17 @@ if __name__ == "__main__":
     
     # TODO look for plugin directory
 
-    if options.context_only:
-        if len(args) < 1:
-            parser.error('Must specify project directory.')
-            sys.exit(1)
+    if len(args) < 1:
+        parser.error('Must specify project directory.')
+        sys.exit(1)
 
-        project_dir = args[0]
+    project_dir = args[0]
+
+    if not os.path.exists('%s/.control' % project_dir):
+        parser.error('Could not find .control file in directory, "%s".' % project_dir)
+        sys.exit(1)
+
+    if options.context_only:
         (parse_results, control_config) = parsecontrol(project_dir)
         msg_filename = buildmessagefile(control_config)
         message_file = open(msg_filename, 'r')
@@ -68,15 +74,12 @@ if __name__ == "__main__":
             os.remove(msg_filename)            
         sys.exit(0)
 
-    if len(args) != 2:
-        parser.error('Must specicy both project directory and quiet yime.')
-        sys.exit(1)
-
-    project_dir = args[0]
-    try:
-        quiet_period = int(args[1])
-    except:
-        parser.error('Quiet minutes must be a valid number.')
-        sys.exit(1)
+    quiet_period = 0
+    if len(args) == 2:
+        try:
+            quiet_period = int(args[1])
+        except:
+            parser.error('Quiet minutes, "%s", must be a valid number.' % args[1])
+            sys.exit(1)
 
     commit(project_dir, quiet_period)
