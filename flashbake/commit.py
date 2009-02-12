@@ -21,79 +21,7 @@ import commands
 import smtplib
 # Import the email modules we'll need
 from email.mime.text import MIMEText
-
-class ParseResults:
-    """
-    Track the files as they are parsed and manipulated with regards to their git
-    status and the dot-control file.
-    """
-    def __init__(self):
-        self.linked_files = dict()
-        self.control_files = set()
-        self.not_exists = set()
-        self.to_add = set()
-
-    def addfile(self, filename):
-        link = self.checklink(filename)
-
-        if link == None:
-            self.control_files.add(filename)
-        else:
-            self.linked_files[filename] = link
-
-    def checklink(self, filename):
-        if os.path.islink(filename):
-           return filename
-        directory = os.path.dirname(filename)
-
-        while (len(directory) > 0):
-            if os.path.islink(directory):
-                return directory
-            directory = os.path.dirname(directory)
-        return None
-
-    def contains(self, filename):
-        return filename in self.control_files
-
-    def remove(self, filename):
-        self.control_files.remove(filename)
-
-    def putabsent(self, filename):
-        self.not_exists.add(filename)
-
-    def putneedsadd(self, filename):
-        self.to_add.add(filename)
-
-    def warnlinks(self):
-        # print warnings for linked files
-        for (filename, link) in self.linked_files.iteritems():
-            logging.info('%s is a link or its directory path contains a link.' % filename)
-
-    def addorphans(self, control_config):
-        if len(self.to_add) == 0:
-            return
-
-        message_file = context.buildmessagefile(control_config)
-
-        add_template = 'git add "%s"'
-        git_commit = 'git commit -F %(msg_filename)s %(filenames)s'
-        file_template = ' "%s"'
-        to_commit = ''
-        for orphan in self.to_add:
-            logging.debug('Adding %s.' % orphan)
-            add_output = commands.getoutput(add_template % orphan)
-            to_commit += file_template % orphan
-
-        logging.info('Adding new files, %s.' % to_commit)
-        # consolidate the commit to be friendly to how git normally works
-        git_commit = git_commit % {'msg_filename' : message_file, 'filenames' : to_commit}
-        logging.debug(git_commit)
-        commit_output = commands.getoutput(git_commit)
-
-        os.remove(message_file)
-
-    def needsnotice(self):
-        return len(self.not_exists) > 0 or len(self.linked_files) > 0
+from flashbake import ControlConfig, ParseResults
 
 def parsecontrol(project_dir):
     """ Parse the dot-control file in the project directory. """
@@ -107,7 +35,7 @@ def parsecontrol(project_dir):
     # script
     control_file = open('.control', 'r')
     parse_results = ParseResults()
-    control_config = context.ControlConfig()
+    control_config = ControlConfig()
     try:
         for line in control_file:
             # skip anything else if the config consumed the line
