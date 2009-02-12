@@ -7,13 +7,11 @@ from optparse import OptionParser
 import os
 from os.path import join, dirname, exists, realpath, abspath
 
-VERSION='0.16'
-
 # just provide the command line hook into the flashbake.commit module
 if __name__ == "__main__":
     usage = "usage: %prog [options] <project_dir> <quiet_min>"
 
-    parser = OptionParser(usage=usage, version='%prog 0.17')
+    parser = OptionParser(usage=usage, version='%prog 0.18')
     parser.add_option('-c', '--context', dest='context_only',
             action='store_true', default=False,
             help='Dry run and show the context message for potentail commits only.')
