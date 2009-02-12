@@ -10,6 +10,7 @@ import os
 import os.path
 import string
 import logging
+from urllib2 import HTTPError, URLError
 from flashbake.context import findtimezone, parsecity
 
 connectable = True
@@ -47,6 +48,8 @@ def getweather(city):
     opener = urllib2.build_opener(urllib2.HTTPCookieProcessor())
 
     try:
+        logging.debug('Requesting page for %s.' % for_city)
+
         # open the weather API page
         weather_xml = opener.open(urllib2.Request(for_city)).read()
 
@@ -63,9 +66,9 @@ def getweather(city):
            weather[child.localName] = child.getAttribute('data').strip()
 
         return weather
-    except HttpError, e:
+    except HTTPError, e:
         logging.error('Failed with HTTP status code %d' % e.code)
         return {}
-    except UrlError, e:
+    except URLError, e:
         logging.error('Failed with reason %s.' % e.reason)
         return {}

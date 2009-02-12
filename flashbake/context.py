@@ -120,6 +120,8 @@ def findtimezone():
     # check the environment for the zone value
     zone = os.environ.get("TZ")
 
+    logging.debug('Zone from env is %s.' % zone)
+
     # some desktops don't set the env var but /etc/timezone should
     # have the value regardless
     if None == zone:

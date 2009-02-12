@@ -4,6 +4,8 @@
 
 import urllib, urllib2
 import xml.dom.minidom
+import logging
+from urllib2 import HTTPError, URLError
 
 connectable = True
 
@@ -67,9 +69,9 @@ def fetchfeed(control_config):
                break
 
         return (feed_title, by_creator)
-    except HttpError, e:
+    except HTTPError, e:
         logging.error('Failed with HTTP status code %d' % e.code)
         return (None, {})
-    except UrlError, e:
+    except URLError, e:
         logging.error('Failed with reason %s.' % e.reason)
         return (None, {})
