@@ -3,15 +3,31 @@ import logging
 import sys
 from types import *
 
+# from http://pypi.python.org/pypi/enum/
+from enum import Enum
+PLUGIN_ERRORS = Enum('unknown_plugin',
+        'missing_attribute',
+        'invalid_attribute',
+        'missing_property'
+        )
+
+class PluginError(Exception):
+    def __init__(self, reason, name=None):
+        self.reason = reason
+        self.name = name
+    def __str__(self):
+        if self.name == None:
+            return self.reason
+        else:
+            return '%s: %s' % (self.reason, self.name)
+
 class ControlConfig:
     """
     Gather control options parsed out of the dot-control file in a project.
     """
 
     def __init__(self):
-        self.feed = None
-        self.limit = 3
-        self.author = None
+        self.extra_props = dict()
 
         self.email = None
         self.notice_to = None
@@ -20,7 +36,7 @@ class ControlConfig:
 
         self.int_props = list()
         self.int_props.append('smtp_port')
-        self.int_props.append('limit')
+
         self.plugins = list()
 
     def capture(self, line):
@@ -38,12 +54,12 @@ class ControlConfig:
             prop_value = prop_tokens[1].strip()
 
             if 'plugins' == prop_name:
-               self.initplugins(prop_value.split(','))
+               self.__initplugins(prop_value.split(','))
                return True
 
-            # only capture explicitly initialized attributes
+            # hang onto any extra propeties in case plugins use them
             if not prop_name in self.__dict__:
-                logging.debug('Ignoring unkown property, %s' % prop_name)
+                self.extra_props[prop_name] = prop_value;
                 return True
 
             if prop_name in self.int_props:
@@ -64,7 +80,7 @@ class ControlConfig:
 
         if len(self.plugins) == 0:
             logging.debug('No plugins configured, enabling the stock set.')
-            self.initplugins(('flashbake.plugins.timezone',
+            self.__initplugins(('flashbake.plugins.timezone',
                     'flashbake.plugins.weather',
                     'flashbake.plugins.uptime',
                     'flashbake.plugins.feed'))
@@ -73,33 +89,44 @@ class ControlConfig:
             logging.error('Make sure that feed:, author:, and notice_to: are in the .control file')
             sys.exit(1)
 
-    def initplugins(self, plugin_names):
-        for plugin_name in plugin_names:
-            plugin = initplugin(plugin_name)
-            self.plugins.append(plugin)
+    def requireproperty(self, name):
+        if not name in self.extra_props:
+            raise PluginError(PLUGIN_ERRORS.missing_property, name)
+
+        value = self.extra_props[name]
+        del self.extra_props[name]
+        self.__dict__[name] = value
 
     def initplugin(self, plugin_name):
         try:
             __import__(plugin_name)
         except ImportError:
             logging.warn('Invalid module, %s' % plugin_name)
-            return None
+            raise PluginError(PLUGIN_ERRORS.unknown_plugin)
 
         plugin_module = sys.modules[plugin_name]
 
-        if 'connectable' not in plugin_module.__dict__:
-            logging.warn('Plugin, %s, must have a connectable property.' % plugin_name)
-            return None
+        self.__checkattr(plugin_module, 'connectable', bool)
+        self.__checkattr(plugin_module, 'addcontext', FunctionType)
 
-        if not isinstance(plugin_module.connectable, bool):
-            logging.warn('Connectable property of plugin, %s, must be boolean.' % plugin_name)
-            return None
-
-        if plugin_module.addcontext == None:
-            logging.warn('Plugin, %s, doesn\'t provide the addcontext function.' % plugin_name)
-            return None
+        if 'init' in plugin_module.__dict__ and isinstance(plugin_module.__dict__['init'], FunctionType):
+            plugin_module.init(self)
 
         return plugin_module
+
+    def __initplugins(self, plugin_names):
+        for plugin_name in plugin_names:
+            plugin = self.initplugin(plugin_name)
+            self.plugins.append(plugin)
+
+    def __checkattr(self, plugin, name, expected_type):
+        if name not in plugin.__dict__:
+            logging.warn('Plugin, %s, must have a %s attribute.' % (plugin.__name__, name))
+            raise PluginError(PLUGIN_ERRORS.missing_attribute, name)
+
+        if not isinstance(plugin.__dict__[name], expected_type):
+            logging.warn('%s attribute of plugin, %s, must be %s.' % (name, plugin.__name__, str(expected_type)))
+            raise PluginError(PLUGIN_ERRORS.invalid_attribute, name)
 
 class ParseResults:
     """
