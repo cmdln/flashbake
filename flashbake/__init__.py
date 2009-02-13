@@ -13,14 +13,11 @@ PLUGIN_ERRORS = Enum('unknown_plugin',
         )
 
 class PluginError(Exception):
-    def __init__(self, reason, name=None):
+    def __init__(self, reason, name):
         self.reason = reason
         self.name = name
     def __str__(self):
-        if self.name == None:
-            return self.reason
-        else:
-            return '%s: %s' % (self.reason, self.name)
+        return '%s: %s' % (self.reason, self.name)
 
 class ControlConfig:
     """
@@ -38,9 +35,10 @@ class ControlConfig:
         self.int_props = list()
         self.int_props.append('smtp_port')
 
+        self.plugin_names = list()
         self.plugins = list()
 
-    def fix(self):
+    def init(self):
         """
         Do any property clean up, after parsing but before use
         """
@@ -48,12 +46,14 @@ class ControlConfig:
         if self.notice_from == None and self.notice_to != None:
             self.notice_from = self.notice_to
 
-        if len(self.plugins) == 0:
+        if len(self.plugin_names) == 0:
             logging.debug('No plugins configured, enabling the stock set.')
-            self.initplugins(('flashbake.plugins.timezone',
+            self.addplugins(['flashbake.plugins.timezone',
                     'flashbake.plugins.weather',
                     'flashbake.plugins.uptime',
-                    'flashbake.plugins.feed'))
+                    'flashbake.plugins.feed'])
+
+        self.initplugins()
 
     def requireproperty(self, name):
         """ Useful to plugins to express a property that is required in the
@@ -73,8 +73,11 @@ class ControlConfig:
 
         self.__dict__[name] = value
 
-    def initplugins(self, plugin_names):
-        for plugin_name in plugin_names:
+    def addplugins(self, plugin_names):
+        self.plugin_names = self.plugin_names + plugin_names
+
+    def initplugins(self):
+        for plugin_name in self.plugin_names:
             plugin = self.initplugin(plugin_name)
             self.plugins.append(plugin)
 
@@ -85,7 +88,7 @@ class ControlConfig:
             __import__(plugin_name)
         except ImportError:
             logging.warn('Invalid module, %s' % plugin_name)
-            raise PluginError(PLUGIN_ERRORS.unknown_plugin)
+            raise PluginError(PLUGIN_ERRORS.unknown_plugin, plugin_name)
 
         plugin_module = sys.modules[plugin_name]
 

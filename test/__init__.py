@@ -7,23 +7,23 @@ class ConfigTestCase(unittest.TestCase):
 
     def testnoplugin(self):
         try:
-            plugin = self.config.initplugin('flashbake.test.foo')
+            plugin = self.config.initplugin('test.foo')
             self.fail('Should not be able to use unknown')
         except PluginError, error:
             self.assertEquals(str(error.reason), 'unknown_plugin',
                     'Should not be able to load unknown plugin.')
 
     def testnoconnectable(self):
-        self.__testattr('flashbake.test.noconnectable', 'connectable', 'missing_attribute')
+        self.__testattr('test.noconnectable', 'connectable', 'missing_attribute')
 
     def testwrongconnectable(self):
-        self.__testattr('flashbake.test.wrongconnectable', 'connectable', 'invalid_attribute')
+        self.__testattr('test.wrongconnectable', 'connectable', 'invalid_attribute')
 
     def testnoaddcontext(self):
-        self.__testattr('flashbake.test.noaddcontext', 'addcontext', 'missing_attribute')
+        self.__testattr('test.noaddcontext', 'addcontext', 'missing_attribute')
 
     def testwrongaddcontext(self):
-        self.__testattr('flashbake.test.wrongaddcontext', 'addcontext', 'invalid_attribute')
+        self.__testattr('test.wrongaddcontext', 'addcontext', 'invalid_attribute')
 
     def teststockplugins(self):
         self.config.extra_props['feed'] = "http://random.com/feed"

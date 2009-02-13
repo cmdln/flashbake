@@ -18,15 +18,27 @@ if __name__ == "__main__":
     parser.add_option('-v', '--verbose', dest='verbose',
             action='store_true', default=False,
             help='include debug information in the output')
+    parser.add_option('-q', '--quiet', dest='quiet',
+            action='store_true', default=False,
+            help='disable all output excepts errors')
     parser.add_option('-d', '--dryrun', dest='dryrun',
             action='store_true', default=False,
             help='execute a dry run')
+    parser.add_option('-p', '--plugins', dest='plugin_dir',
+            action='store', type='string', metavar='PLUGIN_DIR',
+            help='specify an additional location for plugins')
 
     (options, args) = parser.parse_args()
+
+    if options.quiet and options.verbose:
+        parser.error('Cannot specify both verbose and quiet')
 
     level = logging.INFO
     if options.verbose:
         level = logging.DEBUG
+
+    if options.quiet:
+        level = logging.ERROR
 
     logging.basicConfig(level=level,
             format='%(message)s')
@@ -52,7 +64,21 @@ if __name__ == "__main__":
         from flashbake.commit import commit, parsecontrol
         from flashbake.context import buildmessagefile
     
-    # TODO look for plugin directory
+    # look for plugin directory
+    home_dir = os.path.expanduser('~')
+    plugin_dir = join(home_dir, '.flashbake', 'plugins')
+    if os.path.exists(plugin_dir):
+        logging.debug('Plugin directory exists, adding.')
+        sys.path.insert(0, realpath(plugin_dir))
+    else:
+        logging.debug('Plugin directory doesn\'t exist, skipping.')
+
+    if options.plugin_dir != None:
+        if os.path.exists(options.plugin_dir):
+            logging.debug('Adding plugin directory, %s.' % options.plugin_dir)
+            sys.path.insert(0, realpath(options.plugin_dir))
+        else:
+            logging.warn('Plugin directory, %s, doesn\'t exist.' % options.plugin_dir)
 
     if len(args) < 1:
         parser.error('Must specify project directory.')

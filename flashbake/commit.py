@@ -46,7 +46,7 @@ def parsecontrol(project_dir):
     finally:
         control_file.close()
 
-    control_config.fix()
+    control_config.init()
 
     return (parse_results, control_config)
 
@@ -168,7 +168,7 @@ def __capture(config, line):
         prop_value = prop_tokens[1].strip()
 
         if 'plugins' == prop_name:
-           config.initplugins(prop_value.split(','))
+           config.addplugins(prop_value.split(','))
            return True
 
         if prop_name in config.int_props:

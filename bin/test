@@ -9,18 +9,16 @@ import unittest
 
 # just provide the command line hook into the flashbake.commit module
 if __name__ == "__main__":
-    ######################################################################
-    # Setup path (borrowed directly from gwibber)
     LAUNCH_DIR = abspath(sys.path[0])
-    source_tree_flashbake = join(LAUNCH_DIR, "..", "flashbake")
+    flashbake_dir = join(LAUNCH_DIR, "..")
 
-    sys.path.insert(0, realpath(dirname(source_tree_flashbake)))
+    sys.path.insert(0, realpath(flashbake_dir))
     try:
         from flashbake.commit import commit, parsecontrol
         from flashbake.context import buildmessagefile
-        import flashbake.test
+        import test
     finally:
         del sys.path[0]
     
-    suite = unittest.TestLoader().loadTestsFromTestCase(flashbake.test.ConfigTestCase)
+    suite = unittest.TestLoader().loadTestsFromTestCase(test.ConfigTestCase)
     unittest.TextTestRunner(verbosity=2).run(suite)
