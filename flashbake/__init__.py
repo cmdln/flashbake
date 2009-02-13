@@ -39,37 +39,6 @@ class ControlConfig:
 
         self.plugins = list()
 
-    def capture(self, line):
-        # grab comments but don't do anything
-        if line.startswith('#'):
-            return True
-
-        # grab blanks but don't do anything
-        if len(line.strip()) == 0:
-            return True
-
-        if line.find(':') > 0:
-            prop_tokens = line.split(':', 1)
-            prop_name = prop_tokens[0].strip()
-            prop_value = prop_tokens[1].strip()
-
-            if 'plugins' == prop_name:
-               self.__initplugins(prop_value.split(','))
-               return True
-
-            # hang onto any extra propeties in case plugins use them
-            if not prop_name in self.__dict__:
-                self.extra_props[prop_name] = prop_value;
-                return True
-
-            if prop_name in self.int_props:
-                prop_value = int(prop_value)
-            self.__dict__[prop_name] = prop_value
-
-            return True
-
-        return False
-
     def fix(self):
         """
         Do any property clean up, after parsing but before use
@@ -80,24 +49,37 @@ class ControlConfig:
 
         if len(self.plugins) == 0:
             logging.debug('No plugins configured, enabling the stock set.')
-            self.__initplugins(('flashbake.plugins.timezone',
+            self.initplugins(('flashbake.plugins.timezone',
                     'flashbake.plugins.weather',
                     'flashbake.plugins.uptime',
                     'flashbake.plugins.feed'))
 
-        if self.feed == None or self.author == None or self.notice_to == None:
-            logging.error('Make sure that feed:, author:, and notice_to: are in the .control file')
-            sys.exit(1)
-
     def requireproperty(self, name):
+        """ Useful to plugins to express a property that is required in the
+            dot-control file and to move it from the extra_props dict to a
+            property of the config. """
         if not name in self.extra_props:
             raise PluginError(PLUGIN_ERRORS.missing_property, name)
 
-        value = self.extra_props[name]
-        del self.extra_props[name]
+        self.optionalproperty(name)
+
+    def optionalproperty(self, name):
+        value = None
+
+        if name in self.extra_props:
+            value = self.extra_props[name]
+            del self.extra_props[name]
+
         self.__dict__[name] = value
 
+    def initplugins(self, plugin_names):
+        for plugin_name in plugin_names:
+            plugin = self.initplugin(plugin_name)
+            self.plugins.append(plugin)
+
     def initplugin(self, plugin_name):
+        """ Initialize a plugin, including vetting that it meets the correct
+            protocol; not private so it can be used in testing. """
         try:
             __import__(plugin_name)
         except ImportError:
@@ -113,11 +95,6 @@ class ControlConfig:
             plugin_module.init(self)
 
         return plugin_module
-
-    def __initplugins(self, plugin_names):
-        for plugin_name in plugin_names:
-            plugin = self.initplugin(plugin_name)
-            self.plugins.append(plugin)
 
     def __checkattr(self, plugin, name, expected_type):
         if name not in plugin.__dict__:

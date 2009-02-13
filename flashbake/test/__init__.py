@@ -4,9 +4,6 @@ from flashbake import ControlConfig, PluginError
 class ConfigTestCase(unittest.TestCase):
     def setUp(self):
         self.config = ControlConfig()
-        self.config.extra_props['feed'] = "http://random.com/feed"
-        self.config.extra_props['author'] = "Joe Random"
-        self.config.extra_props['limit'] = "3"
 
     def testnoplugin(self):
         try:
@@ -29,12 +26,49 @@ class ConfigTestCase(unittest.TestCase):
         self.__testattr('flashbake.test.wrongaddcontext', 'addcontext', 'invalid_attribute')
 
     def teststockplugins(self):
+        self.config.extra_props['feed'] = "http://random.com/feed"
+        self.config.extra_props['author'] = "Joe Random"
+        self.config.extra_props['limit'] = "3"
+
         plugins = ('flashbake.plugins.weather',
                 'flashbake.plugins.uptime',
                 'flashbake.plugins.timezone',
                 'flashbake.plugins.feed')
         for plugin_name in plugins:
             plugin = self.config.initplugin(plugin_name)
+
+    def testfeedfail(self):
+        try:
+            self.config.initplugin('flashbake.plugins.feed')
+            self.fail('Should not be able to initialize without full plugin props.')
+        except PluginError, error:
+            self.assertEquals(str(error.reason), 'missing_property',
+                    'Feed plugin should fail missing property.')
+            self.assertEquals(error.name, 'feed',
+                    'Missing property should be feed.')
+
+        self.config.extra_props['feed'] = "http://random.com/feed"
+
+        try:
+            self.config.initplugin('flashbake.plugins.feed')
+            self.fail('Should not be able to initialize without full plugin props.')
+        except PluginError, error:
+            self.assertEquals(str(error.reason), 'missing_property',
+                    'Feed plugin should fail missing property.')
+            self.assertEquals(error.name, 'author',
+                    'Missing property should be author.')
+
+        self.config.extra_props['feed'] = "http://random.com/feed"
+        self.config.extra_props['author'] = "Joe Random"
+
+        try:
+            self.config.initplugin('flashbake.plugins.feed')
+            self.fail('Should not be able to initialize without full plugin props.')
+        except PluginError, error:
+            self.assertEquals(str(error.reason), 'missing_property',
+                    'Feed plugin should fail missing property.')
+            self.assertEquals(error.name, 'limit',
+                    'Missing property should be limit.')
 
     def __testattr(self, plugin_name, name, reason):
         try:
