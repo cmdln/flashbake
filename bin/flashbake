@@ -18,6 +18,9 @@ if __name__ == "__main__":
     parser.add_option('-v', '--verbose', dest='verbose',
             action='store_true', default=False,
             help='include debug information in the output')
+    parser.add_option('-d', '--dryrun', dest='dryrun',
+            action='store_true', default=False,
+            help='execute a dry run')
 
     (options, args) = parser.parse_args()
 
@@ -82,4 +85,4 @@ if __name__ == "__main__":
             parser.error('Quiet minutes, "%s", must be a valid number.' % args[1])
             sys.exit(1)
 
-    commit(project_dir, quiet_period)
+    commit(project_dir, quiet_period, options.dryrun)

@@ -1,6 +1,7 @@
 import os
 import logging
 import sys
+import commands
 from types import *
 
 # from http://pypi.python.org/pypi/enum/
@@ -171,7 +172,9 @@ class ParseResults:
         # consolidate the commit to be friendly to how git normally works
         git_commit = git_commit % {'msg_filename' : message_file, 'filenames' : to_commit}
         logging.debug(git_commit)
-        commit_output = commands.getoutput(git_commit)
+        if not control_config.dryrun:
+            commit_output = commands.getoutput(git_commit)
+            logging.debug(commit_output)
 
         os.remove(message_file)
 

@@ -50,8 +50,9 @@ def parsecontrol(project_dir):
 
     return (parse_results, control_config)
 
-def commit(project_dir, quiet_mins):
+def commit(project_dir, quiet_mins, dryrun):
     (parse_results, control_config) = parsecontrol(project_dir)
+    control_config.dryrun = dryrun
 
     # get the git status for the project
     git_status = commands.getoutput('git status')
@@ -137,9 +138,10 @@ def commit(project_dir, quiet_mins):
         # consolidate the commit to be friendly to how git normally works
         git_commit = git_commit % {'msg_filename' : message_file, 'filenames' : to_commit}
         logging.debug(git_commit)
-        commit_output = commands.getoutput(git_commit)
+        if not dryrun:
+            commit_output = commands.getoutput(git_commit)
+            logging.debug(commit_output)
         os.remove(message_file)
-        logging.debug(commit_output)
         logging.info('Commit for known files complete.')
     else:
         logging.info('No changes to known files found to commit.')
@@ -192,7 +194,7 @@ def __trimgit(status_line):
     return tokens[1].strip()
 
 def __sendnotice(control_config, project_dir, parse_results):
-    if None == control_config:
+    if None == control_config.notice_to:
         logging.info('Skipping notice, no notice_to: recipient set.')
         return
 
@@ -217,6 +219,12 @@ def __sendnotice(control_config, project_dir, parse_results):
 
         body += '\nMake sure the physical file and its parent directories reside in the git project directory.\n'
 
+
+    if control_config.dryrun:
+        logging.debug(body)
+        logging.info('Dry run, skipping email notice.')
+        return
+
     # Create a text/plain message
     msg = MIMEText(body, 'plain')
 
@@ -227,6 +235,7 @@ def __sendnotice(control_config, project_dir, parse_results):
     # Send the message via our own SMTP server, but don't include the
     # envelope header.
     logging.debug('\nConnecting to SMTP port %d' % control_config.smtp_port)
+
     try:
         s = smtplib.SMTP()
         s.connect(port=control_config.smtp_port)
