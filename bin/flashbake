@@ -11,7 +11,7 @@ from os.path import join, dirname, exists, realpath, abspath
 if __name__ == "__main__":
     usage = "usage: %prog [options] <project_dir> [quiet_min]"
 
-    parser = OptionParser(usage=usage, version='%prog 0.18')
+    parser = OptionParser(usage=usage, version='%prog 0.19')
     parser.add_option('-c', '--context', dest='context_only',
             action='store_true', default=False,
             help='just generate and show the commit message, don\'t check for changes')
