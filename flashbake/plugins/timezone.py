@@ -6,6 +6,10 @@ from flashbake.context import findtimezone
 
 connectable = False
 
+def init(control_config):
+    """ Grab any extra properties that the config parser found and are needed by this module. """
+    control_config.optionalproperty('timezone')
+
 def addcontext(message_file, control_config):
     """ Add the system's time zone to the commit context. """
 

@@ -15,6 +15,9 @@ from flashbake.context import findtimezone, parsecity
 
 connectable = True
 
+def init(control_config):
+    """ Grab any extra properties that the config parser found and are needed by this module. """
+
 def addcontext(message_file, control_config):
     """ Add weather information, based in the TZ, to the commit message. """
     zone = findtimezone()

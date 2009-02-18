@@ -6,8 +6,16 @@ import urllib, urllib2
 import xml.dom.minidom
 import logging
 from urllib2 import HTTPError, URLError
+from flashbake import PluginError, PLUGIN_ERRORS
 
 connectable = True
+
+def init(control_config):
+    """ Grab any extra properties that the config parser found and are needed by this module. """
+    control_config.requireproperty('feed')
+    control_config.requireproperty('author')
+    control_config.requireproperty('limit')
+    control_config.limit = int(control_config.limit)
 
 def addcontext(message_file, control_config):
     """ Add the matching items to the commit context. """

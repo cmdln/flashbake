@@ -39,19 +39,20 @@ def parsecontrol(project_dir):
     try:
         for line in control_file:
             # skip anything else if the config consumed the line
-            if control_config.capture(line):
+            if __capture(control_config, line):
                 continue
 
             parse_results.addfile(line.strip())
     finally:
         control_file.close()
 
-    control_config.fix()
+    control_config.init()
 
     return (parse_results, control_config)
 
-def commit(project_dir, quiet_mins):
+def commit(project_dir, quiet_mins, dryrun):
     (parse_results, control_config) = parsecontrol(project_dir)
+    control_config.dryrun = dryrun
 
     # get the git status for the project
     git_status = commands.getoutput('git status')
@@ -73,7 +74,7 @@ def commit(project_dir, quiet_mins):
     # first look in the files git already knows about
     for line in git_status.splitlines():
         if pending_re.match(line):
-            pending_file = trimgit(line)
+            pending_file = __trimgit(line)
 
             # not in the dot-control file, skip it
             if not (parse_results.contains(pending_file)):
@@ -137,20 +138,54 @@ def commit(project_dir, quiet_mins):
         # consolidate the commit to be friendly to how git normally works
         git_commit = git_commit % {'msg_filename' : message_file, 'filenames' : to_commit}
         logging.debug(git_commit)
-        commit_output = commands.getoutput(git_commit)
+        if not dryrun:
+            commit_output = commands.getoutput(git_commit)
+            logging.debug(commit_output)
         os.remove(message_file)
-        logging.debug(commit_output)
         logging.info('Commit for known files complete.')
     else:
         logging.info('No changes to known files found to commit.')
 
     if parse_results.needsnotice():
-        sendnotice(control_config, project_dir, parse_results)
+        __sendnotice(control_config, project_dir, parse_results)
     else:
         logging.info('No missing or untracked files found, not sending email notice.')
         
+def __capture(config, line):
+    """ Used by the dot-control parsing code to capture files and properties
+        as they are encountered. """
+    # grab comments but don't do anything
+    if line.startswith('#'):
+        return True
 
-def trimgit(status_line):
+    # grab blanks but don't do anything
+    if len(line.strip()) == 0:
+        return True
+
+    if line.find(':') > 0:
+        prop_tokens = line.split(':', 1)
+        prop_name = prop_tokens[0].strip()
+        prop_value = prop_tokens[1].strip()
+
+        if 'plugins' == prop_name:
+           config.addplugins(prop_value.split(','))
+           return True
+
+        if prop_name in config.int_props:
+            prop_value = int(prop_value)
+
+        # hang onto any extra propeties in case plugins use them
+        if not prop_name in config.__dict__:
+            config.extra_props[prop_name] = prop_value;
+            return True
+
+        config.__dict__[prop_name] = prop_value
+
+        return True
+
+    return False
+
+def __trimgit(status_line):
     if status_line.find('->') >= 0:
         tokens = status_line.split('->')
         return tokens[1].strip()
@@ -158,7 +193,11 @@ def trimgit(status_line):
     tokens = status_line.split(':')
     return tokens[1].strip()
 
-def sendnotice(control_config, project_dir, parse_results):
+def __sendnotice(control_config, project_dir, parse_results):
+    if None == control_config.notice_to:
+        logging.info('Skipping notice, no notice_to: recipient set.')
+        return
+
     body = ''
     
     if len(parse_results.not_exists) > 0:
@@ -180,6 +219,12 @@ def sendnotice(control_config, project_dir, parse_results):
 
         body += '\nMake sure the physical file and its parent directories reside in the git project directory.\n'
 
+
+    if control_config.dryrun:
+        logging.debug(body)
+        logging.info('Dry run, skipping email notice.')
+        return
+
     # Create a text/plain message
     msg = MIMEText(body, 'plain')
 
@@ -190,6 +235,7 @@ def sendnotice(control_config, project_dir, parse_results):
     # Send the message via our own SMTP server, but don't include the
     # envelope header.
     logging.debug('\nConnecting to SMTP port %d' % control_config.smtp_port)
+
     try:
         s = smtplib.SMTP()
         s.connect(port=control_config.smtp_port)
