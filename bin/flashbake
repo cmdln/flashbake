@@ -86,12 +86,18 @@ if __name__ == "__main__":
 
     project_dir = args[0]
 
-    if not os.path.exists('%s/.control' % project_dir):
-        parser.error('Could not find .control file in directory, "%s".' % project_dir)
+    control_file = '.flashbake'
+
+    # look for .control for backwards compatibility
+    if not os.path.exists('%s/%s' % (project_dir, control_file)):
+        control_file = '.control'
+
+    if not os.path.exists('%s/%s' % (project_dir, control_file)):
+        parser.error('Could not find .flashbake or .control file in directory, "%s".' % project_dir)
         sys.exit(1)
 
     if options.context_only:
-        (parse_results, control_config) = parsecontrol(project_dir)
+        (parse_results, control_config) = parsecontrol(project_dir, control_file)
         msg_filename = buildmessagefile(control_config)
         message_file = open(msg_filename, 'r')
 
@@ -111,4 +117,4 @@ if __name__ == "__main__":
             parser.error('Quiet minutes, "%s", must be a valid number.' % args[1])
             sys.exit(1)
 
-    commit(project_dir, quiet_period, options.dryrun)
+    commit(project_dir, control_file, quiet_period, options.dryrun)

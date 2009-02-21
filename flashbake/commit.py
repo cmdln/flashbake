@@ -23,17 +23,17 @@ import smtplib
 from email.mime.text import MIMEText
 from flashbake import ControlConfig, ParseResults
 
-def parsecontrol(project_dir):
+def parsecontrol(project_dir, control_file):
     """ Parse the dot-control file in the project directory. """
 
     logging.debug('Checking %s' % project_dir)
-    # change to the project directory, necessary to find the .control file and
+    # change to the project directory, necessary to find the .flashbake file and
     # to correctly refer to the project files by relative paths
     os.chdir(project_dir)
     # read the control file into a hashable set to compare git status entries
     # more easily against the possible subset that should be controlled by the
     # script
-    control_file = open('.control', 'r')
+    control_file = open(control_file, 'r')
     parse_results = ParseResults()
     control_config = ControlConfig()
     try:
@@ -50,8 +50,8 @@ def parsecontrol(project_dir):
 
     return (parse_results, control_config)
 
-def commit(project_dir, quiet_mins, dryrun):
-    (parse_results, control_config) = parsecontrol(project_dir)
+def commit(project_dir, control_file, quiet_mins, dryrun):
+    (parse_results, control_config) = parsecontrol(project_dir, control_file)
     control_config.dryrun = dryrun
 
     # get the git status for the project
