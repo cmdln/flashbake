@@ -29,7 +29,8 @@ def buildmessagefile(control_config):
             if plugin.connectable:
                 connected = connected or plugin_success
         if not connected:
-            message_file.write('System is most likely offline.')
+            message_file.write('All of the plugins that use the network failed.\n')
+            message_file.write('Your computer may not be connected to the network.')
     finally:
         message_file.close()
     return msg_filename
