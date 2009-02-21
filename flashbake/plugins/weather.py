@@ -20,7 +20,7 @@ def init(control_config):
 
 def addcontext(message_file, control_config):
     """ Add weather information, based in the TZ, to the commit message. """
-    zone = findtimezone()
+    zone = findtimezone(control_config)
     if None == zone:
         message_file.write('Couldn\'t fetch current weather.\n')
         return False

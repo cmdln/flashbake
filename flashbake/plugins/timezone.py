@@ -13,7 +13,7 @@ def init(control_config):
 def addcontext(message_file, control_config):
     """ Add the system's time zone to the commit context. """
 
-    zone = findtimezone()
+    zone = findtimezone(control_config)
 
     if zone == None:
         message_file.write('Couldn\'t determine time zone.\n')

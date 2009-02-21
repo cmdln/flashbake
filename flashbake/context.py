@@ -34,7 +34,7 @@ def buildmessagefile(control_config):
         message_file.close()
     return msg_filename
 
-def findtimezone():
+def findtimezone(control_config):
     # check the environment for the zone value
     zone = os.environ.get("TZ")
 
@@ -42,10 +42,13 @@ def findtimezone():
 
     # some desktops don't set the env var but /etc/timezone should
     # have the value regardless
-    if None == zone:
-        if not os.path.exists('/etc/timezone'):
-            logging.warn('Could not get TZ from env var or /etc/timezone.')
-            return None
+    if None != zone:
+        logging.debug('Returning env var value.')
+        return zone
+
+    # this is common on many *nix variatns
+    logging.debug('Checking /etc/timezone')
+    if os.path.exists('/etc/timezone'):
         zone_file = open('/etc/timezone')
 
         try:
@@ -53,6 +56,24 @@ def findtimezone():
         finally:
             zone_file.close()
         zone = zone.replace("\n", "")
+        return zone
+
+    # this is specific to OS X
+    logging.debug('Checking /etc/localtime')
+    if os.path.exists('/etc/localtime'):
+        zone = os.path.realpath('/etc/localtime')
+        (zone, city) = os.path.split(zone);
+        (zone, continent) = os.path.split(zone);
+        zone = os.path.join(continent, city)
+        return zone
+
+    logging.debug('Checking .flashbake')
+    if 'timezone' in control_config.__dict__:
+        zone = control_config.timezone
+        return zone
+
+    logging.warn('Could not get TZ from env var, /etc/timezone, or .flashbake.')
+    zone = None
 
     return zone
 
