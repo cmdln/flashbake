@@ -26,9 +26,7 @@ class ConfigTestCase(unittest.TestCase):
         self.__testattr('test.wrongaddcontext', 'addcontext', 'invalid_attribute')
 
     def teststockplugins(self):
-        self.config.extra_props['feed'] = "http://random.com/feed"
-        self.config.extra_props['author'] = "Joe Random"
-        self.config.extra_props['limit'] = "3"
+        self.config.extra_props['feed_url'] = "http://random.com/feed"
 
         plugins = ('flashbake.plugins.weather',
                 'flashbake.plugins.uptime',
@@ -44,31 +42,18 @@ class ConfigTestCase(unittest.TestCase):
         except PluginError, error:
             self.assertEquals(str(error.reason), 'missing_property',
                     'Feed plugin should fail missing property.')
-            self.assertEquals(error.name, 'feed',
+            self.assertEquals(error.name, 'feed_url',
                     'Missing property should be feed.')
 
-        self.config.extra_props['feed'] = "http://random.com/feed"
+        self.config.extra_props['feed_url'] = "http://random.com/feed"
 
         try:
             self.config.initplugin('flashbake.plugins.feed')
-            self.fail('Should not be able to initialize without full plugin props.')
         except PluginError, error:
-            self.assertEquals(str(error.reason), 'missing_property',
-                    'Feed plugin should fail missing property.')
-            self.assertEquals(error.name, 'author',
-                    'Missing property should be author.')
+            self.fail('Should be able to initialize with just the url.')
 
-        self.config.extra_props['feed'] = "http://random.com/feed"
-        self.config.extra_props['author'] = "Joe Random"
-
-        try:
-            self.config.initplugin('flashbake.plugins.feed')
-            self.fail('Should not be able to initialize without full plugin props.')
-        except PluginError, error:
-            self.assertEquals(str(error.reason), 'missing_property',
-                    'Feed plugin should fail missing property.')
-            self.assertEquals(error.name, 'limit',
-                    'Missing property should be limit.')
+    def testpluginclass(self):
+        self.config.initplugin('flashbake.plugins:Weather')
 
     def __testattr(self, plugin_name, name, reason):
         try:

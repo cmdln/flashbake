@@ -6,9 +6,13 @@ import sys
 import os
 from os.path import join, dirname, exists, realpath, abspath
 import unittest
+import logging
 
 # just provide the command line hook into the flashbake.commit module
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.DEBUG,
+            format='%(message)s')
+
     LAUNCH_DIR = abspath(sys.path[0])
     flashbake_dir = join(LAUNCH_DIR, "..")
 

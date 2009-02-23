@@ -1,8 +1,7 @@
 #!/usr/bin/env python
 #
 # setup.py for flashbake
-
-from distutils.core import setup
+from setuptools import setup
 
 setup(name='flashbake',
         version='0.21',

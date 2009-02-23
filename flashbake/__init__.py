@@ -85,24 +85,42 @@ class ControlConfig:
             plugin = self.initplugin(plugin_name)
             self.plugins.append(plugin)
 
-    def initplugin(self, plugin_name):
+    def initplugin(self, plugin_spec):
         """ Initialize a plugin, including vetting that it meets the correct
             protocol; not private so it can be used in testing. """
+        if plugin_spec.find(':') > 0:
+            tokens = plugin_spec.split(':')
+            module_name = tokens[0]
+            plugin_name = tokens[1]
+        else:
+            module_name = plugin_spec
+            plugin_name = None
+
         try:
-            __import__(plugin_name)
+            __import__(module_name)
         except ImportError:
             logging.warn('Invalid module, %s' % plugin_name)
-            raise PluginError(PLUGIN_ERRORS.unknown_plugin, plugin_name)
+            raise PluginError(PLUGIN_ERRORS.unknown_plugin, plugin_spec)
 
-        plugin_module = sys.modules[plugin_name]
 
-        self.__checkattr(plugin_module, 'connectable', bool)
-        self.__checkattr(plugin_module, 'addcontext', FunctionType)
+        if plugin_name == None:
+            plugin = sys.modules[module_name]
+        else:
+            from pkg_resources import EntryPoint
+#            try:
+            entrypoint = EntryPoint(plugin_name, module_name)
+            plugin = entrypoint.load()
+#            except:
+#                logging.warn('Invalid class, %s' % plugin_name)
+#                raise PluginError(PLUGIN_ERRORS.unknown_plugin, plugin_spec)
 
-        if 'init' in plugin_module.__dict__ and isinstance(plugin_module.__dict__['init'], FunctionType):
-            plugin_module.init(self)
+        self.__checkattr(plugin, 'connectable', bool)
+        self.__checkattr(plugin, 'addcontext', FunctionType)
 
-        return plugin_module
+        if 'init' in plugin.__dict__ and isinstance(plugin.__dict__['init'], FunctionType):
+            plugin.init(self)
+
+        return plugin
 
     def __checkattr(self, plugin, name, expected_type):
         if name not in plugin.__dict__:
@@ -187,3 +205,22 @@ class ParseResults:
 
     def needsnotice(self):
         return len(self.not_exists) > 0 or len(self.linked_files) > 0
+
+class AbstractPlugin():
+    """ Common parent class for all plugins, will try to help enforce the plugin
+        protocol at runtime. """
+    connectable = False
+
+    def init(self, config):
+        abstract()
+
+    def addcontext(self, message_file, control_config):
+        abstract()
+
+    def __abstract(self): 
+        """ borrowed this from Norvig
+            http://norvig.com/python-iaq.html """
+        import inspect
+        caller = inspect.getouterframes(inspect.currentframe())[1][3]
+        raise NotImplementedError('%s must be implemented in subclass' % caller)
+
