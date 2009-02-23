@@ -5,8 +5,6 @@
 #  script to build automatic commit messages as needed.
 #
 #  Created by Thomas Gideon (cmdln@thecommandline.net) on 1/25/2009
-#  Provided as-is, with no warranties
-#  License: http://creativecommons.org/licenses/by-nc-sa/3.0/us/ 
 
 import os
 import sys
