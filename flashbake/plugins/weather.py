@@ -33,7 +33,7 @@ def addcontext(message_file, config):
         city = __parsecity(zone)
 
     # call the Google weather API with the city
-    weather = getweather(city)
+    weather = __getweather(city)
 
     if len(weather) > 0:
         # there is also an entry for the key, wind_condition, in the weather
@@ -41,10 +41,10 @@ def addcontext(message_file, config):
         message_file.write('Current weather is %(condition)s (%(temp_f)sF/%(temp_c)sC) %(humidity)s\n'\
                 % weather)
     else:
-        message_file.write('Couldn\'t fetch current weather.\n')
+        message_file.write('Couldn\'t fetch current weather for city, %s.\n' % city)
     return len(weather) > 0
 
-def getweather(city):
+def __getweather(city):
     """ This relies on Google's unpublished weather API which may change without notice. """
 
     # unpublished API that iGoogle uses for its weather widget
@@ -67,7 +67,10 @@ def getweather(city):
         # just interested in the conditions at the moment
         current = weather_dom.getElementsByTagName("current_conditions")
 
-        weather = {}
+        if current == None or len(current) == 0:
+            return dict()
+
+        weather = dict()
         for child in current[0].childNodes:
            if child.localName == 'icon':
                continue
