@@ -10,18 +10,21 @@ from flashbake import PluginError, PLUGIN_ERRORS
 
 connectable = True
 
-def init(control_config):
+def init(config):
     """ Grab any extra properties that the config parser found and are needed by this module. """
-    control_config.requireproperty('feed')
-    control_config.requireproperty('author')
-    control_config.requireproperty('limit')
-    control_config.limit = int(control_config.limit)
+    config.requireproperty('feed_url')
+    config.optionalproperty('feed_author')
+    config.optionalproperty('feed_limit')
+    if config.feed_limit == None:
+        config.feed_limit = 5
+    else:
+        config.feed_limit = int(config.feed_limit)
 
-def addcontext(message_file, control_config):
+def addcontext(message_file, config):
     """ Add the matching items to the commit context. """
     
     # last n items for m creator
-    (title,last_items) = fetchfeed(control_config)
+    (title,last_items) = fetchfeed(config)
 
     if len(last_items) > 0:
         message_file.write('Last %(item_count)d entries from %(feed_title)s:\n'\
@@ -31,7 +34,7 @@ def addcontext(message_file, control_config):
           message_file.write('%s\n' % item['title'])
           message_file.write('%s\n' % item['link'])
     else:
-        message_file.write('Couldn\'t fetch entries from feed, %s.\n' % control_config.feed)
+        message_file.write('Couldn\'t fetch entries from feed, %s.\n' % config.feed_url)
 
     return len(last_items) > 0
 
@@ -43,7 +46,7 @@ def filtertext(nodelist):
             text_value = text_value + node.data
     return text_value
 
-def fetchfeed(control_config):
+def fetchfeed(config):
     """ Fetch up to the limit number of items from the specified feed with the specified
         creator. """
 
@@ -52,7 +55,7 @@ def fetchfeed(control_config):
 
     try:
         # open the raw RSS XML
-        rss_xml = opener.open(urllib2.Request(control_config.feed)).read()
+        rss_xml = opener.open(urllib2.Request(config.feed_url)).read()
 
         # build a mini-dom so we can scrape out titles, descriptions
         rss_dom = xml.dom.minidom.parseString(rss_xml)
@@ -67,13 +70,13 @@ def fetchfeed(control_config):
         for child in items:
            item_creator = child.getElementsByTagName("dc:creator")[0]
            item_creator = filtertext(item_creator.childNodes).strip()
-           if item_creator != control_config.author:
+           if config.feed_author != None and item_creator != config.feed_author:
                continue
            title = filtertext(child.getElementsByTagName("title")[0].childNodes)
            title = title.encode('ascii', 'replace')
            link = filtertext(child.getElementsByTagName("link")[0].childNodes)
            by_creator.append({"title" : title, "link" : link})
-           if control_config.limit <= len(by_creator):
+           if config.feed_limit <= len(by_creator):
                break
 
         return (feed_title, by_creator)
