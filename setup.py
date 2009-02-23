@@ -5,11 +5,11 @@
 from distutils.core import setup
 
 setup(name='flashbake',
-        version='0.20',
+        version='0.21',
         author="Thomas Gideon",
         author_email="cmdln@thecommandline.net",
         url="http://thecommandline.net",
-        license="http://creativecommons.org/licenses/by-nc-sa/3.0/us/",
+        license="GPLv3",
         py_modules=['flashbake.commit',
             'flashbake.context',
             'flashbake.plugins.feed',
