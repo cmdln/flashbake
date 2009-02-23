@@ -11,21 +11,26 @@ import os.path
 import string
 import logging
 from urllib2 import HTTPError, URLError
-from flashbake.context import findtimezone, parsecity
+from flashbake.plugins.timezone import findtimezone
 
 connectable = True
 
-def init(control_config):
+def init(config):
     """ Grab any extra properties that the config parser found and are needed by this module. """
+    config.optionalproperty('weather_city')
 
-def addcontext(message_file, control_config):
+def addcontext(message_file, config):
     """ Add weather information, based in the TZ, to the commit message. """
-    zone = findtimezone(control_config)
-    if None == zone:
-        message_file.write('Couldn\'t fetch current weather.\n')
-        return False
+    zone = findtimezone(config)
+    city = None
 
-    city = parsecity(zone)
+    if None == zone:
+        if config.weather_city == none:
+            message_file.write('Couldn\'t determine city to fetch weather.\n')
+            return False
+        city = config.weather_city
+    else:
+        city = __parsecity(zone)
 
     # call the Google weather API with the city
     weather = getweather(city)
@@ -75,3 +80,16 @@ def getweather(city):
     except URLError, e:
         logging.error('Failed with reason %s.' % e.reason)
         return {}
+
+def __parsecity(zone):
+    if None == zone:
+        return None
+    tokens = zone.split("/")
+    if len(tokens) != 2:
+        logging.warning('Zone id, "%s", doesn''t appear to contain a city.' % zone)
+        # return non-zero so calling shell script can catch
+        return None
+
+    city = tokens[1]
+    # ISO id's have underscores, convert to spaces for the Google API
+    return city.replace("_", " ")

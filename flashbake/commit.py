@@ -1,10 +1,7 @@
-#!/usr/bin/env python
 #
 #  commit.py
 #  Parses a project's control file and wraps git operations, calling the context
 #  script to build automatic commit messages as needed.
-#
-#  Created by Thomas Gideon (cmdln@thecommandline.net) on 1/25/2009
 
 import os
 import sys

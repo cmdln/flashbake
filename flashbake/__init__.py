@@ -1,3 +1,7 @@
+#
+#  __init__.py
+#  Shared classes and functions for the flashbake package.
+
 import os
 import logging
 import sys
