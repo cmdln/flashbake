@@ -2,10 +2,8 @@
 #  feed.py
 #  Stock plugin that pulls latest n items from a feed by a given author.
 
-import urllib, urllib2
-import xml.dom.minidom
+import feedparser
 import logging
-from urllib2 import HTTPError, URLError
 from flashbake import PluginError, PLUGIN_ERRORS
 
 connectable = True
@@ -50,31 +48,20 @@ def fetchfeed(config):
     """ Fetch up to the limit number of items from the specified feed with the specified
         creator. """
 
-    # necessary machinery to fetch a web page
-    opener = urllib2.build_opener(urllib2.HTTPCookieProcessor())
-
     try:
-        # open the raw RSS XML
-        rss_xml = opener.open(urllib2.Request(config.feed_url)).read()
+        feed = feedparser.parse(config.feed_url)
 
-        # build a mini-dom so we can scrape out titles, descriptions
-        rss_dom = xml.dom.minidom.parseString(rss_xml)
+        feed_title = feed.feed.title
 
-        titles = rss_dom.getElementsByTagName("title")
-
-        feed_title = filtertext(titles[0].childNodes)
-
-        items = rss_dom.getElementsByTagName("item")
-
+        logging.debug(feed.entries[0].keys())
         by_creator = []
-        for child in items:
-           item_creator = child.getElementsByTagName("dc:creator")[0]
-           item_creator = filtertext(item_creator.childNodes).strip()
+        for entry in feed.entries:
+           item_creator = entry.author
            if config.feed_author != None and item_creator != config.feed_author:
                continue
-           title = filtertext(child.getElementsByTagName("title")[0].childNodes)
+           title = entry.title
            title = title.encode('ascii', 'replace')
-           link = filtertext(child.getElementsByTagName("link")[0].childNodes)
+           link = entry.link
            by_creator.append({"title" : title, "link" : link})
            if config.feed_limit <= len(by_creator):
                break

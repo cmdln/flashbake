@@ -17,5 +17,7 @@ setup(name='flashbake',
             'flashbake.plugins.uptime',
             'flashbake.plugins.weather'
             ],
-        requires=['enum (>=0.4.3)'],
+        requires=['enum (>=0.4.3)',
+            'feedparser (>=4.1)'
+            ],
         scripts=['bin/flashbake'])
