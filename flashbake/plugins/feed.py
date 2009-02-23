@@ -25,8 +25,12 @@ def addcontext(message_file, config):
     (title,last_items) = fetchfeed(config)
 
     if len(last_items) > 0:
-        message_file.write('Last %(item_count)d entries from %(feed_title)s:\n'\
-            % {'item_count' : len(last_items), 'feed_title' : title})
+        if config.feed_author == None:
+            message_file.write('Last %(item_count)d entries from %(feed_title)s:\n'\
+                % {'item_count' : len(last_items), 'feed_title' : title})
+        else:
+            message_file.write('Last %(item_count)d entries from %(feed_title)s by %(author)s:\n'\
+                % {'item_count' : len(last_items), 'feed_title' : title, 'author': config.feed_author})
         for item in last_items:
           # edit the '%s' if you want to add a label, like 'Title %s' to the output
           message_file.write('%s\n' % item['title'])
