@@ -29,7 +29,7 @@ class ConfigTestCase(unittest.TestCase):
         self.config.extra_props['feed_url'] = "http://random.com/feed"
 
         plugins = ('flashbake.plugins.weather:Weather',
-                'flashbake.plugins.uptime',
+                'flashbake.plugins.uptime:UpTime',
                 'flashbake.plugins.timezone',
                 'flashbake.plugins.feed:Feed')
         for plugin_name in plugins:

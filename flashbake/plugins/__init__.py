@@ -5,10 +5,10 @@ class AbstractPlugin():
         self.connectable = False
 
     def init(self, config):
-        abstract()
+        self.__abstract()
 
     def addcontext(self, message_file, config):
-        abstract()
+        self.__abstract()
 
     def __abstract(self): 
         """ borrowed this from Norvig
