@@ -1,7 +1,7 @@
 #
 #  __init__.py
 #  Shared classes and functions for the flashbake package.
-
+    
 import os
 import logging
 import sys
@@ -105,17 +105,18 @@ class ControlConfig:
 
         if plugin_name == None:
             plugin = sys.modules[module_name]
+            self.__checkattr(plugin, 'connectable', bool)
+            self.__checkattr(plugin, 'addcontext', FunctionType)
         else:
-            from pkg_resources import EntryPoint
-#            try:
-            entrypoint = EntryPoint(plugin_name, module_name)
-            plugin = entrypoint.load()
-#            except:
-#                logging.warn('Invalid class, %s' % plugin_name)
-#                raise PluginError(PLUGIN_ERRORS.unknown_plugin, plugin_spec)
+            try:
+                # TODO re-visit pkg_resources, EntryPoint
+                plugin_class = self.__forname(module_name, plugin_name)
+                plugin = plugin_class()
+                self.__checkattr(plugin, 'connectable', bool)
+                self.__checkattr(plugin, 'addcontext', MethodType)
+            except:
+                raise PluginError(PLUGIN_ERRORS.unknown_plugin, plugin_spec)
 
-        self.__checkattr(plugin, 'connectable', bool)
-        self.__checkattr(plugin, 'addcontext', FunctionType)
 
         if 'init' in plugin.__dict__ and isinstance(plugin.__dict__['init'], FunctionType):
             plugin.init(self)
@@ -123,13 +124,30 @@ class ControlConfig:
         return plugin
 
     def __checkattr(self, plugin, name, expected_type):
-        if name not in plugin.__dict__:
-            logging.warn('Plugin, %s, must have a %s attribute.' % (plugin.__name__, name))
+        try:
+            attrib = eval('plugin.%s' % name)
+        except AttributeError:
             raise PluginError(PLUGIN_ERRORS.missing_attribute, name)
 
-        if not isinstance(plugin.__dict__[name], expected_type):
-            logging.warn('%s attribute of plugin, %s, must be %s.' % (name, plugin.__name__, str(expected_type)))
+        if not isinstance(attrib, expected_type):
             raise PluginError(PLUGIN_ERRORS.invalid_attribute, name)
+
+        #if name not in plugin.__dict__:
+        #    logging.warn('Plugin, %s, must have a %s attribute.' % (plugin, name))
+        #    raise PluginError(PLUGIN_ERRORS.missing_attribute, name)
+
+        #if not isinstance(plugin.__dict__[name], expected_type):
+        #    logging.warn('%s attribute of plugin, %s, must be %s.' % (name, plugin, str(expected_type)))
+        #    raise PluginError(PLUGIN_ERRORS.invalid_attribute, name)
+
+    # with thanks to Ben Snider
+    # http://www.bensnider.com/2008/02/27/dynamically-import-and-instantiate-python-classes/
+    def __forname(self, module_name, plugin_name):
+        ''' Returns a class of "plugin_name" from module "module_name". '''
+        module = __import__(module_name)
+        module = sys.modules[module_name]
+        classobj = getattr(module, plugin_name)
+        return classobj
 
 class ParseResults:
     """
@@ -223,4 +241,3 @@ class AbstractPlugin():
         import inspect
         caller = inspect.getouterframes(inspect.currentframe())[1][3]
         raise NotImplementedError('%s must be implemented in subclass' % caller)
-

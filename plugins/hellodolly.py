@@ -1,9 +1,8 @@
-connectable = False
+from flashbake import AbstractPlugin
 
-def initplugin(config):
-    """ Nothing needed. """
+class HelloDolly(AbstractPlugin):
 
-def addcontext(message_file, config):
-    """ Stub. """
+    def addcontext(self, message_file, config):
+        """ Stub. """
 
-    message_file.write('Hello, dolly.')
+        message_file.write('Hello, dolly.')

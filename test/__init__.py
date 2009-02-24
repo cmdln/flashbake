@@ -52,13 +52,10 @@ class ConfigTestCase(unittest.TestCase):
         except PluginError, error:
             self.fail('Should be able to initialize with just the url.')
 
-    def testpluginclass(self):
-        self.config.initplugin('flashbake.plugins:Weather')
-
     def __testattr(self, plugin_name, name, reason):
         try:
             plugin = self.config.initplugin(plugin_name)
-            self.fail('Should not have initialized plugin, %s', plugin_name)
+            self.fail('Should not have initialized plugin, %s' % plugin_name)
         except PluginError, error:
             self.assertEquals(str(error.reason), reason,
                     'Error should specify failure reason, %s.' % reason)
