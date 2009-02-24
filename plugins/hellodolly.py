@@ -1,4 +1,4 @@
-from flashbake import AbstractPlugin
+from flashbake.plugins import AbstractPlugin
 
 class HelloDolly(AbstractPlugin):
     """ Sample plugin. """

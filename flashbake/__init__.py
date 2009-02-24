@@ -132,14 +132,6 @@ class ControlConfig:
         if not isinstance(attrib, expected_type):
             raise PluginError(PLUGIN_ERRORS.invalid_attribute, name)
 
-        #if name not in plugin.__dict__:
-        #    logging.warn('Plugin, %s, must have a %s attribute.' % (plugin, name))
-        #    raise PluginError(PLUGIN_ERRORS.missing_attribute, name)
-
-        #if not isinstance(plugin.__dict__[name], expected_type):
-        #    logging.warn('%s attribute of plugin, %s, must be %s.' % (name, plugin, str(expected_type)))
-        #    raise PluginError(PLUGIN_ERRORS.invalid_attribute, name)
-
     # with thanks to Ben Snider
     # http://www.bensnider.com/2008/02/27/dynamically-import-and-instantiate-python-classes/
     def __forname(self, module_name, plugin_name):
@@ -223,21 +215,3 @@ class ParseResults:
 
     def needsnotice(self):
         return len(self.not_exists) > 0 or len(self.linked_files) > 0
-
-class AbstractPlugin():
-    """ Common parent class for all plugins, will try to help enforce the plugin
-        protocol at runtime. """
-    connectable = False
-
-    def init(self, config):
-        abstract()
-
-    def addcontext(self, message_file, control_config):
-        abstract()
-
-    def __abstract(self): 
-        """ borrowed this from Norvig
-            http://norvig.com/python-iaq.html """
-        import inspect
-        caller = inspect.getouterframes(inspect.currentframe())[1][3]
-        raise NotImplementedError('%s must be implemented in subclass' % caller)

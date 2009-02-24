@@ -12,7 +12,7 @@ import string
 import logging
 from urllib2 import HTTPError, URLError
 from flashbake.plugins.timezone import findtimezone
-from flashbake import AbstractPlugin
+from flashbake.plugins import AbstractPlugin
 
 class Weather(AbstractPlugin):
     def __init__(self):

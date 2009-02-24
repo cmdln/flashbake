@@ -28,7 +28,7 @@ class ConfigTestCase(unittest.TestCase):
     def teststockplugins(self):
         self.config.extra_props['feed_url'] = "http://random.com/feed"
 
-        plugins = ('flashbake.plugins.weather',
+        plugins = ('flashbake.plugins.weather:Weather',
                 'flashbake.plugins.uptime',
                 'flashbake.plugins.timezone',
                 'flashbake.plugins.feed')
