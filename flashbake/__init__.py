@@ -17,11 +17,15 @@ PLUGIN_ERRORS = Enum('unknown_plugin',
         )
 
 class PluginError(Exception):
-    def __init__(self, reason, name):
+    def __init__(self, reason, name, plugin_spec = None):
+        self.plugin_spec = plugin_spec
         self.reason = reason
         self.name = name
     def __str__(self):
-        return '%s: %s' % (self.reason, self.name)
+        if self.plugin_spec == None:
+            return '%s: %s' % (self.reason, self.name)
+        else:
+            return '%s - %s: %s' % (self.plugin_spec, self.reason, self.name)
 
 class ControlConfig:
     """
@@ -105,32 +109,34 @@ class ControlConfig:
 
         if plugin_name == None:
             plugin = sys.modules[module_name]
-            self.__checkattr(plugin, 'connectable', bool)
-            self.__checkattr(plugin, 'addcontext', FunctionType)
+            self.__checkattr(plugin_spec, plugin, 'connectable', bool)
+            self.__checkattr(plugin_spec, plugin, 'addcontext', FunctionType)
+
+            if 'init' in plugin.__dict__ and isinstance(plugin.__dict__['init'], FunctionType):
+                plugin.init(self)
         else:
             try:
                 # TODO re-visit pkg_resources, EntryPoint
                 plugin_class = self.__forname(module_name, plugin_name)
                 plugin = plugin_class()
-                self.__checkattr(plugin, 'connectable', bool)
-                self.__checkattr(plugin, 'addcontext', MethodType)
             except:
                 raise PluginError(PLUGIN_ERRORS.unknown_plugin, plugin_spec)
+            self.__checkattr(plugin_spec, plugin, 'connectable', bool)
+            self.__checkattr(plugin_spec, plugin, 'addcontext', MethodType)
 
-
-        if 'init' in plugin.__dict__ and isinstance(plugin.__dict__['init'], FunctionType):
             plugin.init(self)
+
 
         return plugin
 
-    def __checkattr(self, plugin, name, expected_type):
+    def __checkattr(self, plugin_spec, plugin, name, expected_type):
         try:
             attrib = eval('plugin.%s' % name)
         except AttributeError:
-            raise PluginError(PLUGIN_ERRORS.missing_attribute, name)
+            raise PluginError(PLUGIN_ERRORS.missing_attribute, name, plugin_spec)
 
         if not isinstance(attrib, expected_type):
-            raise PluginError(PLUGIN_ERRORS.invalid_attribute, name)
+            raise PluginError(PLUGIN_ERRORS.invalid_attribute, name, plugin_spec)
 
     # with thanks to Ben Snider
     # http://www.bensnider.com/2008/02/27/dynamically-import-and-instantiate-python-classes/

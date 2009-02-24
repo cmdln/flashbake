@@ -31,13 +31,13 @@ class ConfigTestCase(unittest.TestCase):
         plugins = ('flashbake.plugins.weather:Weather',
                 'flashbake.plugins.uptime',
                 'flashbake.plugins.timezone',
-                'flashbake.plugins.feed')
+                'flashbake.plugins.feed:Feed')
         for plugin_name in plugins:
             plugin = self.config.initplugin(plugin_name)
 
     def testfeedfail(self):
         try:
-            self.config.initplugin('flashbake.plugins.feed')
+            self.config.initplugin('flashbake.plugins.feed:Feed')
             self.fail('Should not be able to initialize without full plugin props.')
         except PluginError, error:
             self.assertEquals(str(error.reason), 'missing_property',
@@ -48,7 +48,7 @@ class ConfigTestCase(unittest.TestCase):
         self.config.extra_props['feed_url'] = "http://random.com/feed"
 
         try:
-            self.config.initplugin('flashbake.plugins.feed')
+            self.config.initplugin('flashbake.plugins.feed:Feed')
         except PluginError, error:
             self.fail('Should be able to initialize with just the url.')
 
