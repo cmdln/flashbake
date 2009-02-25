@@ -20,7 +20,8 @@ class Weather(AbstractMessagePlugin):
 
     def init(self, config):
         """ Grab any extra properties that the config parser found and are needed by this module. """
-        config.optionalproperty('weather_city')
+        config.sharedproperty('timezone_tz')
+        self.optionalproperty(config, 'weather_city')
 
     def addcontext(self, message_file, config):
         """ Add weather information, based in the TZ, to the commit message. """

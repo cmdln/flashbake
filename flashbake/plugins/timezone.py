@@ -8,7 +8,7 @@ from flashbake.plugins import AbstractMessagePlugin
 class TimeZone(AbstractMessagePlugin):
     def init(self, config):
         """ Grab any extra properties that the config parser found and are needed by this module. """
-        config.optionalproperty('timezone_tz')
+        config.sharedproperty('timezone_tz')
 
     def addcontext(self, message_file, config):
         """ Add the system's time zone to the commit context. """

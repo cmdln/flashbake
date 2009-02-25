@@ -45,16 +45,12 @@ class ControlConfig:
 
         self.initplugins()
 
-    def requireproperty(self, name):
-        """ Useful to plugins to express a property that is required in the
-            dot-control file and to move it from the extra_props dict to a
-            property of the config. """
-        if not name in self.extra_props:
-            raise PluginError(PLUGIN_ERRORS.missing_property, name)
+    def sharedproperty(self, name):
+        """ Declare a shared property, this way multiple plugins can share some
+            value through the config object. """
+        if name in self.__dict__:
+            return
 
-        self.optionalproperty(name)
-
-    def optionalproperty(self, name):
         value = None
 
         if name in self.extra_props:
