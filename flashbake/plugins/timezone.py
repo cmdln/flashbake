@@ -3,24 +3,7 @@
 #  Stock plugin to find the system's time zone add to the commit message.
 
 import os, logging
-
-connectable = False
-
-def init(config):
-    """ Grab any extra properties that the config parser found and are needed by this module. """
-    config.optionalproperty('timezone_tz')
-
-def addcontext(message_file, config):
-    """ Add the system's time zone to the commit context. """
-
-    zone = findtimezone(config)
-
-    if zone == None:
-        message_file.write('Couldn\'t determine time zone.\n')
-    else:
-        message_file.write('Current time zone is %s\n' % zone)
-
-    return True
+from flashbake.plugins import AbstractPlugin
 
 def findtimezone(config):
     # check the environment for the zone value
@@ -64,3 +47,20 @@ def findtimezone(config):
     zone = None
 
     return zone
+
+class TimeZone(AbstractPlugin):
+    def init(self, config):
+        """ Grab any extra properties that the config parser found and are needed by this module. """
+        config.optionalproperty('timezone_tz')
+
+    def addcontext(self, message_file, config):
+        """ Add the system's time zone to the commit context. """
+
+        zone = findtimezone(config)
+
+        if zone == None:
+            message_file.write('Couldn\'t determine time zone.\n')
+        else:
+            message_file.write('Current time zone is %s\n' % zone)
+
+        return True

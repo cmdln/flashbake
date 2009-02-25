@@ -30,7 +30,7 @@ class ConfigTestCase(unittest.TestCase):
 
         plugins = ('flashbake.plugins.weather:Weather',
                 'flashbake.plugins.uptime:UpTime',
-                'flashbake.plugins.timezone',
+                'flashbake.plugins.timezone:TimeZone',
                 'flashbake.plugins.feed:Feed')
         for plugin_name in plugins:
             plugin = self.config.initplugin(plugin_name)
