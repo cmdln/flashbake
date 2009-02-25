@@ -5,9 +5,9 @@
 import string
 import os.path
 import logging
-from flashbake.plugins import AbstractPlugin
+from flashbake.plugins import AbstractMessagePlugin
 
-class UpTime(AbstractPlugin):
+class UpTime(AbstractMessagePlugin):
     def init(self, config):
         """ Nothing needed. """
 

@@ -3,7 +3,7 @@
 #  Stock plugin to find the system's time zone add to the commit message.
 
 import os, logging
-from flashbake.plugins import AbstractPlugin
+from flashbake.plugins import AbstractMessagePlugin
 
 def findtimezone(config):
     # check the environment for the zone value
@@ -48,7 +48,7 @@ def findtimezone(config):
 
     return zone
 
-class TimeZone(AbstractPlugin):
+class TimeZone(AbstractMessagePlugin):
     def init(self, config):
         """ Grab any extra properties that the config parser found and are needed by this module. """
         config.optionalproperty('timezone_tz')

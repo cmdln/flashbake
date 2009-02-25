@@ -12,9 +12,9 @@ import string
 import logging
 from urllib2 import HTTPError, URLError
 from flashbake.plugins.timezone import findtimezone
-from flashbake.plugins import AbstractPlugin
+from flashbake.plugins import AbstractMessagePlugin
 
-class Weather(AbstractPlugin):
+class Weather(AbstractMessagePlugin):
     def __init__(self):
         self.connectable = True
 

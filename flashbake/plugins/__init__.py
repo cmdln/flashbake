@@ -1,4 +1,4 @@
-class AbstractPlugin():
+class AbstractMessagePlugin():
     """ Common parent class for all plugins, will try to help enforce the plugin
         protocol at runtime. """
     def __init__(self):

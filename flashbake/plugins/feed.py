@@ -4,9 +4,9 @@
 
 import feedparser
 import logging
-from flashbake.plugins import AbstractPlugin
+from flashbake.plugins import AbstractMessagePlugin
 
-class Feed(AbstractPlugin):
+class Feed(AbstractMessagePlugin):
     def __init__(self):
         self.connectable = True
 
