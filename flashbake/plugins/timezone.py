@@ -5,6 +5,23 @@
 import os, logging
 from flashbake.plugins import AbstractMessagePlugin
 
+class TimeZone(AbstractMessagePlugin):
+    def init(self, config):
+        """ Grab any extra properties that the config parser found and are needed by this module. """
+        config.optionalproperty('timezone_tz')
+
+    def addcontext(self, message_file, config):
+        """ Add the system's time zone to the commit context. """
+
+        zone = findtimezone(config)
+
+        if zone == None:
+            message_file.write('Couldn\'t determine time zone.\n')
+        else:
+            message_file.write('Current time zone is %s\n' % zone)
+
+        return True
+
 def findtimezone(config):
     # check the environment for the zone value
     zone = os.environ.get("TZ")
@@ -47,20 +64,3 @@ def findtimezone(config):
     zone = None
 
     return zone
-
-class TimeZone(AbstractMessagePlugin):
-    def init(self, config):
-        """ Grab any extra properties that the config parser found and are needed by this module. """
-        config.optionalproperty('timezone_tz')
-
-    def addcontext(self, message_file, config):
-        """ Add the system's time zone to the commit context. """
-
-        zone = findtimezone(config)
-
-        if zone == None:
-            message_file.write('Couldn\'t determine time zone.\n')
-        else:
-            message_file.write('Current time zone is %s\n' % zone)
-
-        return True
