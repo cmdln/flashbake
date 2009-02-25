@@ -16,7 +16,7 @@ class PluginError(Exception):
             return '%s: %s' % (self.reason, self.name)
         else:
             return '%s - %s: %s' % (self.plugin_spec, self.reason, self.name)
-            :
+
 class AbstractMessagePlugin():
     """ Common parent class for all plugins, will try to help enforce the plugin
         protocol at runtime. """

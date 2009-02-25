@@ -1,5 +1,6 @@
 import unittest
-from flashbake import ControlConfig, PluginError
+from flashbake import ControlConfig
+from flashbake.plugins import PluginError
 
 class ConfigTestCase(unittest.TestCase):
     def setUp(self):

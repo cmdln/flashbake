@@ -7,6 +7,7 @@ import logging
 import sys
 import commands
 from types import *
+from flashbake.plugins import PluginError, PLUGIN_ERRORS
 
 class ControlConfig:
     """
