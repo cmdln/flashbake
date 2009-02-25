@@ -7,6 +7,9 @@ import logging
 from flashbake.plugins import AbstractPlugin
 
 class Feed(AbstractPlugin):
+    def __init__(self):
+        self.connectable = True
+
     def init(self, config):
         """ Grab any extra properties that the config parser found and are needed by this module. """
         config.requireproperty('feed_url')
@@ -21,7 +24,7 @@ class Feed(AbstractPlugin):
         """ Add the matching items to the commit context. """
         
         # last n items for m creator
-        (title,last_items) = fetchfeed(config)
+        (title,last_items) = self.__fetchfeed(config)
 
         if len(last_items) > 0:
             if config.feed_author == None:
@@ -39,7 +42,7 @@ class Feed(AbstractPlugin):
 
         return len(last_items) > 0
 
-    def fetchfeed(self, config):
+    def __fetchfeed(self, config):
         """ Fetch up to the limit number of items from the specified feed with the specified
             creator. """
 
@@ -48,7 +51,6 @@ class Feed(AbstractPlugin):
 
             feed_title = feed.feed.title
 
-            logging.debug(feed.entries[0].keys())
             by_creator = []
             for entry in feed.entries:
                item_creator = entry.author

@@ -19,6 +19,7 @@ def buildmessagefile(control_config):
     while os.path.exists(msg_filename):
         msg_filename = '/tmp/git_msg_%d' % random.randint(0,1000)
 
+    connectable = False
     connected = False
 
     message_file = open(msg_filename, 'w')
@@ -27,8 +28,9 @@ def buildmessagefile(control_config):
             plugin_success = plugin.addcontext(message_file, control_config)
             # let each plugin say which ones attempt network connections
             if plugin.connectable:
+                connectable = true
                 connected = connected or plugin_success
-        if not connected:
+        if connectable and not connected:
             message_file.write('All of the plugins that use the network failed.\n')
             message_file.write('Your computer may not be connected to the network.')
     finally:
