@@ -12,55 +12,55 @@ class Feed(AbstractMessagePlugin):
 
     def init(self, config):
         """ Grab any extra properties that the config parser found and are needed by this module. """
-        config.requireproperty('feed_url')
-        config.optionalproperty('feed_author')
-        config.optionalproperty('feed_limit')
-        if config.feed_limit == None:
-            config.feed_limit = 5
+        self.requireproperty(config, 'feed_url')
+        self.optionalproperty(config, 'feed_author')
+        self.optionalproperty(config, 'feed_limit')
+        if self.feed_limit == None:
+            self.feed_limit = 5
         else:
-            config.feed_limit = int(config.feed_limit)
+            self.feed_limit = int(self.feed_limit)
 
     def addcontext(self, message_file, config):
         """ Add the matching items to the commit context. """
         
         # last n items for m creator
-        (title,last_items) = self.__fetchfeed(config)
+        (title,last_items) = self.__fetchfeed()
 
         if len(last_items) > 0:
-            if config.feed_author == None:
+            if self.feed_author == None:
                 message_file.write('Last %(item_count)d entries from %(feed_title)s:\n'\
                     % {'item_count' : len(last_items), 'feed_title' : title})
             else:
                 message_file.write('Last %(item_count)d entries from %(feed_title)s by %(author)s:\n'\
-                    % {'item_count' : len(last_items), 'feed_title' : title, 'author': config.feed_author})
+                    % {'item_count' : len(last_items), 'feed_title' : title, 'author': self.feed_author})
             for item in last_items:
               # edit the '%s' if you want to add a label, like 'Title %s' to the output
               message_file.write('%s\n' % item['title'])
               message_file.write('%s\n' % item['link'])
         else:
-            message_file.write('Couldn\'t fetch entries from feed, %s.\n' % config.feed_url)
+            message_file.write('Couldn\'t fetch entries from feed, %s.\n' % self.feed_url)
 
         return len(last_items) > 0
 
-    def __fetchfeed(self, config):
+    def __fetchfeed(self):
         """ Fetch up to the limit number of items from the specified feed with the specified
             creator. """
 
         try:
-            feed = feedparser.parse(config.feed_url)
+            feed = feedparser.parse(self.feed_url)
 
             feed_title = feed.feed.title
 
             by_creator = []
             for entry in feed.entries:
                item_creator = entry.author
-               if config.feed_author != None and item_creator != config.feed_author:
+               if self.feed_author != None and item_creator != self.feed_author:
                    continue
                title = entry.title
                title = title.encode('ascii', 'replace')
                link = entry.link
                by_creator.append({"title" : title, "link" : link})
-               if config.feed_limit <= len(by_creator):
+               if self.feed_limit <= len(by_creator):
                    break
 
             return (feed_title, by_creator)

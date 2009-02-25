@@ -35,3 +35,23 @@ class AbstractMessagePlugin():
         import inspect
         caller = inspect.getouterframes(inspect.currentframe())[1][3]
         raise NotImplementedError('%s must be implemented in subclass' % caller)
+
+    def requireproperty(self, config, name):
+        """ Useful to plugins to express a property that is required in the
+            dot-control file and to move it from the extra_props dict to a
+            property of the config. """
+        if not name in config.extra_props:
+            raise PluginError(PLUGIN_ERRORS.missing_property, name)
+
+        self.optionalproperty(config, name)
+
+    def optionalproperty(self, config, name):
+        """ Move a property, if present, from the ControlConfig to the daughter
+            plugin. """
+        value = None
+
+        if name in config.extra_props:
+            value = config.extra_props[name]
+            del config.extra_props[name]
+
+        self.__dict__[name] = value
