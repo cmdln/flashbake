@@ -7,8 +7,8 @@ import logging
 from flashbake.plugins import AbstractMessagePlugin
 
 class Feed(AbstractMessagePlugin):
-    def __init__(self):
-        self.connectable = True
+    def __init__(self, plugin_spec):
+        AbstractMessagePlugin.__init__(self, plugin_spec, True)
 
     def init(self, config):
         """ Grab any extra properties that the config parser found and are needed by this module. """

@@ -101,7 +101,7 @@ class ControlConfig:
             try:
                 # TODO re-visit pkg_resources, EntryPoint
                 plugin_class = self.__forname(module_name, plugin_name)
-                plugin = plugin_class()
+                plugin = plugin_class(plugin_spec)
             except:
                 raise PluginError(PLUGIN_ERRORS.unknown_plugin, plugin_spec)
             self.__checkattr(plugin_spec, plugin, 'connectable', bool)

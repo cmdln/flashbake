@@ -15,8 +15,8 @@ from flashbake.plugins.timezone import findtimezone
 from flashbake.plugins import AbstractMessagePlugin
 
 class Weather(AbstractMessagePlugin):
-    def __init__(self):
-        self.connectable = True
+    def __init__(self, plugin_spec):
+        AbstractMessagePlugin.__init__(self, plugin_spec, True)
 
     def init(self, config):
         """ Shares the timezone_tz: property with timezone:TimeZone and supports
