@@ -14,9 +14,13 @@ import context
 import commands
 # Import smtplib for the actual sending function
 import smtplib
-# Import the email modules we'll need
-from email.mime.text import MIMEText
 from flashbake import ControlConfig, HotFiles
+
+# Import the email modules we'll need
+if sys.hexversion < 0x2050000:
+    from email.MIMEText import MIMEText
+else:
+    from email.mime.text import MIMEText
 
 def parsecontrol(control_file, config = None, results = None):
     """ Parse the dot-control file to get config options and hot files. """
