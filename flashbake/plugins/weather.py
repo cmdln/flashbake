@@ -19,22 +19,27 @@ class Weather(AbstractMessagePlugin):
         self.connectable = True
 
     def init(self, config):
-        """ Grab any extra properties that the config parser found and are needed by this module. """
+        """ Shares the timezone_tz: property with timezone:TimeZone and supports
+            an optional weather_city: property. """
         config.sharedproperty('timezone_tz')
         self.optionalproperty(config, 'weather_city')
 
     def addcontext(self, message_file, config):
-        """ Add weather information, based in the TZ, to the commit message. """
-        zone = findtimezone(config)
-        city = None
-
-        if None == zone:
-            if config.weather_city == none:
-                message_file.write('Couldn\'t determine city to fetch weather.\n')
-                return False
-            city = config.weather_city
+        """ Add weather information to the commit message. Looks for
+            weather_city: first in the config information but if that is not
+            set, will try to use the system time zone to identify a city. """
+        if self.weather_city == None:
+            zone = findtimezone(config)
+            if zone == None:
+                city = None
+            else:
+                city = self.__parsecity(zone)
         else:
-            city = self.__parsecity(zone)
+            city = self.weather_city
+
+        if None == city:
+            message_file.write('Couldn\'t determine city to fetch weather.\n')
+            return False
 
         # call the Google weather API with the city
         weather = self.__getweather(city)
@@ -42,7 +47,7 @@ class Weather(AbstractMessagePlugin):
         if len(weather) > 0:
             # there is also an entry for the key, wind_condition, in the weather
             # dictionary
-            message_file.write('Current weather is %(condition)s (%(temp_f)sF/%(temp_c)sC) %(humidity)s\n'\
+            message_file.write('Current weather for %(city)s is %(condition)s (%(temp_f)sF/%(temp_c)sC) %(humidity)s\n'\
                     % weather)
         else:
             message_file.write('Couldn\'t fetch current weather for city, %s.\n' % city)
@@ -75,6 +80,7 @@ class Weather(AbstractMessagePlugin):
                 return dict()
 
             weather = dict()
+            weather['city'] = city
             for child in current[0].childNodes:
                if child.localName == 'icon':
                    continue

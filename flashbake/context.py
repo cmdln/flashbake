@@ -29,7 +29,7 @@ def buildmessagefile(control_config):
             plugin_success = plugin.addcontext(message_file, control_config)
             # let each plugin say which ones attempt network connections
             if plugin.connectable:
-                connectable = true
+                connectable = True
                 connected = connected or plugin_success
         if connectable and not connected:
             message_file.write('All of the plugins that use the network failed.\n')
