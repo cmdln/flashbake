@@ -16,7 +16,7 @@ import commands
 import smtplib
 # Import the email modules we'll need
 from email.mime.text import MIMEText
-from flashbake import ControlConfig, ParseResults
+from flashbake import ControlConfig, HotFiles
 
 def parsecontrol(control_file, config = None, results = None):
     """ Parse the dot-control file to get config options and hot files. """
@@ -24,9 +24,9 @@ def parsecontrol(control_file, config = None, results = None):
     logging.debug('Checking %s' % control_file)
 
     if None == results:
-        parse_results = ParseResults()
+        hot_files = HotFiles()
     else:
-        parse_results = results
+        hot_files = results
 
     if None == config:
         control_config = ControlConfig()
@@ -40,13 +40,13 @@ def parsecontrol(control_file, config = None, results = None):
             if __capture(control_config, line):
                 continue
 
-            parse_results.addfile(line.strip())
+            hot_files.addfile(line.strip())
     finally:
         control_file.close()
 
-    return (parse_results, control_config)
+    return (hot_files, control_config)
 
-def commit(project_dir, control_config, parse_results, quiet_mins, dryrun):
+def commit(project_dir, control_config, hot_files, quiet_mins, dryrun):
     # change to the project directory, necessary to find the .flashbake file and
     # to correctly refer to the project files by relative paths
     os.chdir(project_dir)
@@ -77,13 +77,13 @@ def commit(project_dir, control_config, parse_results, quiet_mins, dryrun):
             pending_file = __trimgit(line)
 
             # not in the dot-control file, skip it
-            if not (parse_results.contains(pending_file)):
+            if not (hot_files.contains(pending_file)):
                 continue
 
             logging.debug('Parsing status line %s to determine commit action' % line)
 
             # remove files that will be considered for commit
-            parse_results.remove(pending_file)
+            hot_files.remove(pending_file)
 
             # check the quiet period against mtime
             last_mod = os.path.getmtime(pending_file)
@@ -99,21 +99,21 @@ def commit(project_dir, control_config, parse_results, quiet_mins, dryrun):
 
     logging.debug('Examining unknown files.')
 
-    parse_results.warnlinks()
+    hot_files.warnlinks()
 
     # figure out what the status of the remaining files is
     git_status = 'git status "%s"'
-    for control_file in parse_results.control_files:
+    for control_file in hot_files.control_files:
         if not os.path.exists(control_file):
             logging.debug('%s does not exist yet.' % control_file)
-            parse_results.putabsent(control_file)
+            hot_files.putabsent(control_file)
             continue
 
         status_output = commands.getoutput(git_status % control_file)
 
         if status_output.startswith('error'):
             if status_output.find('did not match') > 0:
-                parse_results.putneedsadd(control_file)
+                hot_files.putneedsadd(control_file)
                 logging.debug('%s exists but is unknown by git.' % control_file)
             else:
                 logging.error('Unknown error occurred!')
@@ -130,7 +130,7 @@ def commit(project_dir, control_config, parse_results, quiet_mins, dryrun):
             logging.error('%s is in the status message but failed other tests.' % control_file)
             logging.error('Try \'git status "%s"\' for more info.' % control_file)
 
-    parse_results.addorphans(control_config)
+    hot_files.addorphans(control_config)
 
     if len(to_commit.strip()) > 0:
         logging.info('Committing changes to known files, %s.' % to_commit)
@@ -146,8 +146,8 @@ def commit(project_dir, control_config, parse_results, quiet_mins, dryrun):
     else:
         logging.info('No changes to known files found to commit.')
 
-    if parse_results.needsnotice():
-        __sendnotice(control_config, project_dir, parse_results)
+    if hot_files.needsnotice():
+        __sendnotice(control_config, project_dir, hot_files)
     else:
         logging.info('No missing or untracked files found, not sending email notice.')
         
@@ -193,25 +193,25 @@ def __trimgit(status_line):
     tokens = status_line.split(':')
     return tokens[1].strip()
 
-def __sendnotice(control_config, project_dir, parse_results):
+def __sendnotice(control_config, project_dir, hot_files):
     if None == control_config.notice_to:
         logging.info('Skipping notice, no notice_to: recipient set.')
         return
 
     body = ''
     
-    if len(parse_results.not_exists) > 0:
+    if len(hot_files.not_exists) > 0:
         body += '\nThe following files do not exist:\n\n'
 
-        for file in parse_results.not_exists:
+        for file in hot_files.not_exists:
            body += '\t' + file + '\n'
 
         body += '\nMake sure there is not a typo in .control and that you created/saved the file.\n'
     
-    if len(parse_results.linked_files) > 0:
+    if len(hot_files.linked_files) > 0:
         body += '\nThe following files in .control are links or have a link in their directory path.\n'
 
-        for (file, link) in parse_results.linked_files.iteritems():
+        for (file, link) in hot_files.linked_files.iteritems():
             if file == link:
                 body += '\t' + file + ' is a link\n'
             else:

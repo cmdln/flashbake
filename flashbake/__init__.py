@@ -10,10 +10,9 @@ from types import *
 from flashbake.plugins import PluginError, PLUGIN_ERRORS
 
 class ControlConfig:
-    """
-    Gather control options parsed out of the dot-control file in a project.
-    """
-
+    """ Accumulates options from a control file for use by the core modules as
+        well as for the plugins.  Also handles boot strapping the configured
+        plugins. """
     def __init__(self):
         self.initialized = False
         self.extra_props = dict()
@@ -30,9 +29,7 @@ class ControlConfig:
         self.plugins = list()
 
     def init(self):
-        """
-        Do any property clean up, after parsing but before use
-        """
+        """ Do any property clean up, after parsing but before use """
         if self.initialized == True:
             return
 
@@ -128,7 +125,7 @@ class ControlConfig:
         classobj = getattr(module, plugin_name)
         return classobj
 
-class ParseResults:
+class HotFiles:
     """
     Track the files as they are parsed and manipulated with regards to their git
     status and the dot-control file.

@@ -9,10 +9,10 @@ import string
 import random
 import logging
 
-def buildmessagefile(control_config):
+def buildmessagefile(config):
     """ Build a commit message that uses the provided ControlConfig object and
         return a reference to the resulting file. """
-    control_config.init()
+    config.init()
 
     msg_filename = '/tmp/git_msg_%d' % random.randint(0,1000)
 
@@ -25,8 +25,8 @@ def buildmessagefile(control_config):
 
     message_file = open(msg_filename, 'w')
     try:
-        for plugin in control_config.plugins:
-            plugin_success = plugin.addcontext(message_file, control_config)
+        for plugin in config.plugins:
+            plugin_success = plugin.addcontext(message_file, config)
             # let each plugin say which ones attempt network connections
             if plugin.connectable:
                 connectable = True
