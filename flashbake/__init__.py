@@ -15,6 +15,7 @@ class ControlConfig:
     """
 
     def __init__(self):
+        self.initialized = False
         self.extra_props = dict()
 
         self.email = None
@@ -32,16 +33,18 @@ class ControlConfig:
         """
         Do any property clean up, after parsing but before use
         """
+        if self.initialized == True:
+            return
 
         if self.notice_from == None and self.notice_to != None:
             self.notice_from = self.notice_to
 
         if len(self.plugin_names) == 0:
             logging.debug('No plugins configured, enabling the stock set.')
-            self.addplugins(['flashbake.plugins.timezone',
-                    'flashbake.plugins.weather',
-                    'flashbake.plugins.uptime',
-                    'flashbake.plugins.feed'])
+            self.addplugins(['flashbake.plugins.timezone:TimeZone',
+                    'flashbake.plugins.weather:Weather',
+                    'flashbake.plugins.uptime:UpTime',
+                    'flashbake.plugins.feed:Feed'])
 
         self.initplugins()
 

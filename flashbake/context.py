@@ -12,6 +12,7 @@ import logging
 def buildmessagefile(control_config):
     """ Build a commit message that uses the provided ControlConfig object and
         return a reference to the resulting file. """
+    control_config.init()
 
     msg_filename = '/tmp/git_msg_%d' % random.randint(0,1000)
 

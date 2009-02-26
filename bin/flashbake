@@ -64,8 +64,8 @@ if __name__ == "__main__":
         from flashbake.commit import commit, parsecontrol
         from flashbake.context import buildmessagefile
     
-    # look for plugin directory
     home_dir = os.path.expanduser('~')
+    # look for plugin directory
     plugin_dir = join(home_dir, '.flashbake', 'plugins')
     if os.path.exists(plugin_dir):
         logging.debug('Plugin directory exists, adding.')
@@ -86,18 +86,26 @@ if __name__ == "__main__":
 
     project_dir = args[0]
 
-    control_file = '.flashbake'
+    # look for central config
+    control_file = join(home_dir, '.flashbake', 'config')
+    if os.path.exists(control_file):
+        (parse_results, control_config) = parsecontrol(control_file)
+    else:
+        parse_results = None
+        control_config = None
+
+    control_file = join(project_dir, '.flashbake')
 
     # look for .control for backwards compatibility
-    if not os.path.exists('%s/%s' % (project_dir, control_file)):
-        control_file = '.control'
+    if not os.path.exists(control_file):
+        control_file = join(project_dir, '.control')
 
-    if not os.path.exists('%s/%s' % (project_dir, control_file)):
+    if not os.path.exists(control_file):
         parser.error('Could not find .flashbake or .control file in directory, "%s".' % project_dir)
         sys.exit(1)
 
     if options.context_only:
-        (parse_results, control_config) = parsecontrol(project_dir, control_file)
+        (parse_results, control_config) = parsecontrol(control_file, control_config, parse_results)
         msg_filename = buildmessagefile(control_config)
         message_file = open(msg_filename, 'r')
 
@@ -117,4 +125,4 @@ if __name__ == "__main__":
             parser.error('Quiet minutes, "%s", must be a valid number.' % args[1])
             sys.exit(1)
 
-    commit(project_dir, control_file, quiet_period, options.dryrun)
+    commit(project_dir, control_config, parse_results, quiet_period, options.dryrun)
