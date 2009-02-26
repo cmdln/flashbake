@@ -72,7 +72,6 @@ def commit(project_dir, control_config, parse_results, quiet_mins, dryrun):
     to_commit = ''
     # first look in the files git already knows about
     logging.debug("Examining git status.")
-    logging.debug(parse_results)
     for line in git_status.splitlines():
         if pending_re.match(line):
             pending_file = __trimgit(line)
@@ -98,7 +97,7 @@ def commit(project_dir, control_config, parse_results, quiet_mins, dryrun):
             else:
                 logging.debug('Change for file, %s, is too recent.' % pending_file)
 
-    logging.debug('\nExamining unknown files.')
+    logging.debug('Examining unknown files.')
 
     parse_results.warnlinks()
 

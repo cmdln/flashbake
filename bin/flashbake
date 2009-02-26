@@ -125,4 +125,5 @@ if __name__ == "__main__":
             parser.error('Quiet minutes, "%s", must be a valid number.' % args[1])
             sys.exit(1)
 
+    (parse_results, control_config) = parsecontrol(control_file, control_config, parse_results)
     commit(project_dir, control_config, parse_results, quiet_period, options.dryrun)
