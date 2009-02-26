@@ -71,6 +71,7 @@ def commit(project_dir, control_config, parse_results, quiet_mins, dryrun):
     file_template = ' "%s"'
     to_commit = ''
     # first look in the files git already knows about
+    logging.debug("Examining git status.")
     for line in git_status.splitlines():
         if pending_re.match(line):
             pending_file = __trimgit(line)
