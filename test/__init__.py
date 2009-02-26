@@ -15,16 +15,16 @@ class ConfigTestCase(unittest.TestCase):
                     'Should not be able to load unknown plugin.')
 
     def testnoconnectable(self):
-        self.__testattr('test.noconnectable', 'connectable', 'missing_attribute')
+        self.__testattr('test.plugins:NoConnectable', 'connectable', 'missing_attribute')
 
     def testwrongconnectable(self):
-        self.__testattr('test.wrongconnectable', 'connectable', 'invalid_attribute')
+        self.__testattr('test.plugins:WrongConnectable', 'connectable', 'invalid_attribute')
 
     def testnoaddcontext(self):
-        self.__testattr('test.noaddcontext', 'addcontext', 'missing_attribute')
+        self.__testattr('test.plugins:NoAddContext', 'addcontext', 'missing_attribute')
 
     def testwrongaddcontext(self):
-        self.__testattr('test.wrongaddcontext', 'addcontext', 'invalid_attribute')
+        self.__testattr('test.plugins:WrongAddContext', 'addcontext', 'invalid_attribute')
 
     def teststockplugins(self):
         self.config.extra_props['feed_url'] = "http://random.com/feed"

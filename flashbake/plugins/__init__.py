@@ -56,6 +56,6 @@ class AbstractMessagePlugin():
 
         # TODO handle ValueError
         # TODO handle bad type
-        if type != None:
+        if type != None and value != None:
             value = type(value)
         self.__dict__[name] = value
