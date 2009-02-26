@@ -14,11 +14,9 @@ class Feed(AbstractMessagePlugin):
         """ Grab any extra properties that the config parser found and are needed by this module. """
         self.requireproperty(config, 'feed_url')
         self.optionalproperty(config, 'feed_author')
-        self.optionalproperty(config, 'feed_limit')
+        self.optionalproperty(config, 'feed_limit', int)
         if self.feed_limit == None:
             self.feed_limit = 5
-        else:
-            self.feed_limit = int(self.feed_limit)
 
     def addcontext(self, message_file, config):
         """ Add the matching items to the commit context. """

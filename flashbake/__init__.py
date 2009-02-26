@@ -22,8 +22,8 @@ class ControlConfig:
         self.notice_from = None
         self.smtp_port = 25
 
-        self.int_props = list()
-        self.int_props.append('smtp_port')
+        self.prop_types = dict()
+        self.prop_types['smtp_port'] = int
 
         self.plugin_names = list()
         self.plugins = list()
@@ -45,7 +45,7 @@ class ControlConfig:
 
         self.initplugins()
 
-    def sharedproperty(self, name):
+    def sharedproperty(self, name, type = None):
         """ Declare a shared property, this way multiple plugins can share some
             value through the config object. """
         if name in self.__dict__:
@@ -57,9 +57,14 @@ class ControlConfig:
             value = self.extra_props[name]
             del self.extra_props[name]
 
+        # TODO handle ValueError
+        # TODO handle bad type
+        if type != None:
+            value = type(value)
         self.__dict__[name] = value
 
     def addplugins(self, plugin_names):
+        # TODO use a comprehension to ensure uniqueness
         self.plugin_names = self.plugin_names + plugin_names
 
     def initplugins(self):

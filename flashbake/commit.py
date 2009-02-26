@@ -171,14 +171,15 @@ def __capture(config, line):
            config.addplugins(prop_value.split(','))
            return True
 
-        if prop_name in config.int_props:
-            prop_value = int(prop_value)
-
         # hang onto any extra propeties in case plugins use them
         if not prop_name in config.__dict__:
             config.extra_props[prop_name] = prop_value;
             return True
 
+        # TODO handle ValueError
+        # TODO handle bad type
+        if prop_name in config.prop_types:
+            prop_value = config.prop_types[prop_name](prop_value)
         config.__dict__[prop_name] = prop_value
 
         return True
