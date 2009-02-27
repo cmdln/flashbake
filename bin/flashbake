@@ -7,6 +7,8 @@ from optparse import OptionParser
 import os
 from os.path import join, dirname, exists, realpath, abspath
 
+VERSION='0.22.1'
+
 def handlebadplugin(plugin_error):
     logging.debug('Plugin error, %s.' % plugin_error)
     if plugin_error.reason == PLUGIN_ERRORS.unknown_plugin:
@@ -32,7 +34,7 @@ def handlebadplugin(plugin_error):
 if __name__ == "__main__":
     usage = "usage: %prog [options] <project_dir> [quiet_min]"
 
-    parser = OptionParser(usage=usage, version='%prog 0.22')
+    parser = OptionParser(usage=usage, version='%s %s' % ('%prog', VERSION))
     parser.add_option('-c', '--context', dest='context_only',
             action='store_true', default=False,
             help='just generate and show the commit message, don\'t check for changes')
