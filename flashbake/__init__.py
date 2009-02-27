@@ -103,6 +103,7 @@ class ControlConfig:
                 plugin_class = self.__forname(module_name, plugin_name)
                 plugin = plugin_class(plugin_spec)
             except:
+                logging.debug('Couldn\'t load class %s' % plugin_spec)
                 raise PluginError(PLUGIN_ERRORS.unknown_plugin, plugin_spec)
             self.__checkattr(plugin_spec, plugin, 'connectable', bool)
             self.__checkattr(plugin_spec, plugin, 'addcontext', MethodType)
@@ -116,10 +117,10 @@ class ControlConfig:
         try:
             attrib = eval('plugin.%s' % name)
         except AttributeError:
-            raise PluginError(PLUGIN_ERRORS.missing_attribute, name, plugin_spec)
+            raise PluginError(PLUGIN_ERRORS.missing_attribute, plugin_spec, name)
 
         if not isinstance(attrib, expected_type):
-            raise PluginError(PLUGIN_ERRORS.invalid_attribute, name, plugin_spec)
+            raise PluginError(PLUGIN_ERRORS.invalid_attribute, plugin_spec, name)
 
     # with thanks to Ben Snider
     # http://www.bensnider.com/2008/02/27/dynamically-import-and-instantiate-python-classes/

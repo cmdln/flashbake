@@ -7,15 +7,15 @@ PLUGIN_ERRORS = Enum('unknown_plugin',
         )
 
 class PluginError(Exception):
-    def __init__(self, reason, name, plugin_spec = None):
+    def __init__(self, reason, plugin_spec, name = None):
         self.plugin_spec = plugin_spec
         self.reason = reason
         self.name = name
     def __str__(self):
-        if self.plugin_spec == None:
-            return '%s: %s' % (self.reason, self.name)
+        if self.name == None:
+            return '%s: %s' % (self.reason, self.plugin_spec)
         else:
-            return '%s - %s: %s' % (self.plugin_spec, self.reason, self.name)
+            return '%s, %s: %s' % (self.plugin_spec, self.reason, self.name)
 
 class AbstractMessagePlugin:
     """ Common parent class for all plugins, will try to help enforce the plugin
