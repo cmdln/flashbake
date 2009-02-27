@@ -62,7 +62,11 @@ def commit(project_dir, control_config, hot_files, quiet_mins, dryrun):
 
     if git_status.startswith('fatal'):
         logging.error('Fatal error from git.')
-        logging.error(git_status)
+        if 'fatal: Not a git repository' == git_status:
+            logging.error('Make sure "git init" was run in %s'
+                % os.path.realpath(project_dir))
+        else:
+            logging.error(git_status)
         sys.exit(1)
 
     # in particular find the existing entries that need a commit
