@@ -17,7 +17,7 @@ class PluginError(Exception):
         else:
             return '%s - %s: %s' % (self.plugin_spec, self.reason, self.name)
 
-class AbstractMessagePlugin():
+class AbstractMessagePlugin:
     """ Common parent class for all plugins, will try to help enforce the plugin
         protocol at runtime. """
     def __init__(self, plugin_spec, connectable = False):
