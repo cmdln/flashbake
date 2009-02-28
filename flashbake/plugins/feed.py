@@ -4,6 +4,7 @@
 
 import feedparser
 import logging
+from urllib2 import HTTPError, URLError
 from flashbake.plugins import AbstractMessagePlugin
 
 class Feed(AbstractMessagePlugin):
@@ -46,6 +47,10 @@ class Feed(AbstractMessagePlugin):
 
         try:
             feed = feedparser.parse(self.feed_url)
+
+            if not 'title' in feed.feed:
+                logging.info('Feed title is empty, feed is either malformed or unavailable.')
+                return (None, {})
 
             feed_title = feed.feed.title
 

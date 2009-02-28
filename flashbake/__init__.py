@@ -3,9 +3,11 @@
 #  Shared classes and functions for the flashbake package.
     
 import os
+import os.path
 import logging
 import sys
 import commands
+import glob
 from types import *
 from flashbake.plugins import PluginError, PLUGIN_ERRORS
 
@@ -136,19 +138,30 @@ class HotFiles:
     Track the files as they are parsed and manipulated with regards to their git
     status and the dot-control file.
     """
-    def __init__(self):
+    def __init__(self, project_dir):
+        self.project_dir = project_dir
         self.linked_files = dict()
         self.control_files = set()
         self.not_exists = set()
         self.to_add = set()
 
     def addfile(self, filename):
-        link = self.checklink(filename)
+        file_exists = False
+        logging.debug('%s: %s'
+               % (filename,
+                  glob.glob(os.path.join(self.project_dir, filename))))
+        for real_file in glob.iglob(os.path.join(self.project_dir, filename)):
+            if not file_exists:
+                file_exists = True
+            link = self.checklink(real_file)
 
-        if link == None:
-            self.control_files.add(filename)
-        else:
-            self.linked_files[filename] = link
+            if link == None:
+                self.control_files.add(real_file)
+            else:
+                self.linked_files[real_file] = link
+                
+        if not file_exists:
+            self.not_exists.add(filename)
 
     def checklink(self, filename):
         if os.path.islink(filename):

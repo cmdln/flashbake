@@ -22,13 +22,13 @@ if sys.hexversion < 0x2050000:
 else:
     from email.mime.text import MIMEText
 
-def parsecontrol(control_file, config = None, results = None):
+def parsecontrol(project_dir, control_file, config = None, results = None):
     """ Parse the dot-control file to get config options and hot files. """
 
     logging.debug('Checking %s' % control_file)
 
     if None == results:
-        hot_files = HotFiles()
+        hot_files = HotFiles(project_dir)
     else:
         hot_files = results
 
@@ -50,10 +50,10 @@ def parsecontrol(control_file, config = None, results = None):
 
     return (hot_files, control_config)
 
-def commit(project_dir, control_config, hot_files, quiet_mins, dryrun):
+def commit(control_config, hot_files, quiet_mins, dryrun):
     # change to the project directory, necessary to find the .flashbake file and
     # to correctly refer to the project files by relative paths
-    os.chdir(project_dir)
+    os.chdir(hot_files.project_dir)
 
     control_config.dryrun = dryrun
 
@@ -64,7 +64,7 @@ def commit(project_dir, control_config, hot_files, quiet_mins, dryrun):
         logging.error('Fatal error from git.')
         if 'fatal: Not a git repository' == git_status:
             logging.error('Make sure "git init" was run in %s'
-                % os.path.realpath(project_dir))
+                % os.path.realpath(hot_files.project_dir))
         else:
             logging.error(git_status)
         sys.exit(1)
@@ -112,6 +112,8 @@ def commit(project_dir, control_config, hot_files, quiet_mins, dryrun):
     # figure out what the status of the remaining files is
     git_status = 'git status "%s"'
     for control_file in hot_files.control_files:
+        # this shouldn't happen since HotFiles.addfile uses glob.iglob to expand
+        # the original file lines which does so based on what is in project_dir
         if not os.path.exists(control_file):
             logging.debug('%s does not exist yet.' % control_file)
             hot_files.putabsent(control_file)
@@ -155,7 +157,7 @@ def commit(project_dir, control_config, hot_files, quiet_mins, dryrun):
         logging.info('No changes to known files found to commit.')
 
     if hot_files.needsnotice():
-        __sendnotice(control_config, project_dir, hot_files)
+        __sendnotice(control_config, hot_files)
     else:
         logging.info('No missing or untracked files found, not sending email notice.')
         
@@ -202,7 +204,7 @@ def __trimgit(status_line):
     tokens = status_line.split(':')
     return tokens[1].strip()
 
-def __sendnotice(control_config, project_dir, hot_files):
+def __sendnotice(control_config, hot_files):
     if None == control_config.notice_to:
         logging.info('Skipping notice, no notice_to: recipient set.')
         return
@@ -237,7 +239,8 @@ def __sendnotice(control_config, project_dir, hot_files):
     # Create a text/plain message
     msg = MIMEText(body, 'plain')
 
-    msg['Subject'] = 'Some files in %s do not exist' % project_dir
+    msg['Subject'] = ('Some files in %s do not exist'
+            % os.path.realpath(hot_files.project_dir))
     msg['From'] = control_config.notice_from
     msg['To'] = control_config.notice_to
 

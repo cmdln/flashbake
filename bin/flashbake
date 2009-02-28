@@ -115,7 +115,7 @@ if __name__ == "__main__":
     # look for central config
     control_file = join(home_dir, '.flashbake', 'config')
     if os.path.exists(control_file):
-        (hot_files, control_config) = parsecontrol(control_file)
+        (hot_files, control_config) = parsecontrol(project_dir, control_file)
     else:
         hot_files = None
         control_config = None
@@ -132,7 +132,7 @@ if __name__ == "__main__":
 
     if options.context_only:
         try:
-            (hot_files, control_config) = parsecontrol(control_file, control_config, hot_files)
+            (hot_files, control_config) = parsecontrol(project_dir, control_file, control_config, hot_files)
             msg_filename = buildmessagefile(control_config)
             message_file = open(msg_filename, 'r')
 
@@ -156,8 +156,8 @@ if __name__ == "__main__":
             sys.exit(1)
 
     try:
-        (hot_files, control_config) = parsecontrol(control_file, control_config, hot_files)
-        commit(project_dir, control_config, hot_files, quiet_period, options.dryrun)
+        (hot_files, control_config) = parsecontrol(project_dir, control_file, control_config, hot_files)
+        commit(control_config, hot_files, quiet_period, options.dryrun)
     except PluginError, error:
         handlebadplugin(error)
         sys.exit(1)
