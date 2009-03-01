@@ -42,7 +42,7 @@ class AbstractMessagePlugin:
             dot-control file and to move it from the extra_props dict to a
             property of the config. """
         if not name in config.extra_props:
-            raise PluginError(PLUGIN_ERRORS.missing_property, name, self.plugin_spec)
+            raise PluginError(PLUGIN_ERRORS.missing_property, self.plugin_spec, name)
 
         self.optionalproperty(config, name)
 
