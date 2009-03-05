@@ -169,7 +169,7 @@ class HotFiles:
            return filename
         directory = os.path.dirname(filename)
 
-        while (len(directory) > 0):
+        while (len(directory) > 0 and directory != '/'):
             if os.path.islink(directory):
                 return directory
             directory = os.path.dirname(directory)
