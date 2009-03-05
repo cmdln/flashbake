@@ -36,6 +36,14 @@ class ConfigTestCase(unittest.TestCase):
         for plugin_name in plugins:
             plugin = self.config.initplugin(plugin_name)
 
+    def testnoauthorfail(self):
+        """Ensure that accessing feeds with no entry.author doesn't cause failures if the
+        feed_author config property isn't set."""
+        self.config.plugin_names = ['flashbake.plugins.feed:Feed']
+        self.config.extra_props['feed_url'] = "http://twitter.com/statuses/user_timeline/704593.rss"
+        from flashbake.context import buildmessagefile
+        buildmessagefile(self.config)
+
     def testfeedfail(self):
         try:
             self.config.initplugin('flashbake.plugins.feed:Feed')
