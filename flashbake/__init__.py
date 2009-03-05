@@ -165,11 +165,12 @@ class HotFiles:
             self.not_exists.add(filename)
 
     def checklink(self, filename):
+        # TODO: only check for links between the file and the project directory
         if os.path.islink(filename):
            return filename
         directory = os.path.dirname(filename)
 
-        while (len(directory) > 0):
+        while (len(directory) > 0 and directory != '/'):
             if os.path.islink(directory):
                 return directory
             directory = os.path.dirname(directory)

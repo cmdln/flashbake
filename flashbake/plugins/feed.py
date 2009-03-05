@@ -56,8 +56,7 @@ class Feed(AbstractMessagePlugin):
 
             by_creator = []
             for entry in feed.entries:
-               item_creator = entry.author
-               if self.feed_author != None and item_creator != self.feed_author:
+               if self.feed_author != None and entry.author != self.feed_author:
                    continue
                title = entry.title
                title = title.encode('ascii', 'replace')

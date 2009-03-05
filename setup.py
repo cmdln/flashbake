@@ -4,7 +4,7 @@
 from setuptools import setup
 
 setup(name='flashbake',
-        version='0.22.2',
+        version='0.23',
         author="Thomas Gideon",
         author_email="cmdln@thecommandline.net",
         url="http://thecommandline.net",
@@ -14,7 +14,8 @@ setup(name='flashbake',
             'flashbake.plugins.feed',
             'flashbake.plugins.timezone',
             'flashbake.plugins.uptime',
-            'flashbake.plugins.weather'
+            'flashbake.plugins.weather',
+            'flashbake.plugins.microblog'
             ],
         install_requires='''
             enum >=0.4.3
