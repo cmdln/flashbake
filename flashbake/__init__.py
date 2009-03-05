@@ -22,8 +22,9 @@ class ControlConfig:
         self.email = None
         self.notice_to = None
         self.notice_from = None
+        self.smtp_host = 'localhost'
         self.smtp_port = 25
-
+        
         self.prop_types = dict()
         self.prop_types['smtp_port'] = int
 
