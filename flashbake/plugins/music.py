@@ -40,14 +40,18 @@ limit %d"""
             results = cursor.fetchall()
             message_file.write('Last %d track(s) played in Banshee:\n' % len(results))
             for result in results:
-                last_played = time.ctime(result[2])
+                last_played = time.localtime(result[2])
                 if self.banshee_last_played_format != None:
+                    logging.debug('Using format %s' % self.banshee_last_played_format)
                     last_played = time.strftime(self.banshee_last_played_format,
                             last_played)
+                else:
+                    last_played = time.ctime(result[2])
                 message_file.write('"%s", by %s (%s)' %
                         (result[0], result[1], last_played))
                 message_file.write('\n')
-        except:
+        except Exception, error:
+            logging.error(error)
             conn.close()
 
         return True
