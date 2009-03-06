@@ -15,7 +15,8 @@ setup(name='flashbake',
             'flashbake.plugins.timezone',
             'flashbake.plugins.uptime',
             'flashbake.plugins.weather',
-            'flashbake.plugins.microblog'
+            'flashbake.plugins.microblog',
+            'flashbake.plugins.music'
             ],
         install_requires='''
             enum >=0.4.3
