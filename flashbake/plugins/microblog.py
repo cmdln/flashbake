@@ -2,6 +2,7 @@
 #  by Ben Snider, bensnider.com
 
 import logging, urllib
+from urllib2 import HTTPError, URLError
 from xml.etree.ElementTree import ElementTree
 from flashbake.plugins import AbstractMessagePlugin
 
@@ -107,6 +108,9 @@ class Twitter(AbstractMessagePlugin):
             return results
         except URLError, e:
             logging.error('Failed with reason %s.' % e.reason)
+            return results
+        except IOError:
+            logging.error('Socket error.')
             return results
         
         tree = ElementTree()
