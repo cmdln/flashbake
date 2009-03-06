@@ -246,15 +246,16 @@ def __sendnotice(control_config, hot_files):
 
     # Send the message via our own SMTP server, but don't include the
     # envelope header.
-    logging.debug('\nConnecting to SMTP port %d' % control_config.smtp_port)
+    logging.debug('\nConnecting to SMTP on host %s, port %d' % (control_config.smtp_host, control_config.smtp_port))
 
     try:
         s = smtplib.SMTP()
-        s.connect(port=control_config.smtp_port)
+        s.connect(host=control_config.smtp_host,port=control_config.smtp_port)
         logging.info('Sending notice to %s.' % control_config.notice_to)
         logging.debug(body)
         s.sendmail(control_config.notice_from, [control_config.notice_to], msg.as_string())
         logging.info('Notice sent.')
         s.close()
-    except:
+    except Exception as e:
         logging.error('Couldn\'t connect, will send later.')
+        logging.debug("SMTP Error:\n" + str(e));
