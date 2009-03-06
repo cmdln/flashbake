@@ -150,7 +150,12 @@ class HotFiles:
         logging.debug('%s: %s'
                % (filename,
                   glob.glob(os.path.join(self.project_dir, filename))))
-        for real_file in glob.iglob(os.path.join(self.project_dir, filename)):
+        if sys.hexversion < 0x2050000:
+            file_iter = glob.glob(os.path.join(self.project_dir, filename))
+        else:
+            file_iter = glob.iglob(os.path.join(self.project_dir, filename))
+
+        for real_file in file_iter:
             if not file_exists:
                 file_exists = True
             link = self.checklink(real_file)
