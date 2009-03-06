@@ -22,4 +22,5 @@ setup(name='flashbake',
             enum >=0.4.3
             feedparser >=4.1
             ''',
-        scripts=['bin/flashbake'])
+        scripts=['bin/flashbake',
+            'bin/flashbakeall'])
