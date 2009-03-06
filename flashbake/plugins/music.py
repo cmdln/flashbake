@@ -5,6 +5,7 @@
 import sqlite3
 import os.path
 import logging
+import time
 from flashbake.plugins import AbstractMessagePlugin
 
 class Banshee(AbstractMessagePlugin):
@@ -13,6 +14,7 @@ class Banshee(AbstractMessagePlugin):
             Banshee database. """   
         self.optionalproperty(config, 'banshee_db')
         self.optionalproperty(config, 'banshee_limit', int)
+        self.optionalproperty(config, 'banshee_last_played_format')
         if self.banshee_db == None:
             logging.debug('Using default location for Banshee database.')
             self.banshee_db = os.path.join(os.path.expanduser('~'),
@@ -24,7 +26,7 @@ class Banshee(AbstractMessagePlugin):
     def addcontext(self, message_file, config):
         """ Open the Banshee database and query for the last played tracks. """
         query = """\
-select t.Title, a.Name
+select t.Title, a.Name, t.LastPlayedStamp
 from CoreTracks t
 join CoreArtists a on t.ArtistID = a.ArtistID
 order by LastPlayedStamp desc
@@ -38,7 +40,12 @@ limit %d"""
             results = cursor.fetchall()
             message_file.write('Last %d track(s) played in Banshee:\n' % len(results))
             for result in results:
-                message_file.write('"%s", by %s' % (result))
+                last_played = time.ctime(result[2])
+                if self.banshee_last_played_format != None:
+                    last_played = time.strftime(self.banshee_last_played_format,
+                            last_played)
+                message_file.write('"%s", by %s (%s)' %
+                        (result[0], result[1], last_played))
                 message_file.write('\n')
         except:
             conn.close()
