@@ -4,7 +4,7 @@
 from setuptools import setup
 
 setup(name='flashbake',
-        version='0.23.1',
+        version='0.23.2',
         author="Thomas Gideon",
         author_email="cmdln@thecommandline.net",
         url="http://thecommandline.net",
