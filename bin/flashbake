@@ -93,8 +93,9 @@ if __name__ == "__main__":
     # look for plugin directory
     plugin_dir = join(home_dir, '.flashbake', 'plugins')
     if os.path.exists(plugin_dir):
-        logging.debug('3rd party plugin directory exists, adding.')
-        sys.path.insert(0, realpath(plugin_dir))
+        real_plugin_dir = realpath(plugin_dir)
+        logging.debug('3rd party plugin directory exists, adding: %s' % real_plugin_dir)
+        sys.path.insert(0, real_plugin_dir)
     else:
         logging.debug('3rd party plugin directory doesn\'t exist, skipping.')
         logging.debug('Only stock plugins will be available.')
