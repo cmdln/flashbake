@@ -1,15 +1,16 @@
 First and foremost, I want to thank Cory Doctorow.  His simple inquiries into
-using source control for his writing projects serviced as the original genesis
+using source control for his writing projects served as the original genesis
 of this project.
 
 I also want to thank all of the early adopters who helped improve the code and
 the documentation by simply asking questions and using the software.
 
-To date, I've also had a few contributors who have helped by submitting patches:
-Vaskin Kissoyan - docs
-Ben Snider, bensnider.com - the original code for microblogs.py, docs
-garthrk, github.org/garthrk - random fixes and tests, docs
-
+To date, I've also had a few contributors who have helped by submitting patches
+and working directly on the project:
+* Vaskin Kissoyan - docs, testing
+* Ben Snider, bensnider.com - the original code for microblogs.py, docs
+* garthrk, github.org/garthrk - random fixes and tests, docs
+* jpenney, github.org/jpenney - brain storming, random fixes and enhancements
 
 I want to give a special thanks to Jonathan Coulton, Brad Turcotte and Beatnik
 Turtle for freely offering their songs for download.  Being able to grab a
