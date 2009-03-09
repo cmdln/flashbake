@@ -256,6 +256,6 @@ def __sendnotice(control_config, hot_files):
         s.sendmail(control_config.notice_from, [control_config.notice_to], msg.as_string())
         logging.info('Notice sent.')
         s.close()
-    except Exception as e:
+    except Exception, e:
         logging.error('Couldn\'t connect, will send later.')
         logging.debug("SMTP Error:\n" + str(e));
