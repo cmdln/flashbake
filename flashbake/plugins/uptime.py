@@ -14,7 +14,7 @@ class UpTime(AbstractMessagePlugin):
     def addcontext(self, message_file, config):
         """ Add the system's up time to the commit context. """
 
-        uptime = __calcuptime()
+        uptime = self.__calcuptime()
 
         if uptime == None:
             message_file.write('Couldn\'t determine up time.\n')
