@@ -164,6 +164,8 @@ class HotFiles:
                 real_file = real_file.replace(self.project_dir, "")
             else:
                 real_file = os.path.relpath(real_file, self.project_dir)
+            if real_file.startswith("/"):
+                real_file = real_file[1:]
             link = self.checklink(real_file)
             if real_file == os.path.abspath(real_file):
                 logging.warn('%s is an absolute path and will be skipped.'
