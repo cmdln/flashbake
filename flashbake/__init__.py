@@ -140,63 +140,56 @@ class HotFiles:
     status and the dot-control file.
     """
     def __init__(self, project_dir):
-        self.project_dir = project_dir
+        self.project_dir = os.path.realpath(project_dir)
         self.linked_files = dict()
+        self.outside_files = set()
         self.control_files = set()
         self.not_exists = set()
         self.to_add = set()
 
     def addfile(self, filename):
+        to_expand = os.path.join(self.project_dir, filename)
         file_exists = False
         logging.debug('%s: %s'
-               % (filename,
-                  glob.glob(os.path.join(self.project_dir, filename))))
+               % (filename, glob.glob(to_expand)))
         if sys.hexversion < 0x2050000:
-            file_iter = glob.glob(os.path.join(self.project_dir, filename))
+            glob_iter = glob.glob(to_expand)
         else:
-            file_iter = glob.iglob(os.path.join(self.project_dir, filename))
+            glob_iter = glob.iglob(to_expand)
 
-        for real_file in file_iter:
+        for expanded_file in glob_iter:
+            # track whether iglob iterates at all, if it does not, then the line
+            # didn't expand to anything meaningful
             if not file_exists:
                 file_exists = True
-            # the commit code expects a relative path
-            project_prefix = self.project_dir
-            # TODO make OS portable for Windows users
-            if not project_prefix.endswith("/"):
-                project_prefix += "/"
-            if sys.hexversion < 0x2060000:
-                real_file = real_file.replace(project_prefix, "")
-            else:
-                real_file = os.path.relpath(real_file, project_prefix)
 
-            link = self.checklink(real_file)
-
-            if real_file == os.path.abspath(real_file):
-                logging.warn('%s is an absolute path and will be skipped.'
-                        % real_file)
+            # skip the file if some previous glob hit it
+            if (expanded_file in self.outside_files
+                    or expanded_file in self.linked_files.keys()):
                 continue
 
+            # the commit code expects a relative path
+            rel_file = self.__make_rel(expanded_file)
+
+            # skip the file if some previous glob hit it
+            if rel_file in self.control_files:
+                continue
+
+            # checking this after removing the expanded project directory
+            # catches absolute paths to files outside the project directory
+            if rel_file == expanded_file:
+                self.outside_files.add(expanded_file)
+                continue
+
+            link = self.__check_link(expanded_file)
+
             if link == None:
-                self.control_files.add(real_file)
+                self.control_files.add(rel_file)
             else:
-                self.linked_files[real_file] = link
+                self.linked_files[expanded_file] = link
                 
         if not file_exists:
-            self.not_exists.add(filename)
-
-    def checklink(self, filename):
-        logging.debug('Checking link for %s'
-                % filename)
-        # TODO: only check for links between the file and the project directory
-        if os.path.islink(filename):
-           return filename
-        directory = os.path.dirname(filename)
-
-        while (len(directory) > 0 and directory != '/'):
-            if os.path.islink(directory):
-                return directory
-            directory = os.path.dirname(directory)
-        return None
+            self.putabsent(filename)
 
     def contains(self, filename):
         return filename in self.control_files
@@ -212,8 +205,14 @@ class HotFiles:
 
     def warnlinks(self):
         # print warnings for linked files
-        for (filename, link) in self.linked_files.iteritems():
+        for filename in self.linked_files.keys():
             logging.info('%s is a link or its directory path contains a link.' % filename)
+        # print warnings for files outside the project
+        for filename in self.outside_files:
+            logging.info('%s is outside the project directory.' % filename)
+        # print warnings for files outside the project
+        for filename in self.not_exists:
+            logging.info('%s does not exist.' % filename)
 
     def addorphans(self, control_config):
         if len(self.to_add) == 0:
@@ -241,4 +240,39 @@ class HotFiles:
         os.remove(message_file)
 
     def needsnotice(self):
-        return len(self.not_exists) > 0 or len(self.linked_files) > 0
+        return (len(self.not_exists) > 0
+               or len(self.linked_files) > 0
+               or len(self.outside_files) > 0) 
+
+    def __check_link(self, filename):
+        # add, above, makes sure filename is always relative
+        if os.path.islink(filename):
+           return filename
+        directory = os.path.dirname(filename)
+
+        while (len(directory) > 0):
+            # stop at the project directory, if it is in the path
+            if directory == self.project_dir:
+                break
+            # stop at root, as a safety check though it should not happen
+            if directory == "/":
+                break
+            if os.path.islink(directory):
+                return directory
+            directory = os.path.dirname(directory)
+        return None
+
+    def __make_rel(self, filepath):
+        return self.__drop_prefix(self.project_dir, filepath)
+
+    def __drop_prefix(self, prefix, filepath):
+        if not filepath.startswith(prefix):
+            return filepath
+
+        # TODO make OS portable for Windows users
+        if not prefix.endswith("/"):
+            prefix += "/"
+        if sys.hexversion < 0x2060000:
+            return filepath.replace(prefix, "")
+        else:
+            return os.path.relpath(filepath, prefix)

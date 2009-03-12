@@ -205,7 +205,8 @@ def __trimgit(status_line):
     return tokens[1].strip()
 
 def __sendnotice(control_config, hot_files):
-    if None == control_config.notice_to:
+    if (None == control_config.notice_to
+            and not control_config.dryrun):
         logging.info('Skipping notice, no notice_to: recipient set.')
         return
 
@@ -217,10 +218,10 @@ def __sendnotice(control_config, hot_files):
         for file in hot_files.not_exists:
            body += '\t' + file + '\n'
 
-        body += '\nMake sure there is not a typo in .control and that you created/saved the file.\n'
+        body += '\nMake sure there is not a typo in .flashbake and that you created/saved the file.\n'
     
     if len(hot_files.linked_files) > 0:
-        body += '\nThe following files in .control are links or have a link in their directory path.\n'
+        body += '\nThe following files in .flashbake are links or have a link in their directory path.\n\n'
 
         for (file, link) in hot_files.linked_files.iteritems():
             if file == link:
@@ -228,12 +229,21 @@ def __sendnotice(control_config, hot_files):
             else:
                 body += '\t' + link + ' is a link on the way to ' + file + '\n'
 
-        body += '\nMake sure the physical file and its parent directories reside in the git project directory.\n'
+        body += '\nMake sure the physical file and its parent directories reside in the project directory.\n'
+    
+    if len(hot_files.outside_files) > 0:
+        body += '\nThe following files in .flashbake are not in the project directory.\n\n'
+
+        for file in hot_files.outside_files:
+           body += '\t' + file + '\n'
+
+        body += '\nOnly files in the project directory can be tracked and committed.\n'
 
 
     if control_config.dryrun:
         logging.debug(body)
-        logging.info('Dry run, skipping email notice.')
+        if control_config.notice_to != None:
+            logging.info('Dry run, skipping email notice.')
         return
 
     # Create a text/plain message
