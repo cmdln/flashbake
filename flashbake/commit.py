@@ -105,7 +105,7 @@ def commit(control_config, hot_files, quiet_mins, dryrun):
             else:
                 logging.debug('Change for file, %s, is too recent.' % pending_file)
 
-    logging.debug('Examining unknown files.')
+    logging.debug('Examining unknown or unchanged files.')
 
     hot_files.warnlinks()
 
