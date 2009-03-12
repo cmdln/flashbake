@@ -160,13 +160,17 @@ class HotFiles:
             if not file_exists:
                 file_exists = True
             # the commit code expects a relative path
+            project_prefix = self.project_dir
+            # TODO make OS portable for Windows users
+            if not project_prefix.endswith("/"):
+                project_prefix += "/"
             if sys.hexversion < 0x2060000:
-                real_file = real_file.replace(self.project_dir, "")
+                real_file = real_file.replace(project_prefix, "")
             else:
-                real_file = os.path.relpath(real_file, self.project_dir)
-            if real_file.startswith("/"):
-                real_file = real_file[1:]
+                real_file = os.path.relpath(real_file, project_prefix)
+
             link = self.checklink(real_file)
+
             if real_file == os.path.abspath(real_file):
                 logging.warn('%s is an absolute path and will be skipped.'
                         % real_file)
