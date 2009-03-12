@@ -165,6 +165,10 @@ class HotFiles:
             else:
                 real_file = os.path.relpath(real_file, self.project_dir)
             link = self.checklink(real_file)
+            if real_file == os.path.abspath(real_file):
+                logging.warn('%s is an absolute path and will be skipped.'
+                        % real_file)
+                continue
 
             if link == None:
                 self.control_files.add(real_file)
@@ -175,6 +179,8 @@ class HotFiles:
             self.not_exists.add(filename)
 
     def checklink(self, filename):
+        logging.debug('Checking link for %s'
+                % filename)
         # TODO: only check for links between the file and the project directory
         if os.path.islink(filename):
            return filename
