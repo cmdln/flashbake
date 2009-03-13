@@ -11,6 +11,10 @@ import glob
 from types import *
 from flashbake.plugins import PluginError, PLUGIN_ERRORS
 
+
+class ConfigError(Exception):
+    pass
+
 class ControlConfig:
     """ Accumulates options from a control file for use by the core modules as
         well as for the plugins.  Also handles boot strapping the configured
@@ -41,12 +45,11 @@ class ControlConfig:
 
         if len(self.plugin_names) == 0:
             logging.debug('No plugins configured, enabling the stock set.')
-            self.addplugins(['flashbake.plugins.timezone:TimeZone',
-                    'flashbake.plugins.weather:Weather',
-                    'flashbake.plugins.uptime:UpTime',
-                    'flashbake.plugins.feed:Feed'])
+            raise ConfigError('No plugins configured!')
 
-        self.initplugins()
+        for plugin_name in self.plugin_names:
+            plugin = self.initplugin(plugin_name)
+            self.plugins.append(plugin)
 
     def sharedproperty(self, name, type = None):
         """ Declare a shared property, this way multiple plugins can share some
@@ -60,20 +63,17 @@ class ControlConfig:
             value = self.extra_props[name]
             del self.extra_props[name]
 
-        # TODO handle ValueError
-        # TODO handle bad type
-        if type != None:
-            value = type(value)
-        self.__dict__[name] = value
+        try:
+            if type != None:
+                value = type(value)
+            self.__dict__[name] = value
+        except:
+            raise ConfigError('Problem parsing %s for option %s'
+                    % (name, value))
 
     def addplugins(self, plugin_names):
         # TODO use a comprehension to ensure uniqueness
         self.plugin_names = self.plugin_names + plugin_names
-
-    def initplugins(self):
-        for plugin_name in self.plugin_names:
-            plugin = self.initplugin(plugin_name)
-            self.plugins.append(plugin)
 
     def initplugin(self, plugin_spec):
         """ Initialize a plugin, including vetting that it meets the correct
@@ -203,7 +203,7 @@ class HotFiles:
     def putneedsadd(self, filename):
         self.to_add.add(filename)
 
-    def warnlinks(self):
+    def warnproblems(self):
         # print warnings for linked files
         for filename in self.linked_files.keys():
             logging.info('%s is a link or its directory path contains a link.' % filename)
