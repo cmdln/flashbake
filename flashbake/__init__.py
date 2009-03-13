@@ -73,8 +73,8 @@ class ControlConfig:
             self.__dict__[name] = value
 
     def addplugins(self, plugin_names):
-        # TODO use a comprehension to ensure uniqueness
-        self.plugin_names = self.plugin_names + plugin_names
+        # use a comprehension to ensure uniqueness
+        [self.__add_last(inbound_name) for inbound_name in plugin_names]
 
     def initplugin(self, plugin_spec):
         """ Initialize a plugin, including vetting that it meets the correct
@@ -108,6 +108,11 @@ class ControlConfig:
         plugin.init(self)
 
         return plugin
+
+    def __add_last(self, plugin_name):
+        if plugin_name in self.plugin_names:
+            self.plugin_names.remove(plugin_name) 
+        self.plugin_names.append(plugin_name)
 
     def __checkattr(self, plugin_spec, plugin, name, expected_type):
         try:
