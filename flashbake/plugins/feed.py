@@ -12,7 +12,8 @@ class Feed(AbstractMessagePlugin):
         AbstractMessagePlugin.__init__(self, plugin_spec, True)
 
     def init(self, config):
-        """ Grab any extra properties that the config parser found and are needed by this module. """
+        """ Grab any extra properties that the config parser found and are
+            needed by this module. """
         self.requireproperty(config, 'feed_url')
         self.optionalproperty(config, 'feed_author')
         self.optionalproperty(config, 'feed_limit', int)

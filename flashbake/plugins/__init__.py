@@ -1,6 +1,9 @@
 # from http://pypi.python.org/pypi/enum/
 from enum import Enum
-PLUGIN_ERRORS = Enum('unknown_plugin',
+PLUGIN_ERRORS = Enum(
+        'invalid_plugin',
+        'invalid_type',
+        'unknown_plugin',
         'missing_attribute',
         'invalid_attribute',
         'missing_property'
@@ -25,9 +28,12 @@ class AbstractMessagePlugin:
         self.plugin_spec = plugin_spec
 
     def init(self, config):
-        self.__abstract()
+        """ This method is optional. """
+        pass
 
     def addcontext(self, message_file, config):
+        """ This method is required, it will asplode if not overridden by
+            daughter classes. """
         self.__abstract()
 
     def __abstract(self): 
@@ -55,8 +61,11 @@ class AbstractMessagePlugin:
             value = config.extra_props[name]
             del config.extra_props[name]
 
-        # TODO handle ValueError
-        # TODO handle bad type
         if type != None and value != None:
-            value = type(value)
+            try:
+                value = type(value)
+            except:
+                raise flashbake.ConfigError(
+                        'The value, %s, for option, %s, could not be parsed as %s.'
+                        % (value, name, type))
         self.__dict__[name] = value

@@ -6,13 +6,31 @@ class ConfigTestCase(unittest.TestCase):
     def setUp(self):
         self.config = ControlConfig()
 
-    def testnoplugin(self):
+    def testinvalidspec(self):
         try:
             plugin = self.config.initplugin('test.foo')
             self.fail('Should not be able to use unknown')
         except PluginError, error:
+            self.assertEquals(str(error.reason), 'invalid_plugin',
+                    'Should not be able to load invalid plugin.')
+
+    def testnoplugin(self):
+        try:
+            plugin = self.config.initplugin('test.foo:Foo')
+            self.fail('Should not be able to use unknown')
+        except PluginError, error:
             self.assertEquals(str(error.reason), 'unknown_plugin',
                     'Should not be able to load unknown plugin.')
+
+    def testmissingparent(self):
+        try:
+            plugin_name = 'test.plugins:MissingParent'
+            plugin = self.config.initplugin(plugin_name)
+            self.fail('Should not have initialized plugin, %s' % plugin_name)
+        except PluginError, error:
+            reason = 'invalid_type'
+            self.assertEquals(str(error.reason), reason,
+                    'Error should specify failure reason, %s.' % reason)
 
     def testnoconnectable(self):
         self.__testattr('test.plugins:NoConnectable', 'connectable', 'missing_attribute')
@@ -21,7 +39,13 @@ class ConfigTestCase(unittest.TestCase):
         self.__testattr('test.plugins:WrongConnectable', 'connectable', 'invalid_attribute')
 
     def testnoaddcontext(self):
-        self.__testattr('test.plugins:NoAddContext', 'addcontext', 'missing_attribute')
+        try:
+            self.config.plugin_names = ['test.plugins:NoAddContext']
+            from flashbake.context import buildmessagefile
+            buildmessagefile(self.config)
+            self.fail('Should raise a NotImplementedError.')
+        except NotImplementedError:
+            pass
 
     def testwrongaddcontext(self):
         self.__testattr('test.plugins:WrongAddContext', 'addcontext', 'invalid_attribute')
