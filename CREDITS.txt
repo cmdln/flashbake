@@ -1,0 +1,18 @@
+First and foremost, I want to thank Cory Doctorow.  His simple inquiries into
+using source control for his writing projects served as the original genesis
+of this project.
+
+I also want to thank all of the early adopters who helped improve the code and
+the documentation by simply asking questions and using the software.
+
+To date, I've also had a few contributors who have helped by submitting patches
+and working directly on the project:
+* Vaskin Kissoyan - docs, testing
+* Ben Snider, bensnider.com - the original code for microblogs.py, docs
+* garthrk, github.org/garthrk - random fixes and tests, docs
+* Jason Penney, jasonpenney.net - brain storming, random fixes and enhancements
+
+I want to give a special thanks to Jonathan Coulton, Brad Turcotte and Beatnik
+Turtle for freely offering their songs for download.  Being able to grab a
+handful of tracks and import them into Banshee let me build that plugin very
+quickly, whislt listening to their awesome tunes to boot.
