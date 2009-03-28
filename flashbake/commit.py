@@ -15,6 +15,7 @@ import commands
 # Import smtplib for the actual sending function
 import smtplib
 from flashbake import ControlConfig, HotFiles
+import fnmatch
 
 # Import the email modules we'll need
 if sys.hexversion < 0x2050000:
@@ -31,7 +32,7 @@ def parsecontrol(project_dir, control_file, config = None, results = None):
         hot_files = HotFiles(project_dir)
     else:
         hot_files = results
-
+        
     if None == config:
         control_config = ControlConfig()
     else:
@@ -48,6 +49,13 @@ def parsecontrol(project_dir, control_file, config = None, results = None):
     finally:
         control_file.close()
 
+### JCP - TEMP - START
+    for f in list(hot_files.control_files):
+        if fnmatch.fnmatch(f,'*.scriv'):
+            for path, dirs, files in os.walk(f):
+                for filename in files:
+                    hot_files.addfile(os.path.join(path,filename))
+### JCP - TEMP - END
     return (hot_files, control_config)
 
 def commit(control_config, hot_files, quiet_mins, dryrun):
