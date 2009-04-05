@@ -68,6 +68,10 @@ def commit(control_config, hot_files, quiet_mins, dryrun):
         else:
             logging.error(git_status)
         sys.exit(1)
+    # especially under cron, git may not be on the path even if installed
+    if git_status.find('command not found') > 0:
+        logging.error('Could not find git command.')
+        sys.exit(1)
 
     # in particular find the existing entries that need a commit
     pending_re = re.compile('#\s*(renamed|copied|modified|new file):.*')
