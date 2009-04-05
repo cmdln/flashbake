@@ -9,7 +9,12 @@ import sys
 import commands
 import glob
 from types import *
+import flashbake.plugins
 from flashbake.plugins import PluginError, PLUGIN_ERRORS
+
+
+class ConfigError(Exception):
+    pass
 
 class ControlConfig:
     """ Accumulates options from a control file for use by the core modules as
@@ -41,12 +46,11 @@ class ControlConfig:
 
         if len(self.plugin_names) == 0:
             logging.debug('No plugins configured, enabling the stock set.')
-            self.addplugins(['flashbake.plugins.timezone:TimeZone',
-                    'flashbake.plugins.weather:Weather',
-                    'flashbake.plugins.uptime:UpTime',
-                    'flashbake.plugins.feed:Feed'])
+            raise ConfigError('No plugins configured!')
 
-        self.initplugins()
+        for plugin_name in self.plugin_names:
+            plugin = self.initplugin(plugin_name)
+            self.plugins.append(plugin)
 
     def sharedproperty(self, name, type = None):
         """ Declare a shared property, this way multiple plugins can share some
@@ -60,31 +64,27 @@ class ControlConfig:
             value = self.extra_props[name]
             del self.extra_props[name]
 
-        # TODO handle ValueError
-        # TODO handle bad type
-        if type != None:
-            value = type(value)
-        self.__dict__[name] = value
+            if type != None:
+                try:
+                    value = type(value)
+                except:
+                    raise ConfigError('Problem parsing %s for option %s'
+                            % (name, value))
+            self.__dict__[name] = value
 
     def addplugins(self, plugin_names):
-        # TODO use a comprehension to ensure uniqueness
-        self.plugin_names = self.plugin_names + plugin_names
-
-    def initplugins(self):
-        for plugin_name in self.plugin_names:
-            plugin = self.initplugin(plugin_name)
-            self.plugins.append(plugin)
+        # use a comprehension to ensure uniqueness
+        [self.__add_last(inbound_name) for inbound_name in plugin_names]
 
     def initplugin(self, plugin_spec):
         """ Initialize a plugin, including vetting that it meets the correct
             protocol; not private so it can be used in testing. """
-        if plugin_spec.find(':') > 0:
-            tokens = plugin_spec.split(':')
-            module_name = tokens[0]
-            plugin_name = tokens[1]
-        else:
-            module_name = plugin_spec
-            plugin_name = None
+        if plugin_spec.find(':') < 0:
+            raise PluginError(PLUGIN_ERRORS.invalid_plugin, plugin_spec)
+
+        tokens = plugin_spec.split(':')
+        module_name = tokens[0]
+        plugin_name = tokens[1]
 
         try:
             __import__(module_name)
@@ -93,28 +93,26 @@ class ControlConfig:
             raise PluginError(PLUGIN_ERRORS.unknown_plugin, plugin_spec)
 
 
-        if plugin_name == None:
-            plugin = sys.modules[module_name]
-            self.__checkattr(plugin_spec, plugin, 'connectable', bool)
-            self.__checkattr(plugin_spec, plugin, 'addcontext', FunctionType)
+        try:
+            # TODO re-visit pkg_resources, EntryPoint
+            plugin_class = self.__forname(module_name, plugin_name)
+            plugin = plugin_class(plugin_spec)
+        except:
+            logging.debug('Couldn\'t load class %s' % plugin_spec)
+            raise PluginError(PLUGIN_ERRORS.unknown_plugin, plugin_spec)
+        if not isinstance(plugin, flashbake.plugins.AbstractMessagePlugin):
+            raise PluginError(PLUGIN_ERRORS.invalid_type, plugin_spec)
+        self.__checkattr(plugin_spec, plugin, 'connectable', bool)
+        self.__checkattr(plugin_spec, plugin, 'addcontext', MethodType)
 
-            if 'init' in plugin.__dict__ and isinstance(plugin.__dict__['init'], FunctionType):
-                plugin.init(self)
-        else:
-            try:
-                # TODO re-visit pkg_resources, EntryPoint
-                plugin_class = self.__forname(module_name, plugin_name)
-                plugin = plugin_class(plugin_spec)
-            except:
-                logging.debug('Couldn\'t load class %s' % plugin_spec)
-                raise PluginError(PLUGIN_ERRORS.unknown_plugin, plugin_spec)
-            self.__checkattr(plugin_spec, plugin, 'connectable', bool)
-            self.__checkattr(plugin_spec, plugin, 'addcontext', MethodType)
-
-            plugin.init(self)
-
+        plugin.init(self)
 
         return plugin
+
+    def __add_last(self, plugin_name):
+        if plugin_name in self.plugin_names:
+            self.plugin_names.remove(plugin_name) 
+        self.plugin_names.append(plugin_name)
 
     def __checkattr(self, plugin_spec, plugin, name, expected_type):
         try:
@@ -203,7 +201,7 @@ class HotFiles:
     def putneedsadd(self, filename):
         self.to_add.add(filename)
 
-    def warnlinks(self):
+    def warnproblems(self):
         # print warnings for linked files
         for filename in self.linked_files.keys():
             logging.info('%s is a link or its directory path contains a link.' % filename)
@@ -255,7 +253,7 @@ class HotFiles:
             if directory == self.project_dir:
                 break
             # stop at root, as a safety check though it should not happen
-            if directory == "/":
+            if directory == os.sep:
                 break
             if os.path.islink(directory):
                 return directory
@@ -269,9 +267,8 @@ class HotFiles:
         if not filepath.startswith(prefix):
             return filepath
 
-        # TODO make OS portable for Windows users
-        if not prefix.endswith("/"):
-            prefix += "/"
+        if not prefix.endswith(os.sep):
+            prefix += os.sep
         if sys.hexversion < 0x2060000:
             return filepath.replace(prefix, "")
         else:

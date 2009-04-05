@@ -14,7 +14,7 @@ import context
 import commands
 # Import smtplib for the actual sending function
 import smtplib
-from flashbake import ControlConfig, HotFiles
+import flashbake
 
 # Import the email modules we'll need
 if sys.hexversion < 0x2050000:
@@ -28,12 +28,12 @@ def parsecontrol(project_dir, control_file, config = None, results = None):
     logging.debug('Checking %s' % control_file)
 
     if None == results:
-        hot_files = HotFiles(project_dir)
+        hot_files = flashbake.HotFiles(project_dir)
     else:
         hot_files = results
 
     if None == config:
-        control_config = ControlConfig()
+        control_config = flashbake.ControlConfig()
     else:
         control_config = config
 
@@ -111,7 +111,7 @@ def commit(control_config, hot_files, quiet_mins, dryrun):
 
     logging.debug('Examining unknown or unchanged files.')
 
-    hot_files.warnlinks()
+    hot_files.warnproblems()
 
     # figure out what the status of the remaining files is
     git_status = 'git status "%s"'
@@ -190,11 +190,14 @@ def __capture(config, line):
             config.extra_props[prop_name] = prop_value;
             return True
 
-        # TODO handle ValueError
-        # TODO handle bad type
-        if prop_name in config.prop_types:
-            prop_value = config.prop_types[prop_name](prop_value)
-        config.__dict__[prop_name] = prop_value
+        try:
+            if prop_name in config.prop_types:
+                prop_value = config.prop_types[prop_name](prop_value)
+            config.__dict__[prop_name] = prop_value
+        except:
+            raise flashbake.ConfigError(
+                    'The value, %s, for option, %s, could not be parse as %s.'
+                    % (prop_value, prop_name, config.prop_types[prop_name]))
 
         return True
 
@@ -260,7 +263,8 @@ def __sendnotice(control_config, hot_files):
 
     # Send the message via our own SMTP server, but don't include the
     # envelope header.
-    logging.debug('\nConnecting to SMTP on host %s, port %d' % (control_config.smtp_host, control_config.smtp_port))
+    logging.debug('\nConnecting to SMTP on host %s, port %d'
+            % (control_config.smtp_host, control_config.smtp_port))
 
     try:
         s = smtplib.SMTP()
