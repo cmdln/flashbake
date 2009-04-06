@@ -92,7 +92,6 @@ class ControlConfig:
             logging.warn('Invalid module, %s' % plugin_name)
             raise PluginError(PLUGIN_ERRORS.unknown_plugin, plugin_spec)
 
-
         try:
             # TODO re-visit pkg_resources, EntryPoint
             plugin_class = self.__forname(module_name, plugin_name)
