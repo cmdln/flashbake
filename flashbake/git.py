@@ -31,8 +31,11 @@ class Git():
             raise VCError('Could not parse PATH env var, %s' % path_env)
         git_exists = False
         # if there is a git_path option, that takes precedence
-        if and git_path != None and os.path.exists(os.path.join(git_path, 'git')):
-            git_exists = True
+        if git_path != None:
+            if git_path.endswith('git'):
+                git_path = os.path.dirname(git_path)
+            if os.path.exists(os.path.join(git_path, 'git')):
+                git_exists = True
         else:
             for path_token in path_tokens:
                 if os.path.exists(os.path.join(path_token, 'git')):
@@ -45,10 +48,10 @@ class Git():
         # module
         self.__init_env(path_sep, git_path)
 
-    def status(self, files):
+    def status(self):
         """ Get the git status for the specified files, or the entire current
             directory. """
-        self.__run('status', files)
+        return self.__run('status')
 
     def __run(self, cmd, files=None):
         cmds = list()
@@ -56,8 +59,7 @@ class Git():
         cmds.append(cmd)
         if files != None:
             cmds += files
-        output = subprocess.Popen(cmds, stdout=subprocess.PIPE, env=self.env).communicate()[0]
-        logging.debug(output)
+        return subprocess.Popen(cmds, stdout=subprocess.PIPE, env=self.env).communicate()[0]
 
     def __init_env(self, path_sep, git_path):
         self.env = dict()
@@ -76,4 +78,4 @@ if __name__ == "__main__":
     except VCError, e:
         logging.info(e)
     os.chdir('../foo')
-    git.status(None)
+    logging.info(git.status())

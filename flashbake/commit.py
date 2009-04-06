@@ -15,6 +15,7 @@ import commands
 # Import smtplib for the actual sending function
 import smtplib
 import flashbake
+import git
 
 # Import the email modules we'll need
 if sys.hexversion < 0x2050000:
@@ -55,10 +56,12 @@ def commit(control_config, hot_files, quiet_mins, dryrun):
     # to correctly refer to the project files by relative paths
     os.chdir(hot_files.project_dir)
 
+    git_obj = git.Git(control_config.git_path)
+
     control_config.dryrun = dryrun
 
     # get the git status for the project
-    git_status = commands.getoutput('git status')
+    git_status = git_obj.status()
 
     if git_status.startswith('fatal'):
         logging.error('Fatal error from git.')

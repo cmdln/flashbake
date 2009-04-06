@@ -36,6 +36,8 @@ class ControlConfig:
         self.plugin_names = list()
         self.plugins = list()
 
+        self.git_path = None
+
     def init(self):
         """ Do any property clean up, after parsing but before use """
         if self.initialized == True:
