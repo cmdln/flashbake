@@ -16,7 +16,7 @@ class VCError(Exception):
         return repr(self.value)
 
 class Git():
-    def __init__(self, git_path=None):
+    def __init__(self, cwd, git_path=None):
         # look for git in the environment's PATH var
         path_env = os.getenv('PATH')
         if path_env.find(';') > 0:
@@ -47,19 +47,39 @@ class Git():
         # set up an environment mapping suitable for use with the subprocess
         # module
         self.__init_env(path_sep, git_path)
+        self.__cwd = cwd
 
-    def status(self):
+    def status(self, filename=None):
         """ Get the git status for the specified files, or the entire current
             directory. """
-        return self.__run('status')
+        if filename != None:
+            files = list()
+            files.append(filename)
+            return self.__run('status', files=files)
+        else:
+            return self.__run('status')
 
-    def __run(self, cmd, files=None):
+    def add(self, file):
+        """ Add an unknown but existing file. """
+        files = [ file ]
+        return self.__run('add', files=files)
+
+    def commit(self, messagefile, files):
+        """ Commit a list of files, the files should be strings and quoted. """
+        options = ['-F', messagefile]
+        return self.__run('commit', options, files)
+
+    def __run(self, cmd, options=None, files=None):
         cmds = list()
         cmds.append('git')
         cmds.append(cmd)
+        if options != None:
+            cmds += options
         if files != None:
             cmds += files
-        return subprocess.Popen(cmds, stdout=subprocess.PIPE, env=self.env).communicate()[0]
+        proc = subprocess.Popen(cmds, stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT, cwd=self.__cwd, env=self.env)
+        return proc.communicate()[0]
 
     def __init_env(self, path_sep, git_path):
         self.env = dict()
@@ -72,9 +92,9 @@ class Git():
 if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG,
             format='%(message)s')
-    git = Git('/opt/local/bin')
+    git = Git('../foo', '/opt/local/bin')
     try:
-        git = Git()
+        git = Git('../foo')
     except VCError, e:
         logging.info(e)
     os.chdir('../foo')

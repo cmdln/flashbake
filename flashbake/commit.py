@@ -56,13 +56,14 @@ def commit(control_config, hot_files, quiet_mins, dryrun):
     # to correctly refer to the project files by relative paths
     os.chdir(hot_files.project_dir)
 
-    git_obj = git.Git(control_config.git_path)
+    git_obj = git.Git(hot_files.project_dir, control_config.git_path)
 
     control_config.dryrun = dryrun
 
-    # get the git status for the project
+    # the wrapper object ensures git is on the path
     git_status = git_obj.status()
 
+    # get the git status for the project
     if git_status.startswith('fatal'):
         logging.error('Fatal error from git.')
         if 'fatal: Not a git repository' == git_status:
@@ -71,10 +72,6 @@ def commit(control_config, hot_files, quiet_mins, dryrun):
         else:
             logging.error(git_status)
         sys.exit(1)
-    # especially under cron, git may not be on the path even if installed
-    if git_status.find('command not found') > 0:
-        logging.error('Could not find git command.')
-        sys.exit(1)
 
     # in particular find the existing entries that need a commit
     pending_re = re.compile('#\s*(renamed|copied|modified|new file):.*')
@@ -82,9 +79,7 @@ def commit(control_config, hot_files, quiet_mins, dryrun):
     now = datetime.datetime.today()
     quiet_period = datetime.timedelta(minutes=quiet_mins)
 
-    git_commit = 'git commit -F %(msg_filename)s %(filenames)s'
-    file_template = ' "%s"'
-    to_commit = ''
+    to_commit = list()
     # first look in the files git already knows about
     logging.debug("Examining git status.")
     for line in git_status.splitlines():
@@ -107,7 +102,7 @@ def commit(control_config, hot_files, quiet_mins, dryrun):
 
             # add the file to the list to include in the commit
             if pending_mod < now:
-                to_commit += file_template % pending_file
+                to_commit.append(pending_file)
                 logging.debug('Flagging file, %s, for commit.' % pending_file)
             else:
                 logging.debug('Change for file, %s, is too recent.' % pending_file)
@@ -117,7 +112,6 @@ def commit(control_config, hot_files, quiet_mins, dryrun):
     hot_files.warnproblems()
 
     # figure out what the status of the remaining files is
-    git_status = 'git status "%s"'
     for control_file in hot_files.control_files:
         # this shouldn't happen since HotFiles.addfile uses glob.iglob to expand
         # the original file lines which does so based on what is in project_dir
@@ -126,7 +120,7 @@ def commit(control_config, hot_files, quiet_mins, dryrun):
             hot_files.putabsent(control_file)
             continue
 
-        status_output = commands.getoutput(git_status % control_file)
+        status_output = git_obj.status(control_file)
 
         if status_output.startswith('error'):
             if status_output.find('did not match') > 0:
@@ -147,16 +141,14 @@ def commit(control_config, hot_files, quiet_mins, dryrun):
             logging.error('%s is in the status message but failed other tests.' % control_file)
             logging.error('Try \'git status "%s"\' for more info.' % control_file)
 
-    hot_files.addorphans(control_config)
+    hot_files.addorphans(git_obj, control_config)
 
-    if len(to_commit.strip()) > 0:
+    if len(to_commit) > 0:
         logging.info('Committing changes to known files, %s.' % to_commit)
         message_file = context.buildmessagefile(control_config)
-        # consolidate the commit to be friendly to how git normally works
-        git_commit = git_commit % {'msg_filename' : message_file, 'filenames' : to_commit}
-        logging.debug(git_commit)
         if not dryrun:
-            commit_output = commands.getoutput(git_commit)
+            # consolidate the commit to be friendly to how git normally works
+            commit_output = git_obj.commit(message_file, to_commit)
             logging.debug(commit_output)
         os.remove(message_file)
         logging.info('Commit for known files complete.')

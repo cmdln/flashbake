@@ -213,28 +213,24 @@ class HotFiles:
         for filename in self.not_exists:
             logging.info('%s does not exist.' % filename)
 
-    def addorphans(self, control_config):
+    def addorphans(self, git_obj, control_config):
         if len(self.to_add) == 0:
             return
 
         message_file = context.buildmessagefile(control_config)
 
-        add_template = 'git add "%s"'
-        git_commit = 'git commit -F %(msg_filename)s %(filenames)s'
-        file_template = ' "%s"'
-        to_commit = ''
+        to_commit = list()
         for orphan in self.to_add:
             logging.debug('Adding %s.' % orphan)
-            add_output = commands.getoutput(add_template % orphan)
-            to_commit += file_template % orphan
+            add_output = git_obj.add(orphan)
+            logging.debug('Add output, %s' % orphan)
+            to_commit.append(orphan)
 
         logging.info('Adding new files, %s.' % to_commit)
         # consolidate the commit to be friendly to how git normally works
-        git_commit = git_commit % {'msg_filename' : message_file, 'filenames' : to_commit}
-        logging.debug(git_commit)
         if not control_config.dryrun:
-            commit_output = commands.getoutput(git_commit)
-            logging.debug(commit_output)
+            commit_output = git_obj.commit(message_file, to_commit)
+            logging.debug('Commit output, %s' % commit_output)
 
         os.remove(message_file)
 
