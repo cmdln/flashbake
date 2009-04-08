@@ -25,7 +25,7 @@ def buildmessagefile(config):
 
     message_file = open(msg_filename, 'w')
     try:
-        for plugin in config.plugins:
+        for plugin in config.msg_plugins:
             plugin_success = plugin.addcontext(message_file, config)
             # let each plugin say which ones attempt network connections
             if plugin.connectable:

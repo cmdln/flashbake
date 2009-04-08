@@ -34,7 +34,9 @@ class ControlConfig:
         self.prop_types['smtp_port'] = int
 
         self.plugin_names = list()
-        self.plugins = list()
+        self.msg_plugins = list()
+
+        self.file_plugins = list()
 
         self.git_path = None
 
@@ -52,7 +54,10 @@ class ControlConfig:
 
         for plugin_name in self.plugin_names:
             plugin = self.initplugin(plugin_name)
-            self.plugins.append(plugin)
+            if isinstance(plugin, flashbake.plugins.AbstractMessagePlugin):
+                self.msg_plugins.append(plugin)
+            if isinstance(plugin, flashbake.plugins.AbstractFilePlugin):
+                self.file_plugins.append(plugin)
 
     def sharedproperty(self, name, type = None):
         """ Declare a shared property, this way multiple plugins can share some
@@ -101,10 +106,14 @@ class ControlConfig:
         except:
             logging.debug('Couldn\'t load class %s' % plugin_spec)
             raise PluginError(PLUGIN_ERRORS.unknown_plugin, plugin_spec)
-        if not isinstance(plugin, flashbake.plugins.AbstractMessagePlugin):
+        is_message_plugin = isinstance(plugin, flashbake.plugins.AbstractMessagePlugin)
+        is_file_plugin = isinstance(plugin, flashbake.plugins.AbstractFilePlugin)
+        if not is_message_plugin and not is_file_plugin:
             raise PluginError(PLUGIN_ERRORS.invalid_type, plugin_spec)
-        self.__checkattr(plugin_spec, plugin, 'connectable', bool)
-        self.__checkattr(plugin_spec, plugin, 'addcontext', MethodType)
+        if is_message_plugin:
+            self.__checkattr(plugin_spec, plugin, 'connectable', bool)
+            self.__checkattr(plugin_spec, plugin, 'addcontext', MethodType)
+        # TODO test file plugin protocol
 
         plugin.init(self)
 
