@@ -113,7 +113,8 @@ class ControlConfig:
         if is_message_plugin:
             self.__checkattr(plugin_spec, plugin, 'connectable', bool)
             self.__checkattr(plugin_spec, plugin, 'addcontext', MethodType)
-        # TODO test file plugin protocol
+        if is_file_plugin:
+            self.__checkattr(plugin_spec, plugin, 'processfiles', MethodType)
 
         plugin.init(self)
 

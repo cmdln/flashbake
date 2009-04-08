@@ -48,6 +48,8 @@ def parsecontrol(project_dir, control_file, config = None, results = None):
             hot_files.addfile(line.strip())
     finally:
         control_file.close()
+    for plugin in control_config.file_plugins:
+        plugin.process
 
     return (hot_files, control_config)
 
