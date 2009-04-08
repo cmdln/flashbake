@@ -49,7 +49,7 @@ def parsecontrol(project_dir, control_file, config = None, results = None):
     finally:
         control_file.close()
     for plugin in control_config.file_plugins:
-        plugin.processfiles(hot_files, control_config):
+        plugin.processfiles(hot_files, control_config)
 
     return (hot_files, control_config)
 
