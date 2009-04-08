@@ -87,6 +87,7 @@ class ControlConfig:
         """ Initialize a plugin, including vetting that it meets the correct
             protocol; not private so it can be used in testing. """
         if plugin_spec.find(':') < 0:
+            logging.debug('Plugin spec not validly formed, %s.' % plugin_spec)
             raise PluginError(PLUGIN_ERRORS.invalid_plugin, plugin_spec)
 
         tokens = plugin_spec.split(':')
