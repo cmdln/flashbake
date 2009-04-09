@@ -14,8 +14,8 @@ import context
 import commands
 # Import smtplib for the actual sending function
 import smtplib
-from flashbake import ControlConfig, HotFiles
-import fnmatch
+import flashbake
+import git
 
 # Import the email modules we'll need
 if sys.hexversion < 0x2050000:
@@ -29,12 +29,12 @@ def parsecontrol(project_dir, control_file, config = None, results = None):
     logging.debug('Checking %s' % control_file)
 
     if None == results:
-        hot_files = HotFiles(project_dir)
+        hot_files = flashbake.HotFiles(project_dir)
     else:
         hot_files = results
         
     if None == config:
-        control_config = ControlConfig()
+        control_config = flashbake.ControlConfig()
     else:
         control_config = config
 
@@ -49,13 +49,9 @@ def parsecontrol(project_dir, control_file, config = None, results = None):
     finally:
         control_file.close()
 
-### JCP - TEMP - START
-    for f in list(hot_files.control_files):
-        if fnmatch.fnmatch(f,'*.scriv'):
-            for path, dirs, files in os.walk(f):
-                for filename in files:
-                    hot_files.addfile(os.path.join(path,filename))
-### JCP - TEMP - END
+    for plugin in control_config.file_plugins:
+        plugin.processfiles(hot_files, control_config)
+
     return (hot_files, control_config)
 
 def commit(control_config, hot_files, quiet_mins, dryrun):
@@ -63,11 +59,14 @@ def commit(control_config, hot_files, quiet_mins, dryrun):
     # to correctly refer to the project files by relative paths
     os.chdir(hot_files.project_dir)
 
+    git_obj = git.Git(hot_files.project_dir, control_config.git_path)
+
     control_config.dryrun = dryrun
 
-    # get the git status for the project
-    git_status = commands.getoutput('git status')
+    # the wrapper object ensures git is on the path
+    git_status = git_obj.status()
 
+    # get the git status for the project
     if git_status.startswith('fatal'):
         logging.error('Fatal error from git.')
         if 'fatal: Not a git repository' == git_status:
@@ -83,9 +82,7 @@ def commit(control_config, hot_files, quiet_mins, dryrun):
     now = datetime.datetime.today()
     quiet_period = datetime.timedelta(minutes=quiet_mins)
 
-    git_commit = 'git commit -F %(msg_filename)s %(filenames)s'
-    file_template = ' "%s"'
-    to_commit = ''
+    to_commit = list()
     # first look in the files git already knows about
     logging.debug("Examining git status.")
     for line in git_status.splitlines():
@@ -108,17 +105,16 @@ def commit(control_config, hot_files, quiet_mins, dryrun):
 
             # add the file to the list to include in the commit
             if pending_mod < now:
-                to_commit += file_template % pending_file
+                to_commit.append(pending_file)
                 logging.debug('Flagging file, %s, for commit.' % pending_file)
             else:
                 logging.debug('Change for file, %s, is too recent.' % pending_file)
 
-    logging.debug('Examining unknown files.')
+    logging.debug('Examining unknown or unchanged files.')
 
-    hot_files.warnlinks()
+    hot_files.warnproblems()
 
     # figure out what the status of the remaining files is
-    git_status = 'git status "%s"'
     for control_file in hot_files.control_files:
         # this shouldn't happen since HotFiles.addfile uses glob.iglob to expand
         # the original file lines which does so based on what is in project_dir
@@ -127,7 +123,7 @@ def commit(control_config, hot_files, quiet_mins, dryrun):
             hot_files.putabsent(control_file)
             continue
 
-        status_output = commands.getoutput(git_status % control_file)
+        status_output = git_obj.status(control_file)
 
         if status_output.startswith('error'):
             if status_output.find('did not match') > 0:
@@ -148,16 +144,14 @@ def commit(control_config, hot_files, quiet_mins, dryrun):
             logging.error('%s is in the status message but failed other tests.' % control_file)
             logging.error('Try \'git status "%s"\' for more info.' % control_file)
 
-    hot_files.addorphans(control_config)
+    hot_files.addorphans(git_obj, control_config)
 
-    if len(to_commit.strip()) > 0:
+    if len(to_commit) > 0:
         logging.info('Committing changes to known files, %s.' % to_commit)
         message_file = context.buildmessagefile(control_config)
-        # consolidate the commit to be friendly to how git normally works
-        git_commit = git_commit % {'msg_filename' : message_file, 'filenames' : to_commit}
-        logging.debug(git_commit)
         if not dryrun:
-            commit_output = commands.getoutput(git_commit)
+            # consolidate the commit to be friendly to how git normally works
+            commit_output = git_obj.commit(message_file, to_commit)
             logging.debug(commit_output)
         os.remove(message_file)
         logging.info('Commit for known files complete.')
@@ -194,11 +188,14 @@ def __capture(config, line):
             config.extra_props[prop_name] = prop_value;
             return True
 
-        # TODO handle ValueError
-        # TODO handle bad type
-        if prop_name in config.prop_types:
-            prop_value = config.prop_types[prop_name](prop_value)
-        config.__dict__[prop_name] = prop_value
+        try:
+            if prop_name in config.prop_types:
+                prop_value = config.prop_types[prop_name](prop_value)
+            config.__dict__[prop_name] = prop_value
+        except:
+            raise flashbake.ConfigError(
+                    'The value, %s, for option, %s, could not be parse as %s.'
+                    % (prop_value, prop_name, config.prop_types[prop_name]))
 
         return True
 
@@ -213,7 +210,8 @@ def __trimgit(status_line):
     return tokens[1].strip()
 
 def __sendnotice(control_config, hot_files):
-    if None == control_config.notice_to:
+    if (None == control_config.notice_to
+            and not control_config.dryrun):
         logging.info('Skipping notice, no notice_to: recipient set.')
         return
 
@@ -225,10 +223,10 @@ def __sendnotice(control_config, hot_files):
         for file in hot_files.not_exists:
            body += '\t' + file + '\n'
 
-        body += '\nMake sure there is not a typo in .control and that you created/saved the file.\n'
+        body += '\nMake sure there is not a typo in .flashbake and that you created/saved the file.\n'
     
     if len(hot_files.linked_files) > 0:
-        body += '\nThe following files in .control are links or have a link in their directory path.\n'
+        body += '\nThe following files in .flashbake are links or have a link in their directory path.\n\n'
 
         for (file, link) in hot_files.linked_files.iteritems():
             if file == link:
@@ -236,12 +234,21 @@ def __sendnotice(control_config, hot_files):
             else:
                 body += '\t' + link + ' is a link on the way to ' + file + '\n'
 
-        body += '\nMake sure the physical file and its parent directories reside in the git project directory.\n'
+        body += '\nMake sure the physical file and its parent directories reside in the project directory.\n'
+    
+    if len(hot_files.outside_files) > 0:
+        body += '\nThe following files in .flashbake are not in the project directory.\n\n'
+
+        for file in hot_files.outside_files:
+           body += '\t' + file + '\n'
+
+        body += '\nOnly files in the project directory can be tracked and committed.\n'
 
 
     if control_config.dryrun:
         logging.debug(body)
-        logging.info('Dry run, skipping email notice.')
+        if control_config.notice_to != None:
+            logging.info('Dry run, skipping email notice.')
         return
 
     # Create a text/plain message
@@ -254,7 +261,8 @@ def __sendnotice(control_config, hot_files):
 
     # Send the message via our own SMTP server, but don't include the
     # envelope header.
-    logging.debug('\nConnecting to SMTP on host %s, port %d' % (control_config.smtp_host, control_config.smtp_port))
+    logging.debug('\nConnecting to SMTP on host %s, port %d'
+            % (control_config.smtp_host, control_config.smtp_port))
 
     try:
         s = smtplib.SMTP()

@@ -20,9 +20,13 @@ if __name__ == "__main__":
     try:
         from flashbake.commit import commit, parsecontrol
         from flashbake.context import buildmessagefile
-        import test
+        import test.config
+        import test.files
     finally:
         del sys.path[0]
     
-    suite = unittest.TestLoader().loadTestsFromTestCase(test.ConfigTestCase)
+    # combine classes into single suite
+    config_suite = unittest.TestLoader().loadTestsFromTestCase(test.config.ConfigTestCase)
+    files_suite = unittest.TestLoader().loadTestsFromTestCase(test.files.FilesTestCase)
+    suite = unittest.TestSuite([config_suite, files_suite])
     unittest.TextTestRunner(verbosity=2).run(suite)
