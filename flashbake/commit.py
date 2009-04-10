@@ -48,12 +48,17 @@ def parsecontrol(project_dir, control_file, config = None, results = None):
             hot_files.addfile(line.strip())
     finally:
         control_file.close()
-
-    for plugin in control_config.file_plugins:
-        plugin.processfiles(hot_files, control_config)
-
+        
     return (hot_files, control_config)
 
+def preparecontrol(hot_files, control_config):
+    control_config.init()
+    logging.debug("loading file plugins")
+    for plugin in control_config.file_plugins:
+        logging.debug("running plugin %s" % plugin)
+        plugin.processfiles(hot_files, control_config)
+    return (hot_files, control_config)
+    
 def commit(control_config, hot_files, quiet_mins, dryrun):
     # change to the project directory, necessary to find the .flashbake file and
     # to correctly refer to the project files by relative paths
