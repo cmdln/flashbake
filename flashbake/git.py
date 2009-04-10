@@ -19,16 +19,9 @@ class Git():
     def __init__(self, cwd, git_path=None):
         # look for git in the environment's PATH var
         path_env = os.getenv('PATH')
-        if path_env.find(';') > 0:
-            path_sep = ';'
-            path_tokens = path_env.split(';')
-        elif path_env.find(':') > 0:
-            path_sep = ':'
-            path_tokens = path_env.split(':')
-        else:
-            # not sure how else to split out the PATH or if there is an OS
-            # agnostic way to do this
-            raise VCError('Could not parse PATH env var, %s' % path_env)
+        if (len(path_env) == 0):
+            path_env = os.defpath
+        path_tokens = path_env.split(os.pathsep)
         git_exists = False
         # if there is a git_path option, that takes precedence
         if git_path != None:
@@ -46,7 +39,7 @@ class Git():
             raise VCError('Could not find git executable on PATH.')
         # set up an environment mapping suitable for use with the subprocess
         # module
-        self.__init_env(path_sep, git_path)
+        self.__init_env(git_path)
         self.__cwd = cwd
 
     def status(self, filename=None):
@@ -81,12 +74,12 @@ class Git():
                 stderr=subprocess.STDOUT, cwd=self.__cwd, env=self.env)
         return proc.communicate()[0]
 
-    def __init_env(self, path_sep, git_path):
+    def __init_env(self, git_path):
         self.env = dict()
         self.env.update(os.environ)
         if git_path != None:
             new_path = self.env['PATH']
-            new_path = '%s%s%s' % (git_path, path_sep, new_path)
+            new_path = '%s%s%s' % (git_path, os.pathsep, new_path)
             self.env['PATH'] = new_path
 
 if __name__ == "__main__":
