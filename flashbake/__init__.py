@@ -45,6 +45,8 @@ class ControlConfig:
         if self.initialized == True:
             return
 
+        self.initialized = True
+
         if self.notice_from == None and self.notice_to != None:
             self.notice_from = self.notice_to
 
@@ -53,10 +55,13 @@ class ControlConfig:
             raise ConfigError('No plugins configured!')
 
         for plugin_name in self.plugin_names:
+            logging.debug("initalizing plugin: %s" % plugin_name)
             plugin = self.initplugin(plugin_name)
             if isinstance(plugin, flashbake.plugins.AbstractMessagePlugin):
+                logging.debug("Message Plugin: %s" % plugin_name)
                 self.msg_plugins.append(plugin)
             if isinstance(plugin, flashbake.plugins.AbstractFilePlugin):
+                logging.debug("File Plugin: %s" % plugin_name)
                 self.file_plugins.append(plugin)
 
     def sharedproperty(self, name, type = None):
