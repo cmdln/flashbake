@@ -8,6 +8,7 @@ import re
 from urllib2 import HTTPError, URLError
 from flashbake.plugins import AbstractMessagePlugin
 import xml
+import os.path
 
 class Location(AbstractMessagePlugin):
     def __init__(self, plugin_spec):
@@ -81,8 +82,18 @@ class Location(AbstractMessagePlugin):
         return cache
 
     def __save_cache(self, ip_addr, location):
-        # TODO save to file
-        pass
+        home_dir = os.path.expanduser('~')
+        # look for flashbake directory
+        fb_dir = join(home_dir, '.flashbake')
+        if not os.path.exists(fb_dir):
+            os.path.mkdir(fb_dir)
+        cache_file = open(os.path.join(fb_dir, 'ip_cache'), 'w')
+        try:
+            cache_file.write('ip_addr:%s\n' % ip_addr)
+            for key in location.iterkeys():
+                cache_file.write('location.%s:%s\n' % (key, location[key]))
+        finally:
+            cache_file.close()
 
     def __get_text(self, node_list):
         text_value = ''
