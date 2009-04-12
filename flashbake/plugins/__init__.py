@@ -6,7 +6,8 @@ PLUGIN_ERRORS = Enum(
         'unknown_plugin',
         'missing_attribute',
         'invalid_attribute',
-        'missing_property'
+        'missing_property',
+        'ignorable_error'
         )
 
 class PluginError(Exception):

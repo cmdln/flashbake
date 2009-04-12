@@ -67,28 +67,25 @@ class ScrivenerFile(AbstractFilePlugin):
                 hot_files.control_files.add(hotfile)
 
  
-        
+
 
 class ScrivenerWordcountFile(AbstractFilePlugin):
     """ Record Wordcount for Scrivener Files """
     def __init__(self, plugin_spec):
         AbstractFilePlugin.__init__(self, plugin_spec)
 
-    #def init(self, config):
-        # TODO: need a way to gracefully skip plugin in this case
-        # if not executable_available('textutil')
-        #    raise PluginError(PLUGIN_ERRORS.missing_property, self.plugin_spec, "textutilcmd")
-
     def init(self,config):
+        if not executable_available('textutil')
+           raise PluginError(PLUGIN_ERRORS.ignorable_error, self.plugin_spec, 'Could not find command, textutil.')
         config.sharedproperty('scrivener_projects')
         config.sharedproperty('scrivener_project_count')
         
     def processfiles(self, hot_files, config):
-        if 'scrivener_projects' in config.__dict__:
-            scrivener_projects = config.scrivener_projects
-        else:
+        if config.scrivener_projects == None:
             scrivener_projects = find_scrivener_projects(hot_files)
             config.scrivener_projects = scrivener_projects
+        else:
+            scrivener_projects = config.scrivener_projects
 
         config.scrivener_project_count = dict()
         for f in scrivener_projects:

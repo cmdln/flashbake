@@ -56,13 +56,21 @@ class ControlConfig:
 
         for plugin_name in self.plugin_names:
             logging.debug("initalizing plugin: %s" % plugin_name)
-            plugin = self.initplugin(plugin_name)
-            if isinstance(plugin, flashbake.plugins.AbstractMessagePlugin):
-                logging.debug("Message Plugin: %s" % plugin_name)
-                self.msg_plugins.append(plugin)
-            if isinstance(plugin, flashbake.plugins.AbstractFilePlugin):
-                logging.debug("File Plugin: %s" % plugin_name)
-                self.file_plugins.append(plugin)
+            try:
+                plugin = self.initplugin(plugin_name)
+                if isinstance(plugin, flashbake.plugins.AbstractMessagePlugin):
+                    logging.debug("Message Plugin: %s" % plugin_name)
+                    self.msg_plugins.append(plugin)
+                if isinstance(plugin, flashbake.plugins.AbstractFilePlugin):
+                    logging.debug("File Plugin: %s" % plugin_name)
+                    self.file_plugins.append(plugin)
+            except PluginError, e:
+                # re-raise critical plugin error
+                if not e.reason == PLUGIN_ERRORS.ignorable_error:
+                    raise e
+                # allow ignorable errors through with a warning
+                logging.warning('Skipping plugin, %s, ignorable error: %s' %
+                        (plugin_name, e.name))
 
     def sharedproperty(self, name, type = None):
         """ Declare a shared property, this way multiple plugins can share some
