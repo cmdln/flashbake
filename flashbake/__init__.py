@@ -82,7 +82,8 @@ class ControlConfig:
                 except:
                     raise ConfigError('Problem parsing %s for option %s'
                             % (name, value))
-            self.__dict__[name] = value
+
+        self.__dict__[name] = value
 
     def addplugins(self, plugin_names):
         # use a comprehension to ensure uniqueness
