@@ -60,7 +60,10 @@ class ControlConfig:
                 plugin = self.initplugin(plugin_name)
                 if isinstance(plugin, flashbake.plugins.AbstractMessagePlugin):
                     logging.debug("Message Plugin: %s" % plugin_name)
-                    self.msg_plugins.append(plugin)
+                    if 'flashbake.plugins.location:Location' == plugin_name:
+                        self.msg_plugins.insert(0, plugin)
+                    else:
+                        self.msg_plugins.append(plugin)
                 if isinstance(plugin, flashbake.plugins.AbstractFilePlugin):
                     logging.debug("File Plugin: %s" % plugin_name)
                     self.file_plugins.append(plugin)
