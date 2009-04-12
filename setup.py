@@ -18,6 +18,7 @@ setup(name='flashbake',
             'flashbake.plugins.weather',
             'flashbake.plugins.microblog',
             'flashbake.plugins.music',
+            'flashbake.plugins.location',
             'flashbake.plugins.scrivener'
             ],
         install_requires='''
