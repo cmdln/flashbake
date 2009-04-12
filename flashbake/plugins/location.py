@@ -38,7 +38,8 @@ class Location(AbstractMessagePlugin):
     def __locate_ip(self, ip_addr):
         cached = self.__load_cache()
         if cached['ip_addr'] == ip_addr:
-            return cached['location']
+            del cached['ip_addr']
+            return cached
         base_url = 'http://iplocationtools.com/ip_query.php?'
         for_ip = base_url + urllib.urlencode({'ip': ip_addr})
 
@@ -76,15 +77,33 @@ class Location(AbstractMessagePlugin):
             return {}
 
     def __load_cache(self):
+        home_dir = os.path.expanduser('~')
+        # look for flashbake directory
+        fb_dir = os.path.join(home_dir, '.flashbake')
         cache = dict()
-        cache['ip_addr'] = None
-        # TODO read from file
+        if not os.path.exists(fb_dir):
+            return cache
+        cache_name = os.path.join(fb_dir, 'ip_cache')
+        if not os.path.exists(cache_name):
+            return cache
+        cache_file = open(cache_name, 'r')
+        try:
+            for line in cache_file:
+                tokens = line.split(':')
+                key = tokens[0]
+                value = tokens[1].strip()
+                if key.startswith('location.'):
+                    key = key.replace('location.', '')
+                cache[key] = value
+            logging.debug('Loaded cache %s' % cache)
+        finally:
+            cache_file.close()
         return cache
 
     def __save_cache(self, ip_addr, location):
         home_dir = os.path.expanduser('~')
         # look for flashbake directory
-        fb_dir = join(home_dir, '.flashbake')
+        fb_dir = os.path.join(home_dir, '.flashbake')
         if not os.path.exists(fb_dir):
             os.path.mkdir(fb_dir)
         cache_file = open(os.path.join(fb_dir, 'ip_cache'), 'w')
