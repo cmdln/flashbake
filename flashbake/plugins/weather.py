@@ -28,14 +28,17 @@ class Weather(AbstractMessagePlugin):
         """ Add weather information to the commit message. Looks for
             weather_city: first in the config information but if that is not
             set, will try to use the system time zone to identify a city. """
-        if self.weather_city == None:
+        if config.location_location == None and self.weather_city == None:
             zone = findtimezone(config)
             if zone == None:
                 city = None
             else:
                 city = self.__parsecity(zone)
         else:
-            city = self.weather_city
+            if config.location_location == None:
+                city = self.weather_city
+            else:
+                city = config.location_location
 
         if None == city:
             message_file.write('Couldn\'t determine city to fetch weather.\n')

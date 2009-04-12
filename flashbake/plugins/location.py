@@ -10,6 +10,14 @@ from flashbake.plugins import AbstractMessagePlugin
 import xml
 
 class Location(AbstractMessagePlugin):
+    def __init__(self, plugin_spec):
+        AbstractMessagePlugin.__init__(self, plugin_spec, True)
+
+    def init(self, config):
+        """ Shares the timezone_tz: property with timezone:TimeZone and supports
+            an optional weather_city: property. """
+        config.sharedproperty('location_location')
+
     def addcontext(self, message_file, config):
         ip_addr = self.__get_ip()
         if ip_addr == None:
@@ -22,12 +30,14 @@ class Location(AbstractMessagePlugin):
 
         logging.debug(location)
         location_str = '%(City)s, %(RegionName)s' % location
-        if 'weather_city' in config.__dict__:
-            config.weather_city = location_str
+        config.location_location = location_str
         message_file.write('Current location is %s based on IP %s.\n' % (location_str, ip_addr))
+        return True
 
     def __locate_ip(self, ip_addr):
-        # TODO cache IP, check for same in the cache
+        cached = self.__load_cache()
+        if cached['ip_addr'] == ip_addr:
+            return cached['location']
         base_url = 'http://iplocationtools.com/ip_query.php?'
         for_ip = base_url + urllib.urlencode({'ip': ip_addr})
 
@@ -55,7 +65,7 @@ class Location(AbstractMessagePlugin):
                 key = child.localName
                 key = key.encode('ASCII', 'replace')
                 location[key] = self.__get_text(child.childNodes)
-
+            self.__save_cache(ip_addr, location)
             return location
         except HTTPError, e:
             logging.error('Failed with HTTP status code %d' % e.code)
@@ -63,6 +73,16 @@ class Location(AbstractMessagePlugin):
         except URLError, e:
             logging.error('Failed with reason %s.' % e.reason)
             return {}
+
+    def __load_cache(self):
+        cache = dict()
+        cache['ip_addr'] = None
+        # TODO read from file
+        return cache
+
+    def __save_cache(self, ip_addr, location):
+        # TODO save to file
+        pass
 
     def __get_text(self, node_list):
         text_value = ''
