@@ -23,6 +23,8 @@ class Weather(AbstractMessagePlugin):
             an optional weather_city: property. """
         config.sharedproperty('timezone_tz')
         self.optionalproperty(config, 'weather_city')
+        ## plugin uses location_location from Location plugin
+        config.sharedproperty('location_location')
 
     def addcontext(self, message_file, config):
         """ Add weather information to the commit message. Looks for
