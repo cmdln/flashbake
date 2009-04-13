@@ -37,7 +37,7 @@ class Location(AbstractMessagePlugin):
 
     def __locate_ip(self, ip_addr):
         cached = self.__load_cache()
-        if cached['ip_addr'] == ip_addr:
+        if cached.get('ip_addr','') == ip_addr:
             del cached['ip_addr']
             return cached
         base_url = 'http://iplocationtools.com/ip_query.php?'
