@@ -22,13 +22,19 @@ def executable_available(executable):
     return find_executable(executable) != None
 
     
-def find_scrivener_projects(hot_files):
-    files=list()
-    for f in hot_files.control_files:
-        if fnmatch.fnmatch(f,'*.scriv'):
-            files.append(f)
+def find_scrivener_projects(hot_files, config, flush_cache=False):
+    if flush_cache:
+        config.scrivener_projects = None
+        
+    if config.scrivener_projects == None:
+        scrivener_projects = list()
+        for f in hot_files.control_files:
+            if fnmatch.fnmatch(f,'*.scriv'):
+                scrivener_projects.append(f)
 
-    return files
+        config.scrivener_projects = scrivener_projects
+
+    return config.scrivener_projects
 
 def find_scrivener_project_contents(hot_files, scrivener_project):
     contents=list()
@@ -54,20 +60,11 @@ class ScrivenerFile(AbstractFilePlugin):
         config.sharedproperty('scrivener_projects')
         
     def processfiles(self, hot_files, config):
-        if 'scrivener_projects' in config.__dict__:
-            scrivener_projects = config.scrivener_projects
-        else:
-            scrivener_projects = find_scrivener_projects(hot_files)
-            config.scrivener_projects = scrivener_projects
-            
-        for f in scrivener_projects:
+        for f in find_scrivener_projects(hot_files, config):
             logging.debug("ScrivenerFile: adding '%s'" % f)
             for hotfile in find_scrivener_project_contents(hot_files,f):
                 #logging.debug(" - %s" % hotfile)
                 hot_files.control_files.add(hotfile)
-
- 
-
 
 class ScrivenerWordcountFile(AbstractFilePlugin):
     """ Record Wordcount for Scrivener Files """
@@ -75,20 +72,14 @@ class ScrivenerWordcountFile(AbstractFilePlugin):
         AbstractFilePlugin.__init__(self, plugin_spec)
 
     def init(self,config):
-        if not executable_available('textutil')
-           raise PluginError(PLUGIN_ERRORS.ignorable_error, self.plugin_spec, 'Could not find command, textutil.')
+        if not executable_available('textutil'):
+            raise PluginError(PLUGIN_ERRORS.ignorable_error, self.plugin_spec, 'Could not find command, textutil.')
         config.sharedproperty('scrivener_projects')
         config.sharedproperty('scrivener_project_count')
         
     def processfiles(self, hot_files, config):
-        if config.scrivener_projects == None:
-            scrivener_projects = find_scrivener_projects(hot_files)
-            config.scrivener_projects = scrivener_projects
-        else:
-            scrivener_projects = config.scrivener_projects
-
         config.scrivener_project_count = dict()
-        for f in scrivener_projects:
+        for f in find_scrivener_projects(hot_files,config):
             scriv_proj_dir  = os.path.join(hot_files.project_dir,f)
             hot_logfile = get_logfile_name(f)
             logfile = os.path.join(hot_files.project_dir,hot_logfile)
