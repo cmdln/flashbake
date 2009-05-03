@@ -36,12 +36,34 @@ def find_scrivener_projects(hot_files, config, flush_cache=False):
 
     return config.scrivener_projects
 
+def _relpath(path, start):
+    path = os.path.realpath(path)
+    start = os.path.realpath(start)
+    if not path.startswith(start):
+        raise Error("unable to calculate paths")
+    if os.path.samefile(path,start):
+        return "."
+
+    if not start.endswith(os.path.sep):
+        start += os.path.sep
+
+    return path[len(start):]
+
+    
 def find_scrivener_project_contents(hot_files, scrivener_project):
     contents=list()
-    for path, dirs, files in os.walk(os.path.join(hot_files.project_dir,scrivener_project)):
-        relpath = os.path.relpath(path,hot_files.project_dir)
+    for path, dirs, files in os.walk(os.path.join(hot_files.project_dir,scrivener_project)):        
+        if hasattr(os.path, "relpath"):
+            rpath = os.path.relpath(path,hot_files.project_dir)
+        else:
+            try:
+                import pathutils
+                rpath = pathutils.relative(path, hot_files.project_dir)
+            except:
+                rpath = _relpath(path, hot_files.project_dir)
+            
         for filename in files:
-            contents.append(os.path.join(relpath,filename))
+            contents.append(os.path.join(rpath,filename))
 
     return contents
 
