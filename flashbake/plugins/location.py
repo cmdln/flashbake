@@ -7,7 +7,8 @@ import urllib2
 import re
 from urllib2 import HTTPError, URLError
 from flashbake.plugins import AbstractMessagePlugin
-import xml
+from xml.dom import minidom
+import os
 import os.path
 
 class Location(AbstractMessagePlugin):
@@ -52,7 +53,7 @@ class Location(AbstractMessagePlugin):
             location_xml = opener.open(urllib2.Request(for_ip)).read()
 
             # the weather API returns some nice, parsable XML
-            location_dom = xml.dom.minidom.parseString(location_xml)
+            location_dom = minidom.parseString(location_xml)
 
             # just interested in the conditions at the moment
             response = location_dom.getElementsByTagName("Response")
@@ -105,7 +106,7 @@ class Location(AbstractMessagePlugin):
         # look for flashbake directory
         fb_dir = os.path.join(home_dir, '.flashbake')
         if not os.path.exists(fb_dir):
-            os.path.mkdir(fb_dir)
+            os.mkdir(fb_dir)
         cache_file = open(os.path.join(fb_dir, 'ip_cache'), 'w')
         try:
             cache_file.write('ip_addr:%s\n' % ip_addr)
