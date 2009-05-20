@@ -18,6 +18,7 @@ class Location(AbstractMessagePlugin):
         """ Shares the timezone_tz: property with timezone:TimeZone and supports
             an optional weather_city: property. """
         config.sharedproperty('location_location')
+        config.sharedproperty('location_data')
 
     def addcontext(self, message_file, config):
         ip_addr = self.__get_ip()
@@ -31,6 +32,7 @@ class Location(AbstractMessagePlugin):
 
         logging.debug(location)
         location_str = '%(City)s, %(RegionName)s' % location
+        config.location_data = location
         config.location_location = location_str
         message_file.write('Current location is %s based on IP %s.\n' % (location_str, ip_addr))
         return True
