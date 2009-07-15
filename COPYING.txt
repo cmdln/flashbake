@@ -1,25 +1,3 @@
-flashbake, its plugins and its tests are provied under a GPL v3 license.
-
-flashbake licensed files:
-* flashbake/__init__.py
-* flashbake/commit.py
-* flashbkae/context.py
-* bin/flashbake
-
-plugins licensed files:
-* flashbake/plugins/__init__.py
-* flashpake/plugins/feed.py
-* flashpake/plugins/timezone.py
-* flashpake/plugins/uptime.py
-* flashpake/plugins/weather.py
-
-test licensed files:
-* test/__init__.py
-* test/plugins.py
-* plugins/hellodolly.py
-* bin/test
-
-
 ----- begin license block -----
                     GNU GENERAL PUBLIC LICENSE
                        Version 3, 29 June 2007
