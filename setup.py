@@ -13,13 +13,13 @@ setup(name='flashbake',
             'flashbake.context',
             'flashbake.git',
             'flashbake.plugins.feed',
+            'flashbake.plugins.location',
+            'flashbake.plugins.microblog',
+            'flashbake.plugins.music',
+            'flashbake.plugins.scrivener'
             'flashbake.plugins.timezone',
             'flashbake.plugins.uptime',
             'flashbake.plugins.weather',
-            'flashbake.plugins.microblog',
-            'flashbake.plugins.music',
-            'flashbake.plugins.location',
-            'flashbake.plugins.scrivener'
             ],
         install_requires='''
             enum >=0.4.3
