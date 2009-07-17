@@ -11,6 +11,7 @@ and working directly on the project:
 * Ben Snider, bensnider.com - the original code for microblogs.py, docs
 * garthrk, github.org/garthrk - random fixes and tests, docs
 * Jason Penney, jasonpenney.net - brain storming, random fixes and enhancements
+* Tony Giunta - alternate implementation of uptime that uses uptime command
 
 I want to give a special thanks to Jonathan Coulton, Brad Turcotte and Beatnik
 Turtle for freely offering their songs for download.  Being able to grab a

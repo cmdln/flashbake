@@ -20,6 +20,7 @@
 import string
 import os.path
 import logging
+from subprocess import Popen, PIPE
 from flashbake.plugins import AbstractMessagePlugin
 
 class UpTime(AbstractMessagePlugin):
@@ -43,8 +44,7 @@ class UpTime(AbstractMessagePlugin):
             http://thesmithfam.org/blog/2005/11/19/python-uptime-script/ """
 
         if not os.path.exists('/proc/uptime'):
-            logging.warn('/proc/uptime doesn\'t exist.')
-            return None
+            return self.__run_uptime()
 
         f = open( "/proc/uptime" )
         try:
@@ -78,3 +78,49 @@ class UpTime(AbstractMessagePlugin):
         string += str(seconds) + " " + (seconds == 1 and "second" or "seconds" )
 
         return string
+    
+    
+    def __run_uptime(self):
+        """ For OSes that don't provide procfs, then try to use the updtime command.
+        
+            Thanks to Tony Giunta for this contribution. """
+        # Try to capture output of 'uptime' command, 
+        # if not found, catch OSError, log and return None
+        try:
+            output = Popen("uptime", stdout=PIPE).communicate()[0].split()
+        except OSError:
+            logging.warn("Can't find 'uptime' command in $PATH")
+            return None
+    
+        # Parse uptime output string
+        # if len == 10 or 11, uptime is less than a day
+        if len(output) in [10,11]:
+            days = "00"
+            hours_and_minutes = output[2].strip(",")
+        elif len(output) == 12:
+            days = output[2]
+            hours_and_minutes = output[4].strip(",")
+        else:
+            return None
+        
+        # If time is exactly x hours/mins, no ":" in "hours_and_minutes" 
+        # and the interpreter will throw a ValueError
+        try:
+            hours, minutes = hours_and_minutes.split(":")
+        except ValueError:
+            if output[3].startswith("hr"):
+                hours = hours_and_minutes
+                minutes = "00"
+            elif output[3].startwwith("min"):
+                hours = "00"
+                minutes = hours_and_minutes
+            else:
+                return None
+        
+        # Build up output string, might require Python 2.5+
+        uptime = (days + (" day, " if days == "1" else " days, ") +
+                hours + (" hour, " if hours == "1" else " hours, ") +
+                minutes + (" minute" if minutes == "1" else " minutes"))
+    
+        return uptime
+
