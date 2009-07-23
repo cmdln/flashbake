@@ -27,15 +27,15 @@ from flashbake.plugins import AbstractMessagePlugin
 class Feed(AbstractMessagePlugin):
     def __init__(self, plugin_spec):
         AbstractMessagePlugin.__init__(self, plugin_spec, True)
-        self.define_property('url')
+        self.define_property('url', required=True)
         self.define_property('author')
         self.define_property('limit', int, False, 5)
 
     def addcontext(self, message_file, config):
         """ Add the matching items to the commit context. """
-        
+
         # last n items for m creator
-        (title,last_items) = self.__fetchfeed()
+        (title, last_items) = self.__fetchfeed()
 
         if len(last_items) > 0:
             if self.author == None:

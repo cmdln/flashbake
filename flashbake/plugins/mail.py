@@ -44,7 +44,7 @@ class Email(plugins.AbstractNotifyPlugin):
         self.define_property('notice_to', required=True)
         self.define_property('notice_from')
         self.define_property('smtp_host', default='localhost')
-        self.define_property('smtp_port', int, False, 25)
+        self.define_property('smtp_port', int, default=25)
 
 
     def init(self, config):
