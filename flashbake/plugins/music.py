@@ -23,6 +23,8 @@ import logging
 import time
 from flashbake.plugins import AbstractMessagePlugin
 
+
+
 class Banshee(AbstractMessagePlugin):
     def __init__(self, plugin_spec):
         """ Add an optional property for specifying a different location for the

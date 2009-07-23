@@ -24,6 +24,8 @@ from urllib2 import HTTPError, URLError
 from xml.etree.ElementTree import ElementTree
 from flashbake.plugins import AbstractMessagePlugin
 
+
+
 class Twitter(AbstractMessagePlugin):
 
     def __init__(self, plugin_spec):

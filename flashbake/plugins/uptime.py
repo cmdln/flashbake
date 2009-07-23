@@ -25,7 +25,6 @@ import string
 
 
 
-
 class UpTime(AbstractMessagePlugin):
     def init(self, config):
         """ Nothing needed. """

@@ -1,8 +1,3 @@
-'''
-Created on Jul 23, 2009
-
-@author: cmdln
-'''
 #    copyright 2009 Thomas Gideon
 #
 #    This file is part of flashbake.
@@ -19,6 +14,15 @@ Created on Jul 23, 2009
 #
 #    You should have received a copy of the GNU General Public License
 #    along with flashbake.  If not, see <http://www.gnu.org/licenses/>.
+
+'''
+Created on Jul 23, 2009
+
+mail.py - plug-in to send notices via smtp.
+
+@author: cmdln
+'''
+
 from flashbake import plugins
 import logging
 import os
@@ -31,6 +35,7 @@ if sys.hexversion < 0x2050000:
     from email.MIMEText import MIMEText
 else:
     from email.mime.text import MIMEText
+
 
 
 class Email(plugins.AbstractNotifyPlugin):

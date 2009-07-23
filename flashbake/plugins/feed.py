@@ -22,6 +22,8 @@ import logging
 from urllib2 import HTTPError, URLError
 from flashbake.plugins import AbstractMessagePlugin
 
+
+
 class Feed(AbstractMessagePlugin):
     def __init__(self, plugin_spec):
         AbstractMessagePlugin.__init__(self, plugin_spec, True)
