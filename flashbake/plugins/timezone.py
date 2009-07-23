@@ -18,13 +18,15 @@
 
 '''  timezone.py - Stock plugin to find the system's time zone add to the commit message.'''
 
-import os, logging
 from flashbake.plugins import AbstractMessagePlugin
+import os
+import logging
 
 class TimeZone(AbstractMessagePlugin):
     def init(self, config):
         """ Grab any extra properties that the config parser found and are needed by this module. """
-        config.sharedproperty('timezone_tz')
+        config.shared_property('timezone_tz')
+
 
     def addcontext(self, message_file, config):
         """ Add the system's time zone to the commit context. """
