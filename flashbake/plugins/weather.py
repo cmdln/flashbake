@@ -18,34 +18,39 @@
 '''  weather.py - Stock plugin for adding weather information to context, must have TZ or
  /etc/localtime available to determine city from ISO ID. '''
 
-import sys
-import urllib, urllib2
-import xml.dom.minidom
+from flashbake.plugins import AbstractMessagePlugin
+from flashbake.plugins.timezone import findtimezone
+from urllib2 import HTTPError, URLError
+import logging
 import os
 import os.path
 import string
-import logging
-from urllib2 import HTTPError, URLError
-from flashbake.plugins.timezone import findtimezone
-from flashbake.plugins import AbstractMessagePlugin
+import sys
+import urllib
+import urllib2
+import xml.dom.minidom
+
+
 
 class Weather(AbstractMessagePlugin):
     def __init__(self, plugin_spec):
         AbstractMessagePlugin.__init__(self, plugin_spec, True)
+        self.define_property('city')
+
 
     def init(self, config):
         """ Shares the timezone_tz: property with timezone:TimeZone and supports
             an optional weather_city: property. """
-        config.sharedproperty('timezone_tz')
-        self.optionalproperty(config, 'weather_city')
+        config.shared_property('timezone_tz')
         ## plugin uses location_location from Location plugin
-        config.sharedproperty('location_location')
+        config.shared_property('location_location')
+
 
     def addcontext(self, message_file, config):
         """ Add weather information to the commit message. Looks for
             weather_city: first in the config information but if that is not
             set, will try to use the system time zone to identify a city. """
-        if config.location_location == None and self.weather_city == None:
+        if config.location_location == None and self.city == None:
             zone = findtimezone(config)
             if zone == None:
                 city = None
@@ -53,7 +58,7 @@ class Weather(AbstractMessagePlugin):
                 city = self.__parsecity(zone)
         else:
             if config.location_location == None:
-                city = self.weather_city
+                city = self.city
             else:
                 city = config.location_location
 
