@@ -48,6 +48,45 @@ class ControlConfig:
 
         self.git_path = None
 
+
+    def capture(self, line):
+        ''' Parse a line from the control file if it is relevant to plugin configuration. '''
+        # grab comments but don't do anything
+        if line.startswith('#'):
+            return True
+
+        # grab blanks but don't do anything
+        if len(line.strip()) == 0:
+            return True
+
+        if line.find(':') > 0:
+            prop_tokens = line.split(':', 1)
+            prop_name = prop_tokens[0].strip()
+            prop_value = prop_tokens[1].strip()
+
+            if 'plugins' == prop_name:
+               self.add_plugins(prop_value.split(','))
+               return True
+
+            # hang onto any extra propeties in case plugins use them
+            if not prop_name in self.__dict__:
+                self.extra_props[prop_name] = prop_value;
+                return True
+
+            try:
+                if prop_name in self.prop_types:
+                    prop_value = self.prop_types[prop_name](prop_value)
+                self.__dict__[prop_name] = prop_value
+            except:
+                raise ConfigError(
+                        'The value, %s, for option, %s, could not be parse as %s.'
+                        % (prop_value, prop_name, config.prop_types[prop_name]))
+
+            return True
+
+        return False
+
+
     def init(self):
         """ Do any property clean up, after parsing but before use """
         if self.initialized == True:
@@ -82,7 +121,7 @@ class ControlConfig:
                 logging.warning('Skipping plugin, %s, ignorable error: %s' %
                         (plugin_name, e.name))
 
-    def sharedproperty(self, name, type=None):
+    def shared_property(self, name, type=None):
         """ Declare a shared property, this way multiple plugins can share some
             value through the config object. """
         if name in self.__dict__:
@@ -103,7 +142,7 @@ class ControlConfig:
 
         self.__dict__[name] = value
 
-    def addplugins(self, plugin_names):
+    def add_plugins(self, plugin_names):
         # use a comprehension to ensure uniqueness
         [self.__add_last(inbound_name) for inbound_name in plugin_names]
 
@@ -149,49 +188,12 @@ class ControlConfig:
 
         return plugin
 
-    def capture(self, line):
-        ''' Parse a line from the control file if it is relevant to plugin configuration. '''
-        # grab comments but don't do anything
-        if line.startswith('#'):
-            return True
-
-        # grab blanks but don't do anything
-        if len(line.strip()) == 0:
-            return True
-
-        if line.find(':') > 0:
-            prop_tokens = line.split(':', 1)
-            prop_name = prop_tokens[0].strip()
-            prop_value = prop_tokens[1].strip()
-
-            if 'plugins' == prop_name:
-               self.addplugins(prop_value.split(','))
-               return True
-
-            # hang onto any extra propeties in case plugins use them
-            if not prop_name in self.__dict__:
-                self.extra_props[prop_name] = prop_value;
-                return True
-
-            try:
-                if prop_name in self.prop_types:
-                    prop_value = self.prop_types[prop_name](prop_value)
-                self.__dict__[prop_name] = prop_value
-            except:
-                raise ConfigError(
-                        'The value, %s, for option, %s, could not be parse as %s.'
-                        % (prop_value, prop_name, config.prop_types[prop_name]))
-
-            return True
-
-        return False
-
-
 
     def __add_last(self, plugin_name):
         if plugin_name in self.plugin_names:
             self.plugin_names.remove(plugin_name)
         self.plugin_names.append(plugin_name)
+
 
     def __checkattr(self, plugin_spec, plugin, name, expected_type):
         try:
@@ -202,6 +204,7 @@ class ControlConfig:
         if not isinstance(attrib, expected_type):
             raise PluginError(PLUGIN_ERRORS.invalid_attribute, plugin_spec, name)
 
+
     # with thanks to Ben Snider
     # http://www.bensnider.com/2008/02/27/dynamically-import-and-instantiate-python-classes/
     def __forname(self, module_name, plugin_name):
@@ -210,6 +213,7 @@ class ControlConfig:
         module = sys.modules[module_name]
         classobj = getattr(module, plugin_name)
         return classobj
+
 
 class HotFiles:
     """
@@ -348,3 +352,17 @@ class HotFiles:
             return filepath.replace(prefix, "")
         else:
             return os.path.relpath(filepath, prefix)
+
+
+def find_executable(executable):
+    found = filter(lambda ex: os.path.exists(ex),
+                   map(lambda path_token:
+                       os.path.join(path_token,executable),
+                       os.getenv('PATH').split(os.pathsep)))
+    if (len(found) == 0):
+        return None
+    return found[0]
+
+
+def executable_available(executable):
+    return find_executable(executable) != None
