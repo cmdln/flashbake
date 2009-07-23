@@ -75,14 +75,15 @@ class AbstractPlugin():
     def __capture_property(self, config, name, type=None, required=False, default=None):
         """ Move a property, if present, from the ControlConfig to the daughter
             plugin. """
-        if required and not name in config.extra_props:
-            raise PluginError(PLUGIN_ERRORS.missing_property, self.plugin_spec, name)
+        config_name = '%s_%s' % (self.property_prefix, name)
+        if required and not config_name in config.extra_props:
+            raise PluginError(PLUGIN_ERRORS.missing_property, self.plugin_spec, config_name)
 
         value = default
 
-        if name in config.extra_props:
-            value = config.extra_props[name]
-            del config.extra_props[name]
+        if config_name in config.extra_props:
+            value = config.extra_props[config_name]
+            del config.extra_props[config_name]
 
         if type != None and value != None:
             try:
@@ -106,7 +107,7 @@ class AbstractMessagePlugin(AbstractPlugin):
     """ Common parent class for all message plugins, will try to help enforce
         the plugin protocol at runtime. """
     def __init__(self, plugin_spec, connectable=False):
-        self.parse_spec(plugin_spec)
+        AbstractPlugin.__init__(self, plugin_spec)
         self.connectable = connectable
 
 
