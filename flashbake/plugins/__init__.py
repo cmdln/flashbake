@@ -29,14 +29,6 @@ PLUGIN_ERRORS = Enum(
         )
 
 
-class PropertyError(Exception):
-    def __init__(self, prop_def):
-        self.prop_def
-
-    def __str__(self):
-        return '%s is not a valid tuple to define a plugin property' % (prop_def)
-
-
 class PluginError(Exception):
     def __init__(self, reason, plugin_spec, name=None):
         self.plugin_spec = plugin_spec
@@ -53,49 +45,40 @@ class AbstractPlugin():
     """ Common parent for all kinds of plugins, mostly to share option handling
         code. """
     def __init__(self, plugin_spec):
-        self.parse_spec(plugin_spec)
-        
-    def parse_spec(self, plugin_spec):
         self.plugin_spec = plugin_spec
         self.service_name = plugin_spec.split(':')[-1]
         self.property_prefix = '_'.join(self.service_name.lower().strip().split(' '))
-        
-    def define_props(self, required=[], optional=[]):
-        self.required_props = required
-        self.optional_props = optional
+        self.__property_defs = []
 
-    def init_props(self, config):
+
+    def define_property(self, name, type=None, required=False, default=None):
         try:
-            for prop in self.required_props:
-                if len(prop) > 2:
-                    raise PropertyError(prop)
-                logging.debug(prop)
-                self.requireproperty(config, *prop)
-            for prop in self.optional_props:
-                logging.debug(prop)
-                self.optionalproperty(config, *prop)
+            self.__property_defs.append((name, type, required, default))
         except AttributeError:
-            pass
+            raise Exception('Call AbstractPlugin.__init__ in your plugin\'s __init__.')
+
+
+    def capture_properties(self, config):
+        try:
+            for prop in self.__property_defs:
+                assert len(prop) == 4, "Property definition, %s, is invalid" % (prop,)
+                self.__capture_property(config, *prop)
+        except AttributeError:
+            raise Exception('Call AbstractPlugin.__init__ in your plugin\'s __init__.')
+
 
     def init(self, config):
         """ This method is optional. """
         pass
 
 
-    def requireproperty(self, config, name, type=None):
-        """ Useful to plugins to express a property that is required in the
-            dot-control file and to move it from the extra_props dict to a
-            property of the config. """
-        if not name in config.extra_props:
-            raise PluginError(PLUGIN_ERRORS.missing_property, self.plugin_spec, name)
-
-        self.optionalproperty(config, name)
-
-
-    def optionalproperty(self, config, name, type=None):
+    def __capture_property(self, config, name, type=None, required=False, default=None):
         """ Move a property, if present, from the ControlConfig to the daughter
             plugin. """
-        value = None
+        if required and not name in config.extra_props:
+            raise PluginError(PLUGIN_ERRORS.missing_property, self.plugin_spec, name)
+
+        value = default
 
         if name in config.extra_props:
             value = config.extra_props[name]

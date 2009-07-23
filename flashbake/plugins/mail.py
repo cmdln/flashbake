@@ -35,22 +35,16 @@ else:
 
 class Email(plugins.AbstractNotifyPlugin):
     def __init__(self, plugin_spec):
-        self.parse_spec(plugin_spec)
-        self.define_props([ ('notice_to',) ],
-                          [
-                                ('notice_from',),
-                                ('smtp_host',),
-                                ('smtp_port', int)
-                          ])
+        plugins.AbstractPlugin.__init__(self, plugin_spec)
+        self.define_property('notice_to', required=True)
+        self.define_property('notice_from')
+        self.define_property('smtp_host', default='localhost')
+        self.define_property('smtp_port', int, False, 25)
 
 
     def init(self, config):
         if self.notice_from == None:
             self.notice_from = self.notice_to
-        if self.smtp_host == None:
-            self.smtp_host = 'localhost'
-        if self.smtp_port == None:
-            self.smtp_port = 25
 
     def notify(self, hot_files, control_config):
         body = ''

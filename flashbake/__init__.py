@@ -39,13 +39,7 @@ class ControlConfig:
         self.initialized = False
         self.extra_props = dict()
 
-#        self.notice_to = None
-#        self.notice_from = None
-#        self.smtp_host = 'localhost'
-#        self.smtp_port = 25
-
         self.prop_types = dict()
-        self.prop_types['smtp_port'] = int
 
         self.plugin_names = list()
         self.msg_plugins = list()
@@ -61,16 +55,13 @@ class ControlConfig:
 
         self.initialized = True
 
-#        if self.notice_from == None and self.notice_to != None:
-#            self.notice_from = self.notice_to
-
         if len(self.plugin_names) == 0:
             raise ConfigError('No plugins configured!')
 
         for plugin_name in self.plugin_names:
             logging.debug("initalizing plugin: %s" % plugin_name)
             try:
-                plugin = self.initplugin(plugin_name)
+                plugin = self.init_plugin(plugin_name)
                 if isinstance(plugin, flashbake.plugins.AbstractMessagePlugin):
                     logging.debug("Message Plugin: %s" % plugin_name)
                     if 'flashbake.plugins.location:Location' == plugin_name:
@@ -116,7 +107,7 @@ class ControlConfig:
         # use a comprehension to ensure uniqueness
         [self.__add_last(inbound_name) for inbound_name in plugin_names]
 
-    def initplugin(self, plugin_spec):
+    def init_plugin(self, plugin_spec):
         """ Initialize a plugin, including vetting that it meets the correct
             protocol; not private so it can be used in testing. """
         if plugin_spec.find(':') < 0:
@@ -134,7 +125,6 @@ class ControlConfig:
             raise PluginError(PLUGIN_ERRORS.unknown_plugin, plugin_spec)
 
         try:
-            # TODO re-visit pkg_resources, EntryPoint
             plugin_class = self.__forname(module_name, plugin_name)
             plugin = plugin_class(plugin_spec)
         except Exception, e:
@@ -154,7 +144,7 @@ class ControlConfig:
         if is_file_plugin:
             self.__checkattr(plugin_spec, plugin, 'notify', MethodType)
 
-        plugin.init_props(self)
+        plugin.capture_properties(self)
         plugin.init(self)
 
         return plugin
