@@ -34,62 +34,78 @@ else:
 
 
 class Email(plugins.AbstractNotifyPlugin):
+    def __init__(self, plugin_spec):
+        self.parse_spec(plugin_spec)
+        self.define_props([ ('notice_to',) ],
+                          [
+                                ('notice_from',),
+                                ('smtp_host',),
+                                ('smtp_port', int)
+                          ])
+    def init(self, config):
+        if self.notice_from == None:
+            self.notice_from = self.notice_to
+        if self.smtp_host == None:
+            self.smtp_host = 'localhost'
+        if self.smtp_port == None:
+            self.smtp_port = 25
+
     def notify(self, hot_files, control_config):
         body = ''
-        
+
         if len(hot_files.not_exists) > 0:
             body += '\nThe following files do not exist:\n\n'
-    
+
             for file in hot_files.not_exists:
                body += '\t' + file + '\n'
-    
+
             body += '\nMake sure there is not a typo in .flashbake and that you created/saved the file.\n'
-        
+
         if len(hot_files.linked_files) > 0:
             body += '\nThe following files in .flashbake are links or have a link in their directory path.\n\n'
-    
+
             for (file, link) in hot_files.linked_files.iteritems():
                 if file == link:
                     body += '\t' + file + ' is a link\n'
                 else:
                     body += '\t' + link + ' is a link on the way to ' + file + '\n'
-    
+
             body += '\nMake sure the physical file and its parent directories reside in the project directory.\n'
-        
+
         if len(hot_files.outside_files) > 0:
             body += '\nThe following files in .flashbake are not in the project directory.\n\n'
-    
+
             for file in hot_files.outside_files:
                body += '\t' + file + '\n'
-    
+
             body += '\nOnly files in the project directory can be tracked and committed.\n'
-    
-    
+
+
         if control_config.dryrun:
             logging.debug(body)
-            if control_config.notice_to != None:
+            if self.notice_to != None:
                 logging.info('Dry run, skipping email notice.')
             return
-    
+
         # Create a text/plain message
         msg = MIMEText(body, 'plain')
-    
+
         msg['Subject'] = ('Some files in %s do not exist'
                 % os.path.realpath(hot_files.project_dir))
-        msg['From'] = control_config.notice_from
-        msg['To'] = control_config.notice_to
-    
+        msg['From'] = self.notice_from
+        msg['To'] = self.notice_to
+
         # Send the message via our own SMTP server, but don't include the
         # envelope header.
         logging.debug('\nConnecting to SMTP on host %s, port %d'
-                % (control_config.smtp_host, control_config.smtp_port))
-    
+                % (self.smtp_host, self.smtp_port))
+
         try:
             s = smtplib.SMTP()
-            s.connect(host=control_config.smtp_host,port=control_config.smtp_port)
-            logging.info('Sending notice to %s.' % control_config.notice_to)
+            s.connect(host=self.smtp_host, port=self.smtp_port)
+            logging.info('Sending notice to %s.' % self.notice_to)
             logging.debug(body)
-            s.sendmail(control_config.notice_from, [control_config.notice_to], msg.as_string())
+            s.sendmail(self.notice_from, [self.notice_to], msg.as_string())
             logging.info('Notice sent.')
             s.close()
         except Exception, e:

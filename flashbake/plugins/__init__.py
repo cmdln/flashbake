@@ -15,8 +15,9 @@
 #    You should have received a copy of the GNU General Public License
 #    along with flashbake.  If not, see <http://www.gnu.org/licenses/>.
 
-# from http://pypi.python.org/pypi/enum/
 from enum import Enum
+import logging
+
 PLUGIN_ERRORS = Enum(
         'invalid_plugin',
         'invalid_type',
@@ -26,6 +27,15 @@ PLUGIN_ERRORS = Enum(
         'missing_property',
         'ignorable_error'
         )
+
+
+class PropertyError(Exception):
+    def __init__(self, prop_def):
+        self.prop_def
+
+    def __str__(self):
+        return '%s is not a valid tuple to define a plugin property' % (prop_def)
+
 
 class PluginError(Exception):
     def __init__(self, reason, plugin_spec, name=None):
@@ -43,8 +53,29 @@ class AbstractPlugin():
     """ Common parent for all kinds of plugins, mostly to share option handling
         code. """
     def __init__(self, plugin_spec):
+        self.parse_spec(plugin_spec)
+        
+    def parse_spec(self, plugin_spec):
         self.plugin_spec = plugin_spec
+        self.service_name = plugin_spec.split(':')[-1]
+        self.property_prefix = '_'.join(self.service_name.lower().strip().split(' '))
+        
+    def define_props(self, required=[], optional=[]):
+        self.required_props = required
+        self.optional_props = optional
 
+    def init_props(self, config):
+        try:
+            for prop in self.required_props:
+                if len(prop) > 2:
+                    raise PropertyError(prop)
+                logging.debug(prop)
+                self.requireproperty(config, *prop)
+            for prop in self.optional_props:
+                logging.debug(prop)
+                self.optionalproperty(config, *prop)
+        except AttributeError:
+            pass
 
     def init(self, config):
         """ This method is optional. """
@@ -92,7 +123,7 @@ class AbstractMessagePlugin(AbstractPlugin):
     """ Common parent class for all message plugins, will try to help enforce
         the plugin protocol at runtime. """
     def __init__(self, plugin_spec, connectable=False):
-        self.plugin_spec = plugin_spec
+        self.parse_spec(plugin_spec)
         self.connectable = connectable
 
 

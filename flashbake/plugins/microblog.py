@@ -28,8 +28,6 @@ class Twitter(AbstractMessagePlugin):
     
     def __init__(self, plugin_spec):
         AbstractMessagePlugin.__init__(self, plugin_spec, True)
-        self.service_name = plugin_spec.split(':')[-1]
-        self.property_prefix = '_'.join(self.service_name.lower().strip().split(' '))
         self.service_url = 'http://twitter.com'
         self.optional_field_info = { \
             'source':{'path':'source', 'transform':propercase}, \

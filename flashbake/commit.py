@@ -186,12 +186,10 @@ def __trimgit(status_line):
 
 
 def __sendnotice(control_config, hot_files):
-    if (None == control_config.notice_to
+    if (len(control_config.notify_plugins) == 0
             and not control_config.dryrun):
-        logging.info('Skipping notice, no notice_to: recipient set.')
+        logging.info('Skipping notice, no notify plugins configured.')
         return
 
-    import plugins.mail
-
-    email = plugins.mail.Email('flashbake.plugins.mail:Email')
-    email.notify(hot_files, control_config)
+    for plugin in control_config.notify_plugins:
+        plugin.notify(hot_files, control_config)

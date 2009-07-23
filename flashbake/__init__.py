@@ -39,19 +39,18 @@ class ControlConfig:
         self.initialized = False
         self.extra_props = dict()
 
-        self.email = None
-        self.notice_to = None
-        self.notice_from = None
-        self.smtp_host = 'localhost'
-        self.smtp_port = 25
+#        self.notice_to = None
+#        self.notice_from = None
+#        self.smtp_host = 'localhost'
+#        self.smtp_port = 25
 
         self.prop_types = dict()
         self.prop_types['smtp_port'] = int
 
         self.plugin_names = list()
         self.msg_plugins = list()
-
         self.file_plugins = list()
+        self.notify_plugins = list()
 
         self.git_path = None
 
@@ -62,8 +61,8 @@ class ControlConfig:
 
         self.initialized = True
 
-        if self.notice_from == None and self.notice_to != None:
-            self.notice_from = self.notice_to
+#        if self.notice_from == None and self.notice_to != None:
+#            self.notice_from = self.notice_to
 
         if len(self.plugin_names) == 0:
             raise ConfigError('No plugins configured!')
@@ -81,6 +80,9 @@ class ControlConfig:
                 if isinstance(plugin, flashbake.plugins.AbstractFilePlugin):
                     logging.debug("File Plugin: %s" % plugin_name)
                     self.file_plugins.append(plugin)
+                if isinstance(plugin, flashbake.plugins.AbstractNotifyPlugin):
+                    logging.debug('Notify Plugin: %s' % plugin_name)
+                    self.notify_plugins.append(plugin)
             except PluginError, e:
                 # re-raise critical plugin error
                 if not e.reason == PLUGIN_ERRORS.ignorable_error:
@@ -135,19 +137,24 @@ class ControlConfig:
             # TODO re-visit pkg_resources, EntryPoint
             plugin_class = self.__forname(module_name, plugin_name)
             plugin = plugin_class(plugin_spec)
-        except:
+        except Exception, e:
+            logging.debug(e)
             logging.debug('Couldn\'t load class %s' % plugin_spec)
             raise PluginError(PLUGIN_ERRORS.unknown_plugin, plugin_spec)
         is_message_plugin = isinstance(plugin, flashbake.plugins.AbstractMessagePlugin)
         is_file_plugin = isinstance(plugin, flashbake.plugins.AbstractFilePlugin)
-        if not is_message_plugin and not is_file_plugin:
+        is_notify_plugin = isinstance(plugin, flashbake.plugins.AbstractNotifyPlugin)
+        if not is_message_plugin and not is_file_plugin and not is_notify_plugin:
             raise PluginError(PLUGIN_ERRORS.invalid_type, plugin_spec)
         if is_message_plugin:
             self.__checkattr(plugin_spec, plugin, 'connectable', bool)
             self.__checkattr(plugin_spec, plugin, 'addcontext', MethodType)
         if is_file_plugin:
             self.__checkattr(plugin_spec, plugin, 'processfiles', MethodType)
+        if is_file_plugin:
+            self.__checkattr(plugin_spec, plugin, 'notify', MethodType)
 
+        plugin.init_props(self)
         plugin.init(self)
 
         return plugin
