@@ -16,16 +16,16 @@
 #    along with flashbake.  If not, see <http://www.gnu.org/licenses/>.
 
 '''  __init__.py - Shared classes and functions for the flashbake package.'''
-    
+
+from flashbake.plugins import PluginError, PLUGIN_ERRORS
+from types import *
+import commands
+import flashbake.plugins
+import glob
+import logging
 import os
 import os.path
-import logging
 import sys
-import commands
-import glob
-from types import *
-import flashbake.plugins
-from flashbake.plugins import PluginError, PLUGIN_ERRORS
 
 
 class ConfigError(Exception):
@@ -44,7 +44,7 @@ class ControlConfig:
         self.notice_from = None
         self.smtp_host = 'localhost'
         self.smtp_port = 25
-        
+
         self.prop_types = dict()
         self.prop_types['smtp_port'] = int
 
@@ -66,7 +66,6 @@ class ControlConfig:
             self.notice_from = self.notice_to
 
         if len(self.plugin_names) == 0:
-            logging.debug('No plugins configured, enabling the stock set.')
             raise ConfigError('No plugins configured!')
 
         for plugin_name in self.plugin_names:
@@ -90,7 +89,7 @@ class ControlConfig:
                 logging.warning('Skipping plugin, %s, ignorable error: %s' %
                         (plugin_name, e.name))
 
-    def sharedproperty(self, name, type = None):
+    def sharedproperty(self, name, type=None):
         """ Declare a shared property, this way multiple plugins can share some
             value through the config object. """
         if name in self.__dict__:
@@ -153,9 +152,48 @@ class ControlConfig:
 
         return plugin
 
+    def capture(self, line):
+        ''' Parse a line from the control file if it is relevant to plugin configuration. '''
+        # grab comments but don't do anything
+        if line.startswith('#'):
+            return True
+
+        # grab blanks but don't do anything
+        if len(line.strip()) == 0:
+            return True
+
+        if line.find(':') > 0:
+            prop_tokens = line.split(':', 1)
+            prop_name = prop_tokens[0].strip()
+            prop_value = prop_tokens[1].strip()
+
+            if 'plugins' == prop_name:
+               self.addplugins(prop_value.split(','))
+               return True
+
+            # hang onto any extra propeties in case plugins use them
+            if not prop_name in self.__dict__:
+                self.extra_props[prop_name] = prop_value;
+                return True
+
+            try:
+                if prop_name in self.prop_types:
+                    prop_value = self.prop_types[prop_name](prop_value)
+                self.__dict__[prop_name] = prop_value
+            except:
+                raise ConfigError(
+                        'The value, %s, for option, %s, could not be parse as %s.'
+                        % (prop_value, prop_name, config.prop_types[prop_name]))
+
+            return True
+
+        return False
+
+
+
     def __add_last(self, plugin_name):
         if plugin_name in self.plugin_names:
-            self.plugin_names.remove(plugin_name) 
+            self.plugin_names.remove(plugin_name)
         self.plugin_names.append(plugin_name)
 
     def __checkattr(self, plugin_spec, plugin, name, expected_type):
@@ -229,7 +267,7 @@ class HotFiles:
                 self.control_files.add(rel_file)
             else:
                 self.linked_files[expanded_file] = link
-                
+
         if not file_exists:
             self.putabsent(filename)
 
@@ -280,7 +318,7 @@ class HotFiles:
     def needsnotice(self):
         return (len(self.not_exists) > 0
                or len(self.linked_files) > 0
-               or len(self.outside_files) > 0) 
+               or len(self.outside_files) > 0)
 
     def __check_link(self, filename):
         # add, above, makes sure filename is always relative

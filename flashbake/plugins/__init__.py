@@ -28,7 +28,7 @@ PLUGIN_ERRORS = Enum(
         )
 
 class PluginError(Exception):
-    def __init__(self, reason, plugin_spec, name = None):
+    def __init__(self, reason, plugin_spec, name=None):
         self.plugin_spec = plugin_spec
         self.reason = reason
         self.name = name
@@ -37,14 +37,21 @@ class PluginError(Exception):
             return '%s: %s' % (self.reason, self.plugin_spec)
         else:
             return '%s, %s: %s' % (self.plugin_spec, self.reason, self.name)
+
+
 class AbstractPlugin():
     """ Common parent for all kinds of plugins, mostly to share option handling
         code. """
+    def __init__(self, plugin_spec):
+        self.plugin_spec = plugin_spec
+
+
     def init(self, config):
         """ This method is optional. """
         pass
 
-    def requireproperty(self, config, name, type = None):
+
+    def requireproperty(self, config, name, type=None):
         """ Useful to plugins to express a property that is required in the
             dot-control file and to move it from the extra_props dict to a
             property of the config. """
@@ -53,7 +60,8 @@ class AbstractPlugin():
 
         self.optionalproperty(config, name)
 
-    def optionalproperty(self, config, name, type = None):
+
+    def optionalproperty(self, config, name, type=None):
         """ Move a property, if present, from the ControlConfig to the daughter
             plugin. """
         value = None
@@ -71,32 +79,44 @@ class AbstractPlugin():
                         % (value, name, type))
         self.__dict__[name] = value
 
-    def abstract(self): 
+
+    def abstract(self):
         """ borrowed this from Norvig
             http://norvig.com/python-iaq.html """
         import inspect
         caller = inspect.getouterframes(inspect.currentframe())[1][3]
         raise NotImplementedError('%s must be implemented in subclass' % caller)
 
+
 class AbstractMessagePlugin(AbstractPlugin):
     """ Common parent class for all message plugins, will try to help enforce
         the plugin protocol at runtime. """
-    def __init__(self, plugin_spec, connectable = False):
-        self.connectable = connectable
+    def __init__(self, plugin_spec, connectable=False):
         self.plugin_spec = plugin_spec
+        self.connectable = connectable
+
 
     def addcontext(self, message_file, config):
         """ This method is required, it will asplode if not overridden by
             daughter classes. """
         self.abstract()
 
+
 class AbstractFilePlugin(AbstractPlugin):
     """ Common parent class for all file plugins, will try to help enforce
         the plugin protocol at runtime. """
-    def __init__(self, plugin_spec):
-        self.plugin_spec = plugin_spec
-
     def processfiles(self, hot_files, config):
         """ This method is required, it will asplode if not overridden by
             daughter classes. """
+        self.abstract()
+
+
+class AbstractNotifyPlugin(AbstractPlugin):
+    """ Common parent class for all notification plugins. """
+    def notify(self, hot_files, config):
+        ''' Implementations will provide messages about the problem files in the
+            hot_files argument through different mechanisms.
+        
+            N.B. This method is required, it will asplode if not overridden by
+            daughter classes. '''
         self.abstract()
