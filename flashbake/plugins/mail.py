@@ -42,6 +42,8 @@ class Email(plugins.AbstractNotifyPlugin):
                                 ('smtp_host',),
                                 ('smtp_port', int)
                           ])
+
+
     def init(self, config):
         if self.notice_from == None:
             self.notice_from = self.notice_to
