@@ -25,7 +25,7 @@ from xml.etree.ElementTree import ElementTree
 from flashbake.plugins import AbstractMessagePlugin
 
 class Twitter(AbstractMessagePlugin):
-    
+
     def __init__(self, plugin_spec):
         AbstractMessagePlugin.__init__(self, plugin_spec, True)
         self.service_url = 'http://twitter.com'
@@ -35,47 +35,33 @@ class Twitter(AbstractMessagePlugin):
             'favorited':{'path':'favorited', 'transform':propercase}, \
             'tweeted_on': {'path':'created_at', 'transform':utc_to_local}, \
         }
-        self.requiredproperties = [self.property_prefix+'_user']
-        self.optionalproperties = [self.property_prefix+'_limit', self.property_prefix+'_optional_fields']
-    
+        self.define_property('user', required=True)
+        self.define_property('limit', int, False, 5)
+        self.define_property('optional_fields')
+
+
     def init(self, config):
-        for prop in self.requiredproperties:
-            self.requireproperty(config, prop)
-        for prop in self.optionalproperties:
-            self.optionalproperty(config, prop)
-        
-        self.__formatproperties(config)
+        if self.limit > 200:
+            logging.warn('Please use a limit <= 200.');
+            self.limit = 200
+
         self.__setoptionalfields(config)
-        
+
         # simple user xml feed
-        self.twitter_url = '%(url)s/statuses/user_timeline/%(user)s.xml?count=%(limit)d' % \
-            {'url':self.service_url, \
-            'user':self.__dict__[self.property_prefix+'_user'], \
-            'limit':self.__dict__[self.property_prefix+'_limit']} \
-    
-    def __formatproperties(self, config):
-        limit_property_name = self.property_prefix+'_limit'
-        
-        # short circuit this conditional so we don't get a TypeError 
-        if (self.__dict__[limit_property_name] == None or int(self.__dict__[limit_property_name]) < 1):
-            self.__dict__[limit_property_name] = 5
-        else:
-            self.__dict__[limit_property_name] = int(self.__dict__[limit_property_name])
-            # respect the twitter api limits
-            if (self.__dict__[limit_property_name] > 200):
-                logging.warn('Please use a limit <= 200.');
-                self.__dict__[limit_property_name] = 200
-    
+        self.twitter_url = '%(url)s/statuses/user_timeline/%(user)s.xml?count=%(limit)d' % {
+            'url':self.service_url,
+            'user':self.user,
+            'limit':self.limit}
+
+
     def __setoptionalfields(self, config):
-        optional_fields_name = self.property_prefix+'_optional_fields'
-        
         # We don't have to worry about a KeyError here since this property
         # should have been set to None by self.setoptionalproperty.
-        if (self.__dict__[optional_fields_name] == None):
-            self.__dict__[optional_fields_name] = []
+        if (self.optional_fields == None):
+            self.optional_fields = []
         else:
             # get the optional fields, split on commas
-            fields = self.__dict__[optional_fields_name].strip().split(',')
+            fields = self.optional_fields.strip().split(',')
             newFields = []
             for field in fields:
                 field = field.strip()
@@ -85,30 +71,31 @@ class Twitter(AbstractMessagePlugin):
                     newFields.append(field)
             # finally sort the list so its the same each run, provided the config is the same
             newFields.sort()
-            self.__dict__[optional_fields_name] = newFields
-        
+            self.optional_fields = newFields
+
+
     def addcontext(self, message_file, config):
         (title, last_tweets) = self.__fetchitems(config)
-        
+
         if (len(last_tweets) > 0 and title != None):
             to_file = ('Last %(item_count)d %(service_name)s messages from %(twitter_title)s:\n' \
                 % {'item_count' : len(last_tweets), 'twitter_title' : title, 'service_name':self.service_name})
-            
-            i=1
+
+            i = 1
             for item in last_tweets:
                 to_file += ('%d) %s\n' % (i, item['tweet']))
-                for field in self.__dict__[self.property_prefix+'_optional_fields']:
+                for field in self.optional_fields:
                     to_file += ('\t%s: %s\n' % (propercase(field), item[field]))
-                i+=1
-            
+                i += 1
+
             logging.debug(to_file.encode('UTF-8'))
             message_file.write(to_file.encode('UTF-8'))
         else:
             message_file.write('Couldn\'t fetch entries from feed, %s.\n' % self.twitter_url)
 
         return len(last_tweets) > 0
-    
-    
+
+
     def __fetchitems(self, config):
         ''' We fetch the tweets from the configured url in self.twitter_url,
         and return a list containing the formatted title and an array of
@@ -116,7 +103,7 @@ class Twitter(AbstractMessagePlugin):
         any optional fields. The 
         '''
         results = [None, []]
-        
+
         try:
             twitter_xml = urllib.urlopen(self.twitter_url)
         except HTTPError, e:
@@ -128,31 +115,31 @@ class Twitter(AbstractMessagePlugin):
         except IOError:
             logging.error('Socket error.')
             return results
-        
+
         tree = ElementTree()
         tree.parse(twitter_xml)
-        
+
         status = tree.find('status')
         if (status == None):
             return results
         # after this point we are pretty much guaranteed that we won't get an
         # exception or None value, provided the twitter xml stays the same
         results[0] = propercase(status.find('user/name').text)
-        
+
         for status in tree.findall('status'):
             tweet = {}
             tweet['tweet'] = status.find('text').text
-            for field in self.__dict__[self.property_prefix+'_optional_fields']:
+            for field in self.optional_fields:
                 tweet[field] = status.find(self.optional_field_info[field]['path']).text
                 if ('transform' in self.optional_field_info[field]):
                     tweet[field] = self.optional_field_info[field]['transform'](tweet[field])
             results[1].append(tweet)
-        
+
         return results
 
 
 class Identica(Twitter):
-    
+
     def __init__(self, plugin_spec):
         Twitter.__init__(self, plugin_spec)
         self.service_url = 'http://identi.ca/api'
@@ -166,7 +153,7 @@ def propercase(string):
     string = string.replace('_', ' ')
     string = string.title()
     return string
-    
+
 def utc_to_local(t):
     ''' ganked from http://feihonghsu.blogspot.com/2008/02/converting-from-local-time-to-utc.html '''
     import calendar, time, datetime
