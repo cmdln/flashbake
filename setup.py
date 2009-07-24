@@ -4,7 +4,7 @@
 from setuptools import setup
 
 setup(name='flashbake',
-        version='0.25',
+        version='0.26',
         author="Thomas Gideon",
         author_email="cmdln@thecommandline.net",
         url="http://thecommandline.net",
@@ -13,7 +13,8 @@ setup(name='flashbake',
             'flashbake.context',
             'flashbake.git',
             'flashbake.plugins.feed',
-            'flashbake.plugins.location',
+#            'flashbake.plugins.location',
+            'flashbake.plugins.mail',
             'flashbake.plugins.microblog',
             'flashbake.plugins.music',
             'flashbake.plugins.scrivener'

@@ -87,9 +87,7 @@ class ScrivenerFile(AbstractFilePlugin):
 
     def __init__(self, plugin_spec):
         AbstractFilePlugin.__init__(self, plugin_spec)
-
-    def init(self, config):
-        config.shared_property('scrivener_projects')
+        self.share_property('scrivener_projects')
 
     def processfiles(self, hot_files, config):
         for f in find_scrivener_projects(hot_files, config):
@@ -103,13 +101,13 @@ class ScrivenerWordcountFile(AbstractFilePlugin):
     """ Record Wordcount for Scrivener Files """
     def __init__(self, plugin_spec):
         AbstractFilePlugin.__init__(self, plugin_spec)
+        self.share_property('scrivener_projects')
+        self.share_property('scrivener_project_count')
 
 
     def init(self, config):
         if not flashbake.executable_available('textutil'):
             raise PluginError(PLUGIN_ERRORS.ignorable_error, self.plugin_spec, 'Could not find command, textutil.')
-        config.shared_property('scrivener_projects')
-        config.shared_property('scrivener_project_count')
 
 
     def processfiles(self, hot_files, config):
@@ -172,10 +170,7 @@ class ScrivenerWordcountMessage(AbstractMessagePlugin):
 
     def __init__(self, plugin_spec):
         AbstractMessagePlugin.__init__(self, plugin_spec, False)
-
-
-    def init(self, config):
-        config.shared_property('scrivener_project_counts')
+        self.share_property('scrivener_project_count')
 
 
     def addcontext(self, message_file, config):

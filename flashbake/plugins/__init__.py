@@ -41,14 +41,20 @@ class PluginError(Exception):
             return '%s, %s: %s' % (self.plugin_spec, self.reason, self.name)
 
 
+def service_and_prefix(plugin_spec):
+    service_name = plugin_spec.split(':')[-1]
+    property_prefix = '_'.join(service_name.lower().strip().split(' '))
+    return service_name, property_prefix
+
+
 class AbstractPlugin():
     """ Common parent for all kinds of plugins, mostly to share option handling
         code. """
     def __init__(self, plugin_spec):
         self.plugin_spec = plugin_spec
-        self.service_name = plugin_spec.split(':')[-1]
-        self.property_prefix = '_'.join(self.service_name.lower().strip().split(' '))
+        self.service_name, self.property_prefix = service_and_prefix(plugin_spec)
         self.__property_defs = []
+        self.__shared_prop_defs = []
 
 
     def define_property(self, name, type=None, required=False, default=None):
@@ -56,6 +62,22 @@ class AbstractPlugin():
             self.__property_defs.append((name, type, required, default))
         except AttributeError:
             raise Exception('Call AbstractPlugin.__init__ in your plugin\'s __init__.')
+
+
+    def share_property(self, name, type=None, plugin_spec=None):
+        try:
+            if plugin_spec:
+                service_name, property_prefix = service_and_prefix(plugin_spec)
+                self.__shared_prop_defs.append(('%s_%s' % (property_prefix, name), type))
+            else:
+                self.__shared_prop_defs.append((name, type))
+        except AttributeError:
+            raise Exception('Call AbstractPlugin.__init__ in your plugin\'s __init__.')
+
+
+    def share_properties(self, config):
+        for name, type in self.__shared_prop_defs:
+            config.share_propert(name, type)
 
 
     def capture_properties(self, config):

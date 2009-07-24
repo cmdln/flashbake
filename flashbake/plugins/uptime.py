@@ -26,10 +26,6 @@ import string
 
 
 class UpTime(AbstractMessagePlugin):
-    def init(self, config):
-        """ Nothing needed. """
-
-
     def addcontext(self, message_file, config):
         """ Add the system's up time to the commit context. """
 

@@ -24,10 +24,12 @@ import logging
 
 
 
+PLUGIN_SPEC='flashbake.plugins.timezone:TimeZone'
+
 class TimeZone(AbstractMessagePlugin):
-    def init(self, config):
-        """ Grab any extra properties that the config parser found and are needed by this module. """
-        config.shared_property('timezone_tz')
+    def __init__(self, plugin_spec):
+        AbstractMessagePlugin.__init__(self, plugin_spec, False)
+        self.share_property('tz', plugin_spec=PLUGIN_SPEC)
 
 
     def addcontext(self, message_file, config):

@@ -29,6 +29,7 @@ import sys
 import urllib
 import urllib2
 import xml.dom.minidom
+import timezone
 
 
 
@@ -36,14 +37,9 @@ class Weather(AbstractMessagePlugin):
     def __init__(self, plugin_spec):
         AbstractMessagePlugin.__init__(self, plugin_spec, True)
         self.define_property('city')
-
-
-    def init(self, config):
-        """ Shares the timezone_tz: property with timezone:TimeZone and supports
-            an optional weather_city: property. """
-        config.shared_property('timezone_tz')
+        self.share_property('tz', plugin_spec=timezone.PLUGIN_SPEC)
         ## plugin uses location_location from Location plugin
-        config.shared_property('location_location')
+        self.share_property('location_location')
 
 
     def addcontext(self, message_file, config):

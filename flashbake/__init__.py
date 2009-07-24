@@ -97,10 +97,12 @@ class ControlConfig:
         if len(self.plugin_names) == 0:
             raise ConfigError('No plugins configured!')
 
+        all_plugins = list()
         for plugin_name in self.plugin_names:
             logging.debug("initalizing plugin: %s" % plugin_name)
             try:
-                plugin = self.init_plugin(plugin_name)
+                plugin = self.create_plugin(plugin_name)
+                all_plugins.append(plugin)
                 if isinstance(plugin, flashbake.plugins.AbstractMessagePlugin):
                     logging.debug("Message Plugin: %s" % plugin_name)
                     if 'flashbake.plugins.location:Location' == plugin_name:
@@ -121,7 +123,15 @@ class ControlConfig:
                 logging.warning('Skipping plugin, %s, ignorable error: %s' %
                         (plugin_name, e.name))
 
-    def shared_property(self, name, type=None):
+        for plugin in all_plugins:
+            plugin.share_properties(self)
+
+        for plugin in all_plugins:
+            plugin.capture_properties(self)
+            plugin.init(self)
+
+
+    def share_property(self, name, type=None):
         """ Declare a shared property, this way multiple plugins can share some
             value through the config object. """
         if name in self.__dict__:
@@ -146,7 +156,7 @@ class ControlConfig:
         # use a comprehension to ensure uniqueness
         [self.__add_last(inbound_name) for inbound_name in plugin_names]
 
-    def init_plugin(self, plugin_spec):
+    def create_plugin(self, plugin_spec):
         """ Initialize a plugin, including vetting that it meets the correct
             protocol; not private so it can be used in testing. """
         if plugin_spec.find(':') < 0:
@@ -182,9 +192,6 @@ class ControlConfig:
             self.__checkattr(plugin_spec, plugin, 'processfiles', MethodType)
         if is_file_plugin:
             self.__checkattr(plugin_spec, plugin, 'notify', MethodType)
-
-        plugin.capture_properties(self)
-        plugin.init(self)
 
         return plugin
 
@@ -357,7 +364,7 @@ class HotFiles:
 def find_executable(executable):
     found = filter(lambda ex: os.path.exists(ex),
                    map(lambda path_token:
-                       os.path.join(path_token,executable),
+                       os.path.join(path_token, executable),
                        os.getenv('PATH').split(os.pathsep)))
     if (len(found) == 0):
         return None
