@@ -25,7 +25,9 @@ from os.path import join, dirname, exists, realpath, abspath
 import unittest
 import logging
 
-# just provide the command line hook into the flashbake.commit module
+
+
+# just provide the command line hook into the tests
 if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG,
             format='%(message)s')
@@ -41,7 +43,7 @@ if __name__ == "__main__":
         import test.files
     finally:
         del sys.path[0]
-    
+
     # combine classes into single suite
     config_suite = unittest.TestLoader().loadTestsFromTestCase(test.config.ConfigTestCase)
     files_suite = unittest.TestLoader().loadTestsFromTestCase(test.files.FilesTestCase)
