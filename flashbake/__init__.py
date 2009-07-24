@@ -323,7 +323,7 @@ class HotFiles:
 
         os.remove(message_file)
 
-    def needsnotice(self):
+    def needs_warning(self):
         return (len(self.not_exists) > 0
                or len(self.linked_files) > 0
                or len(self.outside_files) > 0)

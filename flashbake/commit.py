@@ -166,14 +166,15 @@ def commit(control_config, hot_files, quiet_mins, dryrun):
             commit_output = git_obj.commit(message_file, to_commit)
             logging.debug(commit_output)
         os.remove(message_file)
+        __send_commit_notice(control_config, to_commit)
         logging.info('Commit for known files complete.')
     else:
         logging.info('No changes to known files found to commit.')
 
-    if hot_files.needsnotice():
-        __sendnotice(control_config, hot_files)
+    if hot_files.needs_warning():
+        __send_warning(control_config, hot_files)
     else:
-        logging.info('No missing or untracked files found, not sending email notice.')
+        logging.info('No missing or untracked files found, not sending warning notice.')
 
 
 def __trimgit(status_line):
@@ -185,11 +186,21 @@ def __trimgit(status_line):
     return tokens[1].strip()
 
 
-def __sendnotice(control_config, hot_files):
+def __send_warning(control_config, hot_files):
     if (len(control_config.notify_plugins) == 0
             and not control_config.dryrun):
         logging.info('Skipping notice, no notify plugins configured.')
         return
 
     for plugin in control_config.notify_plugins:
-        plugin.notify(hot_files, control_config)
+        plugin.warn(hot_files, control_config)
+
+
+def __send_commit_notice(control_config, to_commit):
+    if (len(control_config.notify_plugins) == 0
+            and not control_config.dryrun):
+        logging.info('Skipping notice, no notify plugins configured.')
+        return
+
+    for plugin in control_config.notify_plugins:
+        plugin.notify_commit(to_commit, control_config)

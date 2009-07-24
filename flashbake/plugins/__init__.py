@@ -77,7 +77,7 @@ class AbstractPlugin():
 
     def share_properties(self, config):
         for name, type in self.__shared_prop_defs:
-            config.share_propert(name, type)
+            config.share_property(name, type)
 
 
     def capture_properties(self, config):
@@ -150,10 +150,16 @@ class AbstractFilePlugin(AbstractPlugin):
 
 class AbstractNotifyPlugin(AbstractPlugin):
     """ Common parent class for all notification plugins. """
-    def notify(self, hot_files, config):
+    def warn(self, hot_files, config):
         ''' Implementations will provide messages about the problem files in the
             hot_files argument through different mechanisms.
         
             N.B. This method is required, it will asplode if not overridden by
             daughter classes. '''
         self.abstract()
+
+    
+    def notify_commit(self, to_commit):
+        ''' Option method to notify when a commit is performed, probably most useful
+            for services like desktop notifiers. '''
+        pass

@@ -51,7 +51,7 @@ class Email(plugins.AbstractNotifyPlugin):
         if self.notice_from == None:
             self.notice_from = self.notice_to
 
-    def notify(self, hot_files, control_config):
+    def warn(self, hot_files, control_config):
         body = ''
 
         if len(hot_files.not_exists) > 0:
