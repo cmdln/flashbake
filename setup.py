@@ -14,5 +14,8 @@ setup(name='flashbake',
             enum >=0.4.3
             feedparser >=4.1
             ''',
-        scripts=['bin/flashbake',
-            'bin/flashbakeall'])
+        entry_points={
+                'console_scripts': [ 'flashbake = flashbake.console:main',
+                                     'flashbakeall = flashbake.console:multiple_projects' ]
+                }
+        )
