@@ -75,7 +75,7 @@ def main():
     project_dir = args[0]
 
     # look for user's default control file
-    hot_files, control_config = __load_user_control(home_dir, project_dir)
+    hot_files, control_config = __load_user_control(home_dir, project_dir,options)
 
     # look for project control file
     control_file = __find_control(parser, project_dir)
@@ -178,7 +178,7 @@ def __load_plugin_dirs(options, home_dir):
 
 
 
-def __load_user_control(home_dir, project_dir):
+def __load_user_control(home_dir, project_dir, options):
     control_file = join(home_dir, '.flashbake', 'config')
     if os.path.exists(control_file):
         (hot_files, control_config) = parsecontrol(project_dir, control_file)
