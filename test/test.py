@@ -1,6 +1,23 @@
 #!/usr/bin/env python
 
-# wrapper script that will get installed by setup.py into the execution path
+'''  test -  test runner script '''
+
+#    copyright 2009 Thomas Gideon
+#
+#    This file is part of flashbake.
+#
+#    flashbake is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    flashbake is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with flashbake.  If not, see <http://www.gnu.org/licenses/>.
 
 import sys
 import os
@@ -8,7 +25,9 @@ from os.path import join, dirname, exists, realpath, abspath
 import unittest
 import logging
 
-# just provide the command line hook into the flashbake.commit module
+
+
+# just provide the command line hook into the tests
 if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG,
             format='%(message)s')
@@ -24,7 +43,7 @@ if __name__ == "__main__":
         import test.files
     finally:
         del sys.path[0]
-    
+
     # combine classes into single suite
     config_suite = unittest.TestLoader().loadTestsFromTestCase(test.config.ConfigTestCase)
     files_suite = unittest.TestLoader().loadTestsFromTestCase(test.files.FilesTestCase)

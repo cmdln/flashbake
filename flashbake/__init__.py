@@ -1,16 +1,31 @@
+#    copyright 2009 Thomas Gideon
 #
-#  __init__.py
-#  Shared classes and functions for the flashbake package.
-    
+#    This file is part of flashbake.
+#
+#    flashbake is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    flashbake is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with flashbake.  If not, see <http://www.gnu.org/licenses/>.
+
+'''  __init__.py - Shared classes and functions for the flashbake package.'''
+
+from flashbake.plugins import PluginError, PLUGIN_ERRORS
+from types import *
+import commands
+import flashbake.plugins
+import glob
+import logging
 import os
 import os.path
-import logging
 import sys
-import commands
-import glob
-from types import *
-import flashbake.plugins
-from flashbake.plugins import PluginError, PLUGIN_ERRORS
 
 
 class ConfigError(Exception):
@@ -24,21 +39,53 @@ class ControlConfig:
         self.initialized = False
         self.extra_props = dict()
 
-        self.email = None
-        self.notice_to = None
-        self.notice_from = None
-        self.smtp_host = 'localhost'
-        self.smtp_port = 25
-        
         self.prop_types = dict()
-        self.prop_types['smtp_port'] = int
 
         self.plugin_names = list()
         self.msg_plugins = list()
-
         self.file_plugins = list()
+        self.notify_plugins = list()
 
         self.git_path = None
+
+
+    def capture(self, line):
+        ''' Parse a line from the control file if it is relevant to plugin configuration. '''
+        # grab comments but don't do anything
+        if line.startswith('#'):
+            return True
+
+        # grab blanks but don't do anything
+        if len(line.strip()) == 0:
+            return True
+
+        if line.find(':') > 0:
+            prop_tokens = line.split(':', 1)
+            prop_name = prop_tokens[0].strip()
+            prop_value = prop_tokens[1].strip()
+
+            if 'plugins' == prop_name:
+               self.add_plugins(prop_value.split(','))
+               return True
+
+            # hang onto any extra propeties in case plugins use them
+            if not prop_name in self.__dict__:
+                self.extra_props[prop_name] = prop_value;
+                return True
+
+            try:
+                if prop_name in self.prop_types:
+                    prop_value = self.prop_types[prop_name](prop_value)
+                self.__dict__[prop_name] = prop_value
+            except:
+                raise ConfigError(
+                        'The value, %s, for option, %s, could not be parse as %s.'
+                        % (prop_value, prop_name, config.prop_types[prop_name]))
+
+            return True
+
+        return False
+
 
     def init(self):
         """ Do any property clean up, after parsing but before use """
@@ -47,17 +94,15 @@ class ControlConfig:
 
         self.initialized = True
 
-        if self.notice_from == None and self.notice_to != None:
-            self.notice_from = self.notice_to
-
         if len(self.plugin_names) == 0:
-            logging.debug('No plugins configured, enabling the stock set.')
             raise ConfigError('No plugins configured!')
 
+        all_plugins = list()
         for plugin_name in self.plugin_names:
             logging.debug("initalizing plugin: %s" % plugin_name)
             try:
-                plugin = self.initplugin(plugin_name)
+                plugin = self.create_plugin(plugin_name)
+                all_plugins.append(plugin)
                 if isinstance(plugin, flashbake.plugins.AbstractMessagePlugin):
                     logging.debug("Message Plugin: %s" % plugin_name)
                     if 'flashbake.plugins.location:Location' == plugin_name:
@@ -67,6 +112,9 @@ class ControlConfig:
                 if isinstance(plugin, flashbake.plugins.AbstractFilePlugin):
                     logging.debug("File Plugin: %s" % plugin_name)
                     self.file_plugins.append(plugin)
+                if isinstance(plugin, flashbake.plugins.AbstractNotifyPlugin):
+                    logging.debug('Notify Plugin: %s' % plugin_name)
+                    self.notify_plugins.append(plugin)
             except PluginError, e:
                 # re-raise critical plugin error
                 if not e.reason == PLUGIN_ERRORS.ignorable_error:
@@ -75,7 +123,15 @@ class ControlConfig:
                 logging.warning('Skipping plugin, %s, ignorable error: %s' %
                         (plugin_name, e.name))
 
-    def sharedproperty(self, name, type = None):
+        for plugin in all_plugins:
+            plugin.share_properties(self)
+
+        for plugin in all_plugins:
+            plugin.capture_properties(self)
+            plugin.init(self)
+
+
+    def share_property(self, name, type=None):
         """ Declare a shared property, this way multiple plugins can share some
             value through the config object. """
         if name in self.__dict__:
@@ -96,11 +152,11 @@ class ControlConfig:
 
         self.__dict__[name] = value
 
-    def addplugins(self, plugin_names):
+    def add_plugins(self, plugin_names):
         # use a comprehension to ensure uniqueness
         [self.__add_last(inbound_name) for inbound_name in plugin_names]
 
-    def initplugin(self, plugin_spec):
+    def create_plugin(self, plugin_spec):
         """ Initialize a plugin, including vetting that it meets the correct
             protocol; not private so it can be used in testing. """
         if plugin_spec.find(':') < 0:
@@ -118,30 +174,33 @@ class ControlConfig:
             raise PluginError(PLUGIN_ERRORS.unknown_plugin, plugin_spec)
 
         try:
-            # TODO re-visit pkg_resources, EntryPoint
             plugin_class = self.__forname(module_name, plugin_name)
             plugin = plugin_class(plugin_spec)
-        except:
+        except Exception, e:
+            logging.debug(e)
             logging.debug('Couldn\'t load class %s' % plugin_spec)
             raise PluginError(PLUGIN_ERRORS.unknown_plugin, plugin_spec)
         is_message_plugin = isinstance(plugin, flashbake.plugins.AbstractMessagePlugin)
         is_file_plugin = isinstance(plugin, flashbake.plugins.AbstractFilePlugin)
-        if not is_message_plugin and not is_file_plugin:
+        is_notify_plugin = isinstance(plugin, flashbake.plugins.AbstractNotifyPlugin)
+        if not is_message_plugin and not is_file_plugin and not is_notify_plugin:
             raise PluginError(PLUGIN_ERRORS.invalid_type, plugin_spec)
         if is_message_plugin:
             self.__checkattr(plugin_spec, plugin, 'connectable', bool)
             self.__checkattr(plugin_spec, plugin, 'addcontext', MethodType)
         if is_file_plugin:
             self.__checkattr(plugin_spec, plugin, 'processfiles', MethodType)
-
-        plugin.init(self)
+        if is_file_plugin:
+            self.__checkattr(plugin_spec, plugin, 'notify', MethodType)
 
         return plugin
 
+
     def __add_last(self, plugin_name):
         if plugin_name in self.plugin_names:
-            self.plugin_names.remove(plugin_name) 
+            self.plugin_names.remove(plugin_name)
         self.plugin_names.append(plugin_name)
+
 
     def __checkattr(self, plugin_spec, plugin, name, expected_type):
         try:
@@ -152,6 +211,7 @@ class ControlConfig:
         if not isinstance(attrib, expected_type):
             raise PluginError(PLUGIN_ERRORS.invalid_attribute, plugin_spec, name)
 
+
     # with thanks to Ben Snider
     # http://www.bensnider.com/2008/02/27/dynamically-import-and-instantiate-python-classes/
     def __forname(self, module_name, plugin_name):
@@ -160,6 +220,7 @@ class ControlConfig:
         module = sys.modules[module_name]
         classobj = getattr(module, plugin_name)
         return classobj
+
 
 class HotFiles:
     """
@@ -214,7 +275,7 @@ class HotFiles:
                 self.control_files.add(rel_file)
             else:
                 self.linked_files[expanded_file] = link
-                
+
         if not file_exists:
             self.putabsent(filename)
 
@@ -262,10 +323,10 @@ class HotFiles:
 
         os.remove(message_file)
 
-    def needsnotice(self):
+    def needs_warning(self):
         return (len(self.not_exists) > 0
                or len(self.linked_files) > 0
-               or len(self.outside_files) > 0) 
+               or len(self.outside_files) > 0)
 
     def __check_link(self, filename):
         # add, above, makes sure filename is always relative
@@ -298,3 +359,17 @@ class HotFiles:
             return filepath.replace(prefix, "")
         else:
             return os.path.relpath(filepath, prefix)
+
+
+def find_executable(executable):
+    found = filter(lambda ex: os.path.exists(ex),
+                   map(lambda path_token:
+                       os.path.join(path_token, executable),
+                       os.getenv('PATH').split(os.pathsep)))
+    if (len(found) == 0):
+        return None
+    return found[0]
+
+
+def executable_available(executable):
+    return find_executable(executable) != None

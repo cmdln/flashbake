@@ -1,6 +1,8 @@
-import unittest
 from flashbake import ControlConfig
 from flashbake.plugins import PluginError
+import logging
+import unittest
+
 
 class ConfigTestCase(unittest.TestCase):
     def setUp(self):
@@ -8,7 +10,7 @@ class ConfigTestCase(unittest.TestCase):
 
     def testinvalidspec(self):
         try:
-            plugin = self.config.initplugin('test.foo')
+            plugin = self.config.create_plugin('test.foo')
             self.fail('Should not be able to use unknown')
         except PluginError, error:
             self.assertEquals(str(error.reason), 'invalid_plugin',
@@ -16,7 +18,7 @@ class ConfigTestCase(unittest.TestCase):
 
     def testnoplugin(self):
         try:
-            plugin = self.config.initplugin('test.foo:Foo')
+            plugin = self.config.create_plugin('test.foo:Foo')
             self.fail('Should not be able to use unknown')
         except PluginError, error:
             self.assertEquals(str(error.reason), 'unknown_plugin',
@@ -25,7 +27,7 @@ class ConfigTestCase(unittest.TestCase):
     def testmissingparent(self):
         try:
             plugin_name = 'test.plugins:MissingParent'
-            plugin = self.config.initplugin(plugin_name)
+            plugin = self.config.create_plugin(plugin_name)
             self.fail('Should not have initialized plugin, %s' % plugin_name)
         except PluginError, error:
             reason = 'invalid_type'
@@ -58,7 +60,9 @@ class ConfigTestCase(unittest.TestCase):
                 'flashbake.plugins.timezone:TimeZone',
                 'flashbake.plugins.feed:Feed')
         for plugin_name in plugins:
-            plugin = self.config.initplugin(plugin_name)
+            plugin = self.config.create_plugin(plugin_name)
+            plugin.capture_properties(self.config)
+            plugin.init(self.config)
 
     def testnoauthorfail(self):
         """Ensure that accessing feeds with no entry.author doesn't cause failures if the
@@ -70,7 +74,8 @@ class ConfigTestCase(unittest.TestCase):
 
     def testfeedfail(self):
         try:
-            self.config.initplugin('flashbake.plugins.feed:Feed')
+            plugin = self.config.create_plugin('flashbake.plugins.feed:Feed')
+            plugin.capture_properties(self.config)
             self.fail('Should not be able to initialize without full plugin props.')
         except PluginError, error:
             self.assertEquals(str(error.reason), 'missing_property',
@@ -81,13 +86,16 @@ class ConfigTestCase(unittest.TestCase):
         self.config.extra_props['feed_url'] = "http://random.com/feed"
 
         try:
-            self.config.initplugin('flashbake.plugins.feed:Feed')
+            plugin = self.config.create_plugin('flashbake.plugins.feed:Feed')
+            plugin.capture_properties(self.config)
         except PluginError, error:
             self.fail('Should be able to initialize with just the url.')
 
     def __testattr(self, plugin_name, name, reason):
         try:
-            plugin = self.config.initplugin(plugin_name)
+            plugin = self.config.create_plugin(plugin_name)
+            plugin.capture_properties(self.config)
+            plugin.init(self.config)
             self.fail('Should not have initialized plugin, %s' % plugin_name)
         except PluginError, error:
             self.assertEquals(str(error.reason), reason,

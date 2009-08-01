@@ -17,7 +17,7 @@ class NoConnectable(flashbake.plugins.AbstractMessagePlugin):
 
 class NoAddContext(flashbake.plugins.AbstractMessagePlugin):
     def __init__(self, plugin_spec):
-        self.connectable = True
+        flashbake.plugins.AbstractMessagePlugin.__init__(self, plugin_spec, True)
 
 class WrongConnectable(flashbake.plugins.AbstractMessagePlugin):
     def __init__(self, plugin_spec):

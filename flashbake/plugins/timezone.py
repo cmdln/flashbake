@@ -1,16 +1,36 @@
+#    copyright 2009 Thomas Gideon
 #
-#  timezone.py
-#  Stock plugin to find the system's time zone add to the commit message.
+#    This file is part of flashbake.
+#
+#    flashbake is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    flashbake is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with flashbake.  If not, see <http://www.gnu.org/licenses/>.
 
-import os, logging, urllib, urllib2, xml
-from urllib2 import HTTPError, URLError
+
+'''  timezone.py - Stock plugin to find the system's time zone add to the commit message.'''
+
 from flashbake.plugins import AbstractMessagePlugin
+import os
+import logging
+
+
+
+PLUGIN_SPEC='flashbake.plugins.timezone:TimeZone'
 
 class TimeZone(AbstractMessagePlugin):
-    def init(self, config):
-        """ Grab any extra properties that the config parser found and are needed by this module. """
-        config.sharedproperty('timezone_tz')
-        config.sharedproperty('location_data')
+    def __init__(self, plugin_spec):
+        AbstractMessagePlugin.__init__(self, plugin_spec, False)
+        self.share_property('tz', plugin_spec=PLUGIN_SPEC)
+
 
     def addcontext(self, message_file, config):
         """ Add the system's time zone to the commit context. """
@@ -24,44 +44,7 @@ class TimeZone(AbstractMessagePlugin):
 
         return True
 
-## TODO: add caching
-def __findtimezone_from_location(config):
-    zone = None
-    # check for location_data
-    if False:
-    #if config.location_data != None:
-        base_url = 'http://ws.geonames.org/timezone?'
-        for_tz = base_url + urllib.urlencode({
-            'lat': config.location_data.get('Latitude',''),
-            'lng': config.location_data.get('Longitude','')
-            })
-        opener = urllib2.build_opener(urllib2.HTTPCookieProcessor())
-
-        try:
-            logging.debug('Requesting page for %s.' % for_tz)
-
-            # open the TZ API page
-            location_xml = opener.open(urllib2.Request(for_tz)).read()
-            location_dom = xml.dom.minidom.parseString(location_xml)
-            response = location_dom.getElementsByTagName("timezoneId")
-            if (len(response) > 0):
-                zone = response[0]
-        except HTTPError, e:
-            logging.error('Failed with HTTP status code %d' % e.code)
-            pass
-        except URLError, e:
-            logging.error('Failed with reason %s.' % e.reason)
-            pass
-
-    return zone
-
 def findtimezone(config):
-
-    zone = __findtimezone_from_location(config)
-    if None != zone:
-        logging.debug('Returning timezone based on location data: %s' % zone)
-        return zone
-    
     # check the environment for the zone value
     zone = os.environ.get("TZ")
 
