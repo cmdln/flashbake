@@ -190,8 +190,8 @@ class ControlConfig:
             self.__checkattr(plugin_spec, plugin, 'addcontext', MethodType)
         if is_file_plugin:
             self.__checkattr(plugin_spec, plugin, 'processfiles', MethodType)
-        if is_file_plugin:
-            self.__checkattr(plugin_spec, plugin, 'notify', MethodType)
+        if is_notify_plugin:
+            self.__checkattr(plugin_spec, plugin, 'warn', MethodType)
 
         return plugin
 
