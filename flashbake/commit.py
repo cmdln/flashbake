@@ -166,7 +166,7 @@ def commit(control_config, hot_files, quiet_mins, dryrun):
             commit_output = git_obj.commit(message_file, to_commit)
             logging.debug(commit_output)
         os.remove(message_file)
-        __send_commit_notice(control_config, to_commit)
+        __send_commit_notice(control_config, hot_files, to_commit)
         logging.info('Commit for known files complete.')
     else:
         logging.info('No changes to known files found to commit.')
@@ -196,11 +196,11 @@ def __send_warning(control_config, hot_files):
         plugin.warn(hot_files, control_config)
 
 
-def __send_commit_notice(control_config, to_commit):
+def __send_commit_notice(control_config, hot_files, to_commit):
     if (len(control_config.notify_plugins) == 0
             and not control_config.dryrun):
         logging.info('Skipping notice, no notify plugins configured.')
         return
 
     for plugin in control_config.notify_plugins:
-        plugin.notify_commit(to_commit, control_config)
+        plugin.notify_commit(to_commit, hot_files, control_config)

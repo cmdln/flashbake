@@ -159,7 +159,7 @@ class AbstractNotifyPlugin(AbstractPlugin):
         self.abstract()
 
     
-    def notify_commit(self, to_commit):
+    def notify_commit(self, to_commit, hot_files, config):
         ''' Option method to notify when a commit is performed, probably most useful
             for services like desktop notifiers. '''
         pass
