@@ -20,8 +20,9 @@
 #    along with flashbake.  If not, see <http://www.gnu.org/licenses/>.
 
 
-from flashbake.commit import commit, parsecontrol, preparecontrol
+from flashbake.commit import commit
 from flashbake.context import buildmessagefile
+from flashbake.control import parse_control, prepare_control
 from flashbake.plugins import PluginError, PLUGIN_ERRORS
 from optparse import OptionParser, OptionParser
 from os.path import join, dirname, exists, realpath, abspath
@@ -95,9 +96,9 @@ def main():
             sys.exit(1)
 
     try:
-        (hot_files, control_config) = parsecontrol(project_dir, control_file, control_config, hot_files)
+        (hot_files, control_config) = parse_control(project_dir, control_file, control_config, hot_files)
         control_config.context_only = options.context_only
-        (hot_files, control_config) = preparecontrol(hot_files, control_config)
+        (hot_files, control_config) = prepare_control(hot_files, control_config)
         commit(control_config, hot_files, quiet_period, options.dryrun)
     except (flashbake.git.VCError, flashbake.ConfigError), error:
         logging.error('Error: %s' % str(error))
@@ -181,7 +182,7 @@ def __load_plugin_dirs(options, home_dir):
 def __load_user_control(home_dir, project_dir, options):
     control_file = join(home_dir, '.flashbake', 'config')
     if os.path.exists(control_file):
-        (hot_files, control_config) = parsecontrol(project_dir, control_file)
+        (hot_files, control_config) = parse_control(project_dir, control_file)
         control_config.context_only = options.context_only
     else:
         hot_files = None
@@ -205,9 +206,9 @@ def __find_control(parser, project_dir):
 
 def __context_only(options, project_dir, control_file, control_config, hot_files):
     try:
-        (hot_files, control_config) = parsecontrol(project_dir, control_file, control_config, hot_files)
+        (hot_files, control_config) = parse_control(project_dir, control_file, control_config, hot_files)
         control_config.context_only = options.context_only
-        (hot_files, control_config) = preparecontrol(hot_files, control_config)
+        (hot_files, control_config) = prepare_control(hot_files, control_config)
 
         msg_filename = buildmessagefile(control_config)
         message_file = open(msg_filename, 'r')

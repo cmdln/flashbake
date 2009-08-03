@@ -47,6 +47,7 @@ class ControlConfig:
         self.notify_plugins = list()
 
         self.git_path = None
+        self.project_name = None
 
 
     def capture(self, line):
@@ -96,6 +97,9 @@ class ControlConfig:
 
         if len(self.plugin_names) == 0:
             raise ConfigError('No plugins configured!')
+        
+        self.share_property('git_path')
+        self.share_property('project_name')
 
         all_plugins = list()
         for plugin_name in self.plugin_names:

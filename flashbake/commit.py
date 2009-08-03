@@ -29,43 +29,6 @@ import re
 import sys
 import time
 
-
-def parsecontrol(project_dir, control_file, config=None, results=None):
-    """ Parse the dot-control file to get config options and hot files. """
-
-    logging.debug('Checking %s' % control_file)
-
-    if None == results:
-        hot_files = flashbake.HotFiles(project_dir)
-    else:
-        hot_files = results
-
-    if None == config:
-        control_config = flashbake.ControlConfig()
-    else:
-        control_config = config
-
-    control_file = open(control_file, 'r')
-    try:
-        for line in control_file:
-            # skip anything else if the config consumed the line
-            if control_config.capture(line):
-                continue
-
-            hot_files.addfile(line.strip())
-    finally:
-        control_file.close()
-
-    return (hot_files, control_config)
-
-def preparecontrol(hot_files, control_config):
-    control_config.init()
-    logging.debug("loading file plugins")
-    for plugin in control_config.file_plugins:
-        logging.debug("running plugin %s" % plugin)
-        plugin.processfiles(hot_files, control_config)
-    return (hot_files, control_config)
-
 def commit(control_config, hot_files, quiet_mins, dryrun):
     # change to the project directory, necessary to find the .flashbake file and
     # to correctly refer to the project files by relative paths

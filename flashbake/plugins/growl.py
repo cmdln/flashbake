@@ -23,13 +23,14 @@ import fnmatch
 import os
 import subprocess
 import glob
+import logging
 
 class Growl(plugins.AbstractNotifyPlugin):
     def __init__(self, plugin_spec):
         plugins.AbstractPlugin.__init__(self, plugin_spec)
-        self.define_property('host', default='localhost')
+        self.define_property('host')
         self.define_property('port')
-        self.define_property('password',required=True)
+        self.define_property('password')
         self.define_property('growlnotify')
         self.define_property('title_prefix', default='fb:')
 
@@ -45,15 +46,16 @@ class Growl(plugins.AbstractNotifyPlugin):
                                       'Could not find command, growlnotify.')
 
         
-
-    # uses network notification because they don't cause issues when run
-    # from cron jobs
+    # To avoid problems with a crontab entry, make sure to append:
+    # ... 1> /dev/null 2>&1
+    # which swallows any output
     
     # TODO: use netgrowl.py (or wait for GNTP support to be finalized
     # so it will support Growl for Windows as well)
-    def growl_notify(self,title,message):        
-        args = [ self.growlnotify, '--name', 'flashbake', '--udp',
-                 '--host', self.host]
+    def growl_notify(self,title,message):
+        args = [ self.growlnotify, '--name', 'flashbake' ]
+        if self.host != None:
+            args += [ '--udp', '--host', self.host]
         if self.port != None:
             args += [ '--port', self.port ]
         if self.password != None:
@@ -64,13 +66,37 @@ class Growl(plugins.AbstractNotifyPlugin):
         p = subprocess.Popen(args, stdout=subprocess.PIPE,
                              close_fds = True)
 
-    # TODO: flesh this message out (how to keep useful without being too HUGE)
     def warn(self, hot_files, config):
+        ''' Emits one message per file, with less explanation than the email plugin.
+            The most common case is that one or two files will be off, a large number
+            of them can be considered pathological, e.g. someone who didn't read the
+            documentation about lack of support for symlinks, for instance. '''
         args = config
-        self.growl_notify(os.path.basename(hot_files.project_dir), 'issue during commit')
+        logging.debug('Trying to warn via growl.')
+        project_name = os.path.basename(hot_files.project_dir)
 
+        [self.growl_notify('Missing in project, %s' % project_name,
+                          'The file, %s, is missing.' % file)
+         for file in hot_files.not_exists]
+
+
+        [self.growl_notify('Link in project, %s' % project_name,
+                          'The file, %s, is a link.' % file)
+         for (file, link) in hot_files.linked_files.iteritems()
+         if file == link]
+        
+        [self.growl_notify('Link in project, %s' % project_name,
+                          'The file, %s, is a link to %s.' % (link, file))
+         for (file, link) in hot_files.linked_files.iteritems()
+         if file != link]
+
+
+        [self.growl_notify('External file in project, %s' % project_name,
+                           'The file, %s, exists outside of the project directory.' % file)
+        for file in hot_files.outside_files]
 
     def notify_commit(self, to_commit, hot_files, config):
+        logging.debug('Trying to notify via growl.')
         self.growl_notify(os.path.basename(hot_files.project_dir),
                           'Tracking changes to:\n' + '\n'.join(to_commit))
 
