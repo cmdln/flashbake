@@ -75,23 +75,23 @@ class Growl(plugins.AbstractNotifyPlugin):
         project_name = os.path.basename(hot_files.project_dir)
 
         [self.growl_notify('Missing in project, %s' % project_name,
-                          'The file, %s, is missing.' % file)
+                          'The file, "%s", is missing.' % file)
          for file in hot_files.not_exists]
 
 
         [self.growl_notify('Link in project, %s' % project_name,
-                          'The file, %s, is a link.' % file)
+                          'The file, "%s", is a link.' % file)
          for (file, link) in hot_files.linked_files.iteritems()
          if file == link]
         
         [self.growl_notify('Link in project, %s' % project_name,
-                          'The file, %s, is a link to %s.' % (link, file))
+                          'The file, "%s", is a link to %s.' % (link, file))
          for (file, link) in hot_files.linked_files.iteritems()
          if file != link]
 
 
         [self.growl_notify('External file in project, %s' % project_name,
-                           'The file, %s, exists outside of the project directory.' % file)
+                           'The file, "%s", exists outside of the project directory.' % file)
         for file in hot_files.outside_files]
 
     def notify_commit(self, to_commit, hot_files, config):
