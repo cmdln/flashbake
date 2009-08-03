@@ -46,9 +46,8 @@ class Growl(plugins.AbstractNotifyPlugin):
                                       'Could not find command, growlnotify.')
 
         
-    # To avoid problems with a crontab entry, make sure to append:
-    # ... 1> /dev/null 2>&1
-    # which swallows any output
+    # To avoid problems with a crontab entry, make sure to the network settings,
+    # calling out to growlnotify only works locally/via DO if run as the user
     
     # TODO: use netgrowl.py (or wait for GNTP support to be finalized
     # so it will support Growl for Windows as well)
