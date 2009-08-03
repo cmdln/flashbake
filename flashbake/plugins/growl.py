@@ -40,7 +40,9 @@ class Growl(plugins.AbstractNotifyPlugin):
             self.growlnotify = flashbake.find_executable('growlnotify')
 
         if self.growlnotify == None:
-            raise PluginError(PLUGIN_ERRORS.ignorable_error, self.plugin_spec, 'Could not find command, growlnotify.')
+            raise plugins.PluginError(plugins.PLUGIN_ERRORS.ignorable_error,
+                                      self.plugin_spec,
+                                      'Could not find command, growlnotify.')
 
         
 
