@@ -61,7 +61,7 @@ class Growl(plugins.AbstractNotifyPlugin):
 
         title = ' '.join([self.title_prefix, title])
         args += ['--message', message, '--title', title]
-        p = subprocess.Popen(args, stdout=subprocess.PIPE,
+        p = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                              close_fds = True)
 
     def warn(self, hot_files, config):
