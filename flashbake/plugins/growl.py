@@ -24,6 +24,8 @@ import os
 import subprocess
 import glob
 import logging
+import re
+
 
 class Growl(plugins.AbstractNotifyPlugin):
     def __init__(self, plugin_spec):
@@ -70,7 +72,10 @@ class Growl(plugins.AbstractNotifyPlugin):
             The most common case is that one or two files will be off, a large number
             of them can be considered pathological, e.g. someone who didn't read the
             documentation about lack of support for symlinks, for instance. '''
-        logging.debug(self.__whoami())
+        if self.host == None and not self.__active_console():
+            logging.debug('Current user does not have console access.')
+            return
+
         logging.debug('Trying to warn via growl.')
         project_name = os.path.basename(hot_files.project_dir)
 
@@ -101,6 +106,18 @@ class Growl(plugins.AbstractNotifyPlugin):
 
     def __whoami(self):
         proc = subprocess.Popen([flashbake.find_executable('whoami')], stdout=subprocess.PIPE,
-                                stderr=subprocess.STDOUT, cwd=self.__cwd, env=self.env)
-        return proc.communicate()[0]
+                                stderr=subprocess.STDOUT)
+        return proc.communicate()[0].strip()
+    
+    def __active_console(self):
+        user = self.__whoami()
+        proc = subprocess.Popen([flashbake.find_executable('who')], stdout=subprocess.PIPE,
+                                stderr=subprocess.STDOUT)
+        active = False
+        for line in proc.communicate()[0].splitlines():
+            m = re.match('^%s\s+console.*$' % user, line)
+            if m:
+                active = True
+                break
+        return active
 
