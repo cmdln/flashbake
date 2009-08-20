@@ -70,7 +70,7 @@ class Growl(plugins.AbstractNotifyPlugin):
             The most common case is that one or two files will be off, a large number
             of them can be considered pathological, e.g. someone who didn't read the
             documentation about lack of support for symlinks, for instance. '''
-        args = config
+        logging.debug(self.__whoami())
         logging.debug('Trying to warn via growl.')
         project_name = os.path.basename(hot_files.project_dir)
 
@@ -98,4 +98,9 @@ class Growl(plugins.AbstractNotifyPlugin):
         logging.debug('Trying to notify via growl.')
         self.growl_notify(os.path.basename(hot_files.project_dir),
                           'Tracking changes to:\n' + '\n'.join(to_commit))
+
+    def __whoami(self):
+        proc = subprocess.Popen([flashbake.find_executable('whoami')], stdout=subprocess.PIPE,
+                                stderr=subprocess.STDOUT, cwd=self.__cwd, env=self.env)
+        return proc.communicate()[0]
 
