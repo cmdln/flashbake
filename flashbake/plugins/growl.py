@@ -48,9 +48,6 @@ class Growl(plugins.AbstractNotifyPlugin):
                                       'Could not find command, growlnotify.')
 
         
-    # To avoid problems with a crontab entry, make sure to the network settings,
-    # calling out to growlnotify only works locally/via DO if run as the user
-    
     # TODO: use netgrowl.py (or wait for GNTP support to be finalized
     # so it will support Growl for Windows as well)
     def growl_notify(self,title,message):
@@ -72,6 +69,7 @@ class Growl(plugins.AbstractNotifyPlugin):
             The most common case is that one or two files will be off, a large number
             of them can be considered pathological, e.g. someone who didn't read the
             documentation about lack of support for symlinks, for instance. '''
+        # if calling growl locally, then the current user must be logged into the console
         if self.host == None and not self.__active_console():
             logging.debug('Current user does not have console access.')
             return
@@ -105,13 +103,22 @@ class Growl(plugins.AbstractNotifyPlugin):
                           'Tracking changes to:\n' + '\n'.join(to_commit))
 
     def __whoami(self):
-        proc = subprocess.Popen([flashbake.find_executable('whoami')], stdout=subprocess.PIPE,
-                                stderr=subprocess.STDOUT)
-        return proc.communicate()[0].strip()
+        cmd = flashbake.find_executable('whoami')
+        if cmd:
+            proc = subprocess.Popen([cmd], stdout=subprocess.PIPE,
+                                    stderr=subprocess.STDOUT)
+            return proc.communicate()[0].strip()
+        else:
+            return None
     
     def __active_console(self):
         user = self.__whoami()
-        proc = subprocess.Popen([flashbake.find_executable('who')], stdout=subprocess.PIPE,
+        if not user:
+            return False
+        cmd = flashbake.find_executable('who')
+        if not cmd:
+            return False
+        proc = subprocess.Popen([cmd], stdout=subprocess.PIPE,
                                 stderr=subprocess.STDOUT)
         active = False
         for line in proc.communicate()[0].splitlines():
