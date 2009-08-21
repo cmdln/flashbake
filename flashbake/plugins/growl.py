@@ -83,7 +83,7 @@ class Growl(plugins.AbstractNotifyPlugin):
 
         [self.growl_notify('Deleted in project, %s' % project_name,
                           'The file, "%s", has been deleted from version control.' % file)
-         for file in hot_files.not_exists]
+         for file in hot_files.deleted]
 
         [self.growl_notify('Link in project, %s' % project_name,
                           'The file, "%s", is a link.' % file)
