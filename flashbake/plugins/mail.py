@@ -62,6 +62,15 @@ class Email(plugins.AbstractNotifyPlugin):
 
             body += '\nMake sure there is not a typo in .flashbake and that you created/saved the file.\n'
 
+        if len(hot_files.deleted) > 0:
+            body += '\nThe following files have been deleted from version control:\n\n'
+
+            for file in hot_files.deleted:
+               body += '\t' + file + '\n'
+
+            body += '\nYou may restore these files or remove them from .flashbake after running flashbake --purge '
+            body += 'in your project directory.\n'
+
         if len(hot_files.linked_files) > 0:
             body += '\nThe following files in .flashbake are links or have a link in their directory path.\n\n'
 
