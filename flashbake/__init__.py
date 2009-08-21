@@ -26,10 +26,13 @@ import logging
 import os
 import os.path
 import sys
+import re
+
 
 
 class ConfigError(Exception):
     pass
+
 
 class ControlConfig:
     """ Accumulates options from a control file for use by the core modules as
@@ -97,7 +100,7 @@ class ControlConfig:
 
         if len(self.plugin_names) == 0:
             raise ConfigError('No plugins configured!')
-        
+
         self.share_property('git_path')
         self.share_property('project_name')
 
@@ -238,6 +241,8 @@ class HotFiles:
         self.control_files = set()
         self.not_exists = set()
         self.to_add = set()
+        self.globs = dict()
+        self.deleted = set()
 
     def addfile(self, filename):
         to_expand = os.path.join(self.project_dir, filename)
@@ -248,6 +253,12 @@ class HotFiles:
             glob_iter = glob.glob(to_expand)
         else:
             glob_iter = glob.iglob(to_expand)
+
+        pattern = re.compile('(\[.+\]|\*|\?)')
+        if pattern.search(filename):
+            glob_re = re.sub('\*', '.*', filename)
+            glob_re = re.sub('\?', '.', glob_re)
+            self.globs[filename] = glob_re
 
         for expanded_file in glob_iter:
             # track whether iglob iterates at all, if it does not, then the line
@@ -295,6 +306,26 @@ class HotFiles:
     def putneedsadd(self, filename):
         self.to_add.add(filename)
 
+    def put_deleted(self, filename):
+        def __in_target(file_spec):
+            return file_spec in self.not_exists
+        to_delete = self.from_glob(filename)
+        logging.debug('To delete after matching %s' % to_delete)
+        to_delete.append(filename)
+        to_delete = filter(__in_target, to_delete)
+        [self.not_exists.remove(file_spec) for file_spec in to_delete]
+        self.deleted.add(filename)
+
+    def from_glob(self, filename):
+        """ Returns any original glob-based file specifications from the control file that would match
+            the input filename.  Useful for file plugins that add their own globs and need to correlate
+            actual files that match their globs. """
+        def __match(file_tuple):
+            return re.match(file_tuple[1], filename) != None
+        matches = filter(__match, self.globs.iteritems())
+        matches = dict(matches)
+        return matches.keys()
+
     def warnproblems(self):
         # print warnings for linked files
         for filename in self.linked_files.keys():
@@ -302,9 +333,12 @@ class HotFiles:
         # print warnings for files outside the project
         for filename in self.outside_files:
             logging.info('%s is outside the project directory.' % filename)
-        # print warnings for files outside the project
+        # print warnings for files that do not exists
         for filename in self.not_exists:
             logging.info('%s does not exist.' % filename)
+        # print warnings for files that were once under version control but have been deleted
+        for filename in self.deleted:
+            logging.info('%s has been deleted from version control.' % filename)
 
     def addorphans(self, git_obj, control_config):
         if len(self.to_add) == 0:
@@ -330,7 +364,8 @@ class HotFiles:
     def needs_warning(self):
         return (len(self.not_exists) > 0
                or len(self.linked_files) > 0
-               or len(self.outside_files) > 0)
+               or len(self.outside_files) > 0
+               or len(self.deleted) > 0)
 
     def __check_link(self, filename):
         # add, above, makes sure filename is always relative

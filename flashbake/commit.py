@@ -53,6 +53,7 @@ def commit(control_config, hot_files, quiet_mins, dryrun):
 
     # in particular find the existing entries that need a commit
     pending_re = re.compile('#\s*(renamed|copied|modified|new file):.*')
+    deleted_re = re.compile('#\s*deleted:.*')
 
     now = datetime.datetime.today()
     quiet_period = datetime.timedelta(minutes=quiet_mins)
@@ -84,6 +85,9 @@ def commit(control_config, hot_files, quiet_mins, dryrun):
                 logging.debug('Flagging file, %s, for commit.' % pending_file)
             else:
                 logging.debug('Change for file, %s, is too recent.' % pending_file)
+        if deleted_re.match(line):
+            deleted_file = __trimgit(line)
+            hot_files.put_deleted(deleted_file)
 
     logging.debug('Examining unknown or unchanged files.')
 
