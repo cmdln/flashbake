@@ -87,6 +87,8 @@ def commit(control_config, hot_files, quiet_mins, dryrun):
                 logging.debug('Change for file, %s, is too recent.' % pending_file)
         if deleted_re.match(line):
             deleted_file = __trimgit(line)
+            # remove files that will are known to have been deleted
+            hot_files.remove(deleted_file)
             hot_files.put_deleted(deleted_file)
 
     logging.debug('Examining unknown or unchanged files.')
@@ -124,6 +126,9 @@ def commit(control_config, hot_files, quiet_mins, dryrun):
             logging.error('Try \'git status "%s"\' for more info.' % control_file)
 
     hot_files.addorphans(git_obj, control_config)
+    
+    for plugin in control_config.file_plugins:
+        plugin.post_process(to_commit, hot_files, control_config)
 
     if len(to_commit) > 0:
         logging.info('Committing changes to known files, %s.' % to_commit)

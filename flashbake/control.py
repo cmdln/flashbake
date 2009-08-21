@@ -59,6 +59,6 @@ def prepare_control(hot_files, control_config):
     logging.debug("loading file plugins")
     for plugin in control_config.file_plugins:
         logging.debug("running plugin %s" % plugin)
-        plugin.processfiles(hot_files, control_config)
+        plugin.pre_process(hot_files, control_config)
     return (hot_files, control_config)
 

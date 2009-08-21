@@ -89,7 +89,7 @@ class ScrivenerFile(AbstractFilePlugin):
         AbstractFilePlugin.__init__(self, plugin_spec)
         self.share_property('scrivener_projects')
 
-    def processfiles(self, hot_files, config):
+    def pre_process(self, hot_files, config):
         for f in find_scrivener_projects(hot_files, config):
             logging.debug("ScrivenerFile: adding '%s'" % f)
             for hotfile in find_scrivener_project_contents(hot_files, f):
@@ -110,7 +110,7 @@ class ScrivenerWordcountFile(AbstractFilePlugin):
             raise PluginError(PLUGIN_ERRORS.ignorable_error, self.plugin_spec, 'Could not find command, textutil.')
 
 
-    def processfiles(self, hot_files, config):
+    def pre_process(self, hot_files, config):
         config.scrivener_project_count = dict()
         for f in find_scrivener_projects(hot_files, config):
             scriv_proj_dir = os.path.join(hot_files.project_dir, f)

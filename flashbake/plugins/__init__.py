@@ -142,10 +142,16 @@ class AbstractMessagePlugin(AbstractPlugin):
 class AbstractFilePlugin(AbstractPlugin):
     """ Common parent class for all file plugins, will try to help enforce
         the plugin protocol at runtime. """
-    def processfiles(self, hot_files, config):
+    def pre_process(self, hot_files, config):
         """ This method is required, it will asplode if not overridden by
             daughter classes. """
         self.abstract()
+        
+        
+    def post_process(self, to_commit, hot_files, config):
+        """ This method is optional, it will be run after status processing but before commit so the
+            plugin may shuffle files into the commit. """
+        pass
 
 
 class AbstractNotifyPlugin(AbstractPlugin):

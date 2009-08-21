@@ -196,7 +196,7 @@ class ControlConfig:
             self.__checkattr(plugin_spec, plugin, 'connectable', bool)
             self.__checkattr(plugin_spec, plugin, 'addcontext', MethodType)
         if is_file_plugin:
-            self.__checkattr(plugin_spec, plugin, 'processfiles', MethodType)
+            self.__checkattr(plugin_spec, plugin, 'pre_process', MethodType)
         if is_notify_plugin:
             self.__checkattr(plugin_spec, plugin, 'warn', MethodType)
 
@@ -298,7 +298,8 @@ class HotFiles:
         return filename in self.control_files
 
     def remove(self, filename):
-        self.control_files.remove(filename)
+        if filename in  self.control_files:
+            self.control_files.remove(filename)
 
     def putabsent(self, filename):
         self.not_exists.add(filename)
