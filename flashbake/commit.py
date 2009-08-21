@@ -29,6 +29,8 @@ import re
 import sys
 import time
 
+DELETED_RE = re.compile('#\s*deleted:.*')
+
 def commit(control_config, hot_files, quiet_mins, dryrun):
     # change to the project directory, necessary to find the .flashbake file and
     # to correctly refer to the project files by relative paths
@@ -39,21 +41,13 @@ def commit(control_config, hot_files, quiet_mins, dryrun):
     control_config.dryrun = dryrun
 
     # the wrapper object ensures git is on the path
+    # get the git status for the project
     git_status = git_obj.status()
 
-    # get the git status for the project
-    if git_status.startswith('fatal'):
-        logging.error('Fatal error from git.')
-        if 'fatal: Not a git repository' == git_status:
-            logging.error('Make sure "git init" was run in %s'
-                % os.path.realpath(hot_files.project_dir))
-        else:
-            logging.error(git_status)
-        sys.exit(1)
+    __handle_fatal(git_status)
 
     # in particular find the existing entries that need a commit
     pending_re = re.compile('#\s*(renamed|copied|modified|new file):.*')
-    deleted_re = re.compile('#\s*deleted:.*')
 
     now = datetime.datetime.today()
     quiet_period = datetime.timedelta(minutes=quiet_mins)
@@ -85,11 +79,7 @@ def commit(control_config, hot_files, quiet_mins, dryrun):
                 logging.debug('Flagging file, %s, for commit.' % pending_file)
             else:
                 logging.debug('Change for file, %s, is too recent.' % pending_file)
-        if deleted_re.match(line):
-            deleted_file = __trimgit(line)
-            # remove files that will are known to have been deleted
-            hot_files.remove(deleted_file)
-            hot_files.put_deleted(deleted_file)
+        __capture_deleted(hot_files, line)
 
     logging.debug('Examining unknown or unchanged files.')
 
@@ -148,7 +138,51 @@ def commit(control_config, hot_files, quiet_mins, dryrun):
     else:
         logging.info('No missing or untracked files found, not sending warning notice.')
 
+def purge(control_config, hot_files, dry_run):
+    # change to the project directory, necessary to find the .flashbake file and
+    # to correctly refer to the project files by relative paths
+    os.chdir(hot_files.project_dir)
 
+    git_obj = git.Git(hot_files.project_dir, control_config.git_path)
+
+    # the wrapper object ensures git is on the path
+    git_status = git_obj.status()
+    
+    __handle_fatal(git_status)
+    
+    logging.debug("Examining git status.")
+    for line in git_status.splitlines():
+        __capture_deleted(hot_files, line)
+
+    if len(hot_files.deleted) > 0:
+        logging.info('Committing removal of known files, %s.' % hot_files.deleted)
+        message_file = context.buildmessagefile(control_config)
+        if not dry_run:
+            # consolidate the commit to be friendly to how git normally works
+            commit_output = git_obj.commit(message_file, hot_files.deleted)
+            logging.debug(commit_output)
+        os.remove(message_file)
+        logging.info('Commit for deleted files complete.')
+    else:
+        logging.info('No deleted files to purge')
+
+def __capture_deleted(hot_files, line):
+    if DELETED_RE.match(line):
+        deleted_file = __trimgit(line)
+        # remove files that will are known to have been deleted
+        hot_files.remove(deleted_file)
+        hot_files.put_deleted(deleted_file)
+
+def __handle_fatal(git_status):
+    if git_status.startswith('fatal'):
+        logging.error('Fatal error from git.')
+        if 'fatal: Not a git repository' == git_status:
+            logging.error('Make sure "git init" was run in %s'
+                % os.path.realpath(hot_files.project_dir))
+        else:
+            logging.error(git_status)
+        sys.exit(1)
+        
 def __trimgit(status_line):
     if status_line.find('->') >= 0:
         tokens = status_line.split('->')

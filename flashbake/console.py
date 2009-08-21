@@ -20,9 +20,9 @@
 #    along with flashbake.  If not, see <http://www.gnu.org/licenses/>.
 
 
-from flashbake.commit import commit
-from flashbake.context import buildmessagefile
-from flashbake.control import parse_control, prepare_control
+from flashbake import commit
+from flashbake import context
+from flashbake import control
 from flashbake.plugins import PluginError, PLUGIN_ERRORS
 from optparse import OptionParser, OptionParser
 from os.path import join, dirname, exists, realpath, abspath
@@ -96,10 +96,13 @@ def main():
             sys.exit(1)
 
     try:
-        (hot_files, control_config) = parse_control(project_dir, control_file, control_config, hot_files)
+        (hot_files, control_config) = control.parse_control(project_dir, control_file, control_config, hot_files)
         control_config.context_only = options.context_only
-        (hot_files, control_config) = prepare_control(hot_files, control_config)
-        commit(control_config, hot_files, quiet_period, options.dryrun)
+        (hot_files, control_config) = control.prepare_control(hot_files, control_config)
+        if options.purge:
+            commit.purge(control_config, hot_files, options.dryrun)
+        else:
+            commit.commit(control_config, hot_files, quiet_period, options.dryrun)
     except (flashbake.git.VCError, flashbake.ConfigError), error:
         logging.error('Error: %s' % str(error))
         sys.exit(1)
@@ -157,6 +160,9 @@ def __build_parser():
     parser.add_option('-p', '--plugins', dest='plugin_dir',
             action='store', type='string', metavar='PLUGIN_DIR',
             help='specify an additional location for plugins')
+    parser.add_option('-r', '--purge', dest='purge',
+            action='store_true', default=False,
+            help='purge any files that have been deleted from source control')
     return parser
 
 
@@ -182,7 +188,7 @@ def __load_plugin_dirs(options, home_dir):
 def __load_user_control(home_dir, project_dir, options):
     control_file = join(home_dir, '.flashbake', 'config')
     if os.path.exists(control_file):
-        (hot_files, control_config) = parse_control(project_dir, control_file)
+        (hot_files, control_config) = control.parse_control(project_dir, control_file)
         control_config.context_only = options.context_only
     else:
         hot_files = None
@@ -206,11 +212,11 @@ def __find_control(parser, project_dir):
 
 def __context_only(options, project_dir, control_file, control_config, hot_files):
     try:
-        (hot_files, control_config) = parse_control(project_dir, control_file, control_config, hot_files)
+        (hot_files, control_config) = control.parse_control(project_dir, control_file, control_config, hot_files)
         control_config.context_only = options.context_only
-        (hot_files, control_config) = prepare_control(hot_files, control_config)
+        (hot_files, control_config) = control.prepare_control(hot_files, control_config)
 
-        msg_filename = buildmessagefile(control_config)
+        msg_filename = context.buildmessagefile(control_config)
         message_file = open(msg_filename, 'r')
 
         try:
