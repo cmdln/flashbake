@@ -30,6 +30,7 @@ import urllib
 import urllib2
 import xml.dom.minidom
 import timezone
+import re
 
 
 
@@ -89,10 +90,19 @@ class Weather(AbstractMessagePlugin):
             logging.debug('Requesting page for %s.' % for_city)
 
             # open the weather API page
-            weather_xml = opener.open(urllib2.Request(for_city)).read()
+            request = opener.open(urllib2.Request(for_city, headers={'Accept-Charset': 'UTF-8'}))
+            weather_xml = request.read()
+            # figure out whether the response is other than utf-8 and decode if needed
+            if 'Content-Type' in request.info():
+                content_type = request.info()['Content-Type']
+                charset_m = re.search('.*; charset=(.*)$', content_type)
+                if charset_m is not None:
+                    req_charset = charset_m.group(1)
+                    logging.debug('Decoding using charset, %s, based on the response.' % req_charset)
+                    weather_xml = weather_xml.decode(req_charset)
 
             # the weather API returns some nice, parsable XML
-            weather_dom = xml.dom.minidom.parseString(weather_xml)
+            weather_dom = xml.dom.minidom.parseString(weather_xml.encode('utf8'))
 
             # just interested in the conditions at the moment
             current = weather_dom.getElementsByTagName("current_conditions")
