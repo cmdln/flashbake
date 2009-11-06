@@ -80,11 +80,13 @@ class iTunes(AbstractMessagePlugin):
     def __init__(self, plugin_spec):
         AbstractMessagePlugin.__init__(self, plugin_spec)
         self.define_property('osascript')
+        
+    def init(self, config):
+        if self.osascript is None:
+            self.osascript = flashbake.find_executable('osascript')
 
     def addcontext(self, message_file, config):
         """ Get the track info and write it to the commit message """
-        if self.osascript is None:
-            self.osascript = flashbake.find_executable('osascript')
 
         info = self.trackinfo()
 
