@@ -19,14 +19,14 @@
 by Jason Penney, jasonpenney.net'''
 
 from flashbake.plugins import *
-import logging
 import flashbake
 import flashbake.plugins
 import fnmatch
+import glob
+import logging
 import os
 import pickle
 import subprocess
-import glob
 
 
 
@@ -84,7 +84,6 @@ def get_logfile_name(scriv_proj_dir):
 
 ## TODO: deal with deleted files
 class ScrivenerFile(AbstractFilePlugin):
-
     def __init__(self, plugin_spec):
         AbstractFilePlugin.__init__(self, plugin_spec)
         self.share_property('scrivener_projects')
@@ -104,11 +103,9 @@ class ScrivenerWordcountFile(AbstractFilePlugin):
         self.share_property('scrivener_projects')
         self.share_property('scrivener_project_count')
 
-
     def init(self, config):
         if not flashbake.executable_available('textutil'):
             raise PluginError(PLUGIN_ERRORS.ignorable_error, self.plugin_spec, 'Could not find command, textutil.')
-
 
     def pre_process(self, hot_files, config):
         config.scrivener_project_count = dict()
@@ -145,8 +142,6 @@ class ScrivenerWordcountFile(AbstractFilePlugin):
                 if not hot_logfile in hot_files.control_files:
                     hot_files.control_files.add(logfile)
 
-
-
     def get_count(self, file, matches):
         count = 0
         args = ['textutil', '-stdout', '-cat', 'txt']
@@ -167,11 +162,9 @@ class ScrivenerWordcountFile(AbstractFilePlugin):
 
 class ScrivenerWordcountMessage(AbstractMessagePlugin):
     """ Display Wordcount for Scrivener Files """
-
     def __init__(self, plugin_spec):
         AbstractMessagePlugin.__init__(self, plugin_spec, False)
         self.share_property('scrivener_project_count')
-
 
     def addcontext(self, message_file, config):
         to_file = ''
@@ -188,6 +181,3 @@ class ScrivenerWordcountMessage(AbstractMessagePlugin):
                     to_file += "\n"
 
             message_file.write(to_file)
-
-
-

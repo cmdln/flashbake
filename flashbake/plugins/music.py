@@ -34,7 +34,6 @@ class Banshee(AbstractMessagePlugin):
         self.define_property('limit', int, default=3)
         self.define_property('last_played_format')
 
-
     def addcontext(self, message_file, config):
         """ Open the Banshee database and query for the last played tracks. """
         query = """\

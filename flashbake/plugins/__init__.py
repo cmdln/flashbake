@@ -18,6 +18,8 @@
 from enum import Enum
 import logging
 
+
+
 PLUGIN_ERRORS = Enum(
         'invalid_plugin',
         'invalid_type',
@@ -56,13 +58,11 @@ class AbstractPlugin():
         self.__property_defs = []
         self.__shared_prop_defs = []
 
-
     def define_property(self, name, type=None, required=False, default=None):
         try:
             self.__property_defs.append((name, type, required, default))
         except AttributeError:
             raise Exception('Call AbstractPlugin.__init__ in your plugin\'s __init__.')
-
 
     def share_property(self, name, type=None, plugin_spec=None):
         try:
@@ -74,11 +74,9 @@ class AbstractPlugin():
         except AttributeError:
             raise Exception('Call AbstractPlugin.__init__ in your plugin\'s __init__.')
 
-
     def share_properties(self, config):
         for name, type in self.__shared_prop_defs:
             config.share_property(name, type)
-
 
     def capture_properties(self, config):
         try:
@@ -88,11 +86,9 @@ class AbstractPlugin():
         except AttributeError:
             raise Exception('Call AbstractPlugin.__init__ in your plugin\'s __init__.')
 
-
     def init(self, config):
         """ This method is optional. """
         pass
-
 
     def __capture_property(self, config, name, type=None, required=False, default=None):
         """ Move a property, if present, from the ControlConfig to the daughter
@@ -116,7 +112,6 @@ class AbstractPlugin():
                         % (value, name, type))
         self.__dict__[name] = value
 
-
     def abstract(self):
         """ borrowed this from Norvig
             http://norvig.com/python-iaq.html """
@@ -132,7 +127,6 @@ class AbstractMessagePlugin(AbstractPlugin):
         AbstractPlugin.__init__(self, plugin_spec)
         self.connectable = connectable
 
-
     def addcontext(self, message_file, config):
         """ This method is required, it will asplode if not overridden by
             daughter classes. """
@@ -146,7 +140,6 @@ class AbstractFilePlugin(AbstractPlugin):
         """ This method is required, it will asplode if not overridden by
             daughter classes. """
         self.abstract()
-        
         
     def post_process(self, to_commit, hot_files, config):
         """ This method is optional, it will be run after status processing but before commit so the
@@ -163,7 +156,6 @@ class AbstractNotifyPlugin(AbstractPlugin):
             N.B. This method is required, it will asplode if not overridden by
             daughter classes. '''
         self.abstract()
-
     
     def notify_commit(self, to_commit, hot_files, config):
         ''' Option method to notify when a commit is performed, probably most useful

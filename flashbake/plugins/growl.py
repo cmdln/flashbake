@@ -27,6 +27,7 @@ import logging
 import re
 
 
+
 class Growl(plugins.AbstractNotifyPlugin):
     def __init__(self, plugin_spec):
         plugins.AbstractPlugin.__init__(self, plugin_spec)
@@ -35,8 +36,6 @@ class Growl(plugins.AbstractNotifyPlugin):
         self.define_property('password')
         self.define_property('growlnotify')
         self.define_property('title_prefix', default='fb:')
-
-
             
     def init(self, config):
         if self.growlnotify == None:
@@ -46,7 +45,6 @@ class Growl(plugins.AbstractNotifyPlugin):
             raise plugins.PluginError(plugins.PLUGIN_ERRORS.ignorable_error,
                                       self.plugin_spec,
                                       'Could not find command, growlnotify.')
-
         
     # TODO: use netgrowl.py (or wait for GNTP support to be finalized
     # so it will support Growl for Windows as well)

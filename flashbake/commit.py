@@ -29,6 +29,8 @@ import re
 import sys
 import time
 
+
+
 DELETED_RE = re.compile('#\s*deleted:.*')
 
 def commit(control_config, hot_files, quiet_mins, dryrun):

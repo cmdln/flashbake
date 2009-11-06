@@ -17,12 +17,14 @@
 
 '''  context.py - Build up some descriptive context for automatic commit to git'''
 
-import sys
+import logging
 import os
 import os.path
-import string
 import random
-import logging
+import string
+import sys
+
+
 
 def buildmessagefile(config):
     """ Build a commit message that uses the provided ControlConfig object and

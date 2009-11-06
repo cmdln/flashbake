@@ -17,9 +17,9 @@
 
 '''  uptime.py - Stock plugin to calculate the system's uptime and add to the commit message.'''
 
-import flashbake
 from flashbake.plugins import AbstractMessagePlugin
 from subprocess import Popen, PIPE
+import flashbake
 import logging
 import os.path
 import string
@@ -38,7 +38,6 @@ class UpTime(AbstractMessagePlugin):
             message_file.write('System has been up %s\n' % uptime)
 
         return True
-
 
     def __calcuptime(self):
         """ copied with blanket permission from
@@ -79,7 +78,6 @@ class UpTime(AbstractMessagePlugin):
         string += str(seconds) + " " + (seconds == 1 and "second" or "seconds")
 
         return string
-
 
     def __run_uptime(self):
         """ For OSes that don't provide procfs, then try to use the updtime command.

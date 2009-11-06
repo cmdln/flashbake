@@ -25,8 +25,8 @@ import glob
 import logging
 import os
 import os.path
-import sys
 import re
+import sys
 
 
 
@@ -51,7 +51,6 @@ class ControlConfig:
 
         self.git_path = None
         self.project_name = None
-
 
     def capture(self, line):
         ''' Parse a line from the control file if it is relevant to plugin configuration. '''
@@ -89,7 +88,6 @@ class ControlConfig:
             return True
 
         return False
-
 
     def init(self):
         """ Do any property clean up, after parsing but before use """
@@ -136,7 +134,6 @@ class ControlConfig:
         for plugin in all_plugins:
             plugin.capture_properties(self)
             plugin.init(self)
-
 
     def share_property(self, name, type=None):
         """ Declare a shared property, this way multiple plugins can share some
@@ -202,12 +199,10 @@ class ControlConfig:
 
         return plugin
 
-
     def __add_last(self, plugin_name):
         if plugin_name in self.plugin_names:
             self.plugin_names.remove(plugin_name)
         self.plugin_names.append(plugin_name)
-
 
     def __checkattr(self, plugin_spec, plugin, name, expected_type):
         try:

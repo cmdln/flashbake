@@ -24,13 +24,13 @@ from urllib2 import HTTPError, URLError
 import logging
 import os
 import os.path
+import re
 import string
 import sys
+import timezone
 import urllib
 import urllib2
 import xml.dom.minidom
-import timezone
-import re
 
 
 
@@ -41,7 +41,6 @@ class Weather(AbstractMessagePlugin):
         self.share_property('tz', plugin_spec=timezone.PLUGIN_SPEC)
         ## plugin uses location_location from Location plugin
         self.share_property('location_location')
-
 
     def addcontext(self, message_file, config):
         """ Add weather information to the commit message. Looks for

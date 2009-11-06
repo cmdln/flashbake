@@ -20,9 +20,7 @@
 #    along with flashbake.  If not, see <http://www.gnu.org/licenses/>.
 
 
-from flashbake import commit
-from flashbake import context
-from flashbake import control
+from flashbake import commit, context, control
 from flashbake.plugins import PluginError, PLUGIN_ERRORS
 from optparse import OptionParser, OptionParser
 from os.path import join, dirname, exists, realpath, abspath
@@ -31,20 +29,17 @@ import flashbake.git
 import fnmatch
 import logging
 import os
-import os
 import os.path
 import subprocess
 import sys
-import sys
-import logging
 
 
 
 VERSION = '0.26'
 pattern = '.flashbake'
 
-# entry point used by setup.py
 def main():
+    ''' Entry point used by the setup.py installation script. '''
     # handle options and arguments
     parser = __build_parser()
 

@@ -18,9 +18,11 @@
 '''  git.py - Wrap the call outs to git, adding sanity checks and environment set up if
 needed.'''
 
-import os
 import logging
+import os
 import subprocess
+
+
 
 class VCError(Exception):
     """ Error when the version control wrapper object cannot be set up. """

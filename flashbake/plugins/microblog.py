@@ -14,20 +14,17 @@
 #
 #    You should have received a copy of the GNU General Public License
 #    along with flashbake.  If not, see <http://www.gnu.org/licenses/>.
+'''  microblog.py - microblog plugins by Ben Snider, bensnider.com '''
 
-
-
-'''  microblog.py - microblog plugin by Ben Snider, bensnider.com '''
-
-import logging, urllib
+from flashbake.plugins import AbstractMessagePlugin
 from urllib2 import HTTPError, URLError
 from xml.etree.ElementTree import ElementTree
-from flashbake.plugins import AbstractMessagePlugin
+import logging
+import urllib
 
 
 
 class Twitter(AbstractMessagePlugin):
-
     def __init__(self, plugin_spec):
         AbstractMessagePlugin.__init__(self, plugin_spec, True)
         self.service_url = 'http://twitter.com'
@@ -41,7 +38,6 @@ class Twitter(AbstractMessagePlugin):
         self.define_property('limit', int, False, 5)
         self.define_property('optional_fields')
 
-
     def init(self, config):
         if self.limit > 200:
             logging.warn('Please use a limit <= 200.');
@@ -54,7 +50,6 @@ class Twitter(AbstractMessagePlugin):
             'url':self.service_url,
             'user':self.user,
             'limit':self.limit}
-
 
     def __setoptionalfields(self, config):
         # We don't have to worry about a KeyError here since this property
@@ -74,7 +69,6 @@ class Twitter(AbstractMessagePlugin):
             # finally sort the list so its the same each run, provided the config is the same
             newFields.sort()
             self.optional_fields = newFields
-
 
     def addcontext(self, message_file, config):
         (title, last_tweets) = self.__fetchitems(config)
@@ -96,7 +90,6 @@ class Twitter(AbstractMessagePlugin):
             message_file.write('Couldn\'t fetch entries from feed, %s.\n' % self.twitter_url)
 
         return len(last_tweets) > 0
-
 
     def __fetchitems(self, config):
         ''' We fetch the tweets from the configured url in self.twitter_url,
@@ -155,6 +148,7 @@ def propercase(string):
     string = string.replace('_', ' ')
     string = string.title()
     return string
+
 
 def utc_to_local(t):
     ''' ganked from http://feihonghsu.blogspot.com/2008/02/converting-from-local-time-to-utc.html '''
