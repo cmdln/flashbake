@@ -103,11 +103,16 @@ class ControlConfig:
         self.share_property('project_name')
 
         all_plugins = list()
+        with_deps = dict()
         for plugin_name in self.plugin_names:
             logging.debug("initalizing plugin: %s" % plugin_name)
             try:
                 plugin = self.create_plugin(plugin_name)
-                all_plugins.append(plugin)
+                if len(plugin.dependencies()) == 0:
+                    all_plugins.append(plugin)
+                else:
+                    dep = Dependency(plugin)
+                    dep.map(with_deps)
                 if isinstance(plugin, flashbake.plugins.AbstractMessagePlugin):
                     logging.debug("Message Plugin: %s" % plugin_name)
                     # TODO add notion of dependency for ordering
@@ -131,6 +136,11 @@ class ControlConfig:
 
         for plugin in all_plugins:
             plugin.share_properties(self)
+            for dep in with_deps[plugin.plugin_spec]:
+                dep.satisfy(plugin, all_plugins)
+
+        if len(Dependency.all) > 0:
+            logging.error('Unsatisfied dependencies!')
 
         for plugin in all_plugins:
             plugin.capture_properties(self)
@@ -223,6 +233,26 @@ class ControlConfig:
         module = sys.modules[module_name]
         classobj = getattr(module, plugin_name)
         return classobj
+
+
+class Dependency:
+    all = list()
+    def __init__(self, plugin):
+        self.plugin
+        self.dep_count = len(plugin.dependencies)
+
+    def map(self, dep_map):
+        for spec in self.plugin.dependencies():
+            if spec not in dep_map:
+                dep_map[spec] = list()
+            dep_map[spec].append(self)
+
+    def satisfy(self, plugin, all_plugins):
+        self.dep_count -= 1
+        if self.dep_count == 0:
+            pos = all_plugins.index(plugin)
+            all_plugins.insert(pos + 1)
+            all.remove(self)
 
 
 class HotFiles:

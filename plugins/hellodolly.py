@@ -1,6 +1,6 @@
-from flashbake.plugins import AbstractPlugin
+from flashbake.plugins import AbstractMessagePlugin
 
-class HelloDolly(AbstractPlugin):
+class HelloDolly(AbstractMessagePlugin):
     """ Sample plugin. """
 
     def addcontext(self, message_file, config):

@@ -90,6 +90,12 @@ class AbstractPlugin():
         """ This method is optional. """
         pass
 
+
+    def dependencies(self):
+        """ Optional method via which a plugin can express a dependency on another plugin. """
+        return list()
+
+
     def __capture_property(self, config, name, type=None, required=False, default=None):
         """ Move a property, if present, from the ControlConfig to the daughter
             plugin. """
@@ -140,7 +146,7 @@ class AbstractFilePlugin(AbstractPlugin):
         """ This method is required, it will asplode if not overridden by
             daughter classes. """
         self.abstract()
-        
+
     def post_process(self, to_commit, hot_files, config):
         """ This method is optional, it will be run after status processing but before commit so the
             plugin may shuffle files into the commit. """
@@ -156,7 +162,7 @@ class AbstractNotifyPlugin(AbstractPlugin):
             N.B. This method is required, it will asplode if not overridden by
             daughter classes. '''
         self.abstract()
-    
+
     def notify_commit(self, to_commit, hot_files, config):
         ''' Option method to notify when a commit is performed, probably most useful
             for services like desktop notifiers. '''
