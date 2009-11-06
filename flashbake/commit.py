@@ -118,7 +118,7 @@ def commit(control_config, hot_files, quiet_mins, dryrun):
             logging.error('Try \'git status "%s"\' for more info.' % control_file)
 
     hot_files.addorphans(git_obj, control_config)
-    
+
     for plugin in control_config.file_plugins:
         plugin.post_process(to_commit, hot_files, control_config)
 
@@ -149,9 +149,9 @@ def purge(control_config, hot_files, dry_run):
 
     # the wrapper object ensures git is on the path
     git_status = git_obj.status()
-    
+
     __handle_fatal(git_status)
-    
+
     logging.debug("Examining git status.")
     for line in git_status.splitlines():
         __capture_deleted(hot_files, line)
@@ -168,12 +168,14 @@ def purge(control_config, hot_files, dry_run):
     else:
         logging.info('No deleted files to purge')
 
+
 def __capture_deleted(hot_files, line):
     if DELETED_RE.match(line):
         deleted_file = __trimgit(line)
         # remove files that will are known to have been deleted
         hot_files.remove(deleted_file)
         hot_files.put_deleted(deleted_file)
+
 
 def __handle_fatal(git_status):
     if git_status.startswith('fatal'):
@@ -184,7 +186,8 @@ def __handle_fatal(git_status):
         else:
             logging.error(git_status)
         sys.exit(1)
-        
+
+
 def __trimgit(status_line):
     if status_line.find('->') >= 0:
         tokens = status_line.split('->')

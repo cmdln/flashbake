@@ -35,7 +35,7 @@ import sys
 
 
 
-VERSION='0.26'
+VERSION = '0.26'
 pattern = '.flashbake'
 
 def main():
@@ -71,7 +71,7 @@ def main():
     project_dir = args[0]
 
     # look for user's default control file
-    hot_files, control_config = __load_user_control(home_dir, project_dir,options)
+    hot_files, control_config = __load_user_control(home_dir, project_dir, options)
 
     # look for project control file
     control_file = __find_control(parser, project_dir)
