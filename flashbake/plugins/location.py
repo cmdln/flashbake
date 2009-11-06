@@ -72,7 +72,8 @@ class Location(AbstractMessagePlugin):
             logging.error('Failed with HTTP status code %d' % e.code)
             return {}
         except URLError, e:
-            logging.error('Failed with reason %s.' % e.reason)
+            logging.error('Plugin, %s, failed to connect with network.' % self.__class__)
+            logging.debug('Network failure reason, %s.' % e.reason)
             return {}
 
     def __load_cache(self):
@@ -145,5 +146,6 @@ class Location(AbstractMessagePlugin):
             logging.error('Failed with HTTP status code %d' % e.code)
             return None
         except URLError, e:
-            logging.error('Failed with reason %s.' % e.reason)
+            logging.error('Plugin, %s, failed to connect with network.' % self.__class__)
+            logging.debug('Network failure reason, %s.' % e.reason)
             return None
