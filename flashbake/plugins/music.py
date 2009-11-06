@@ -21,11 +21,13 @@
 '''  music.py - Plugin for gathering last played tracks from music player. '''
 
 from flashbake.plugins import AbstractMessagePlugin, AbstractMessagePlugin
+import flashbake
 import logging
 import os
 import os.path
 import sqlite3
 import string
+import subprocess
 import time
 
 
@@ -75,33 +77,33 @@ limit %d"""
 
 class iTunes(AbstractMessagePlugin):
     ''' Based on Andrew Wheiss' plugin which is MIT licensed which should be compatible. '''
-    def __init__(self):
+    def __init__(self, plugin_spec):
+        AbstractMessagePlugin.__init__(self, plugin_spec)
         self.define_property('osascript')
-        
-    def init(self, config):
-        if self.osascript is None:
-            self.osascript = flashbake.findexecutable('osascript')
-            
+
     def addcontext(self, message_file, config):
         """ Get the track info and write it to the commit message """
+        if self.osascript is None:
+            self.osascript = flashbake.find_executable('osascript')
+
         info = self.trackinfo()
 
         if info is None:
             message_file.write('Couldn\'t get current track.\n')
         else:
-            message_file.write('%s' % info)
+            message_file.write('Currently playing in iTunes:\n%s' % info)
 
         return True
 
-    def trackinfo():
+    def trackinfo(self):
         ''' Call the AppleScript file. '''
         if self.osascript is None:
             return None
         directory = os.path.dirname(__file__)
         script_path = os.path.join(directory, 'current_track.scpt')
-        
+
         args = [self.osascript, script_path]
         proc = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                             close_fds = True)
-        
+                             close_fds=True)
+
         return proc.communicate()[0]

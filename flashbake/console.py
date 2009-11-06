@@ -35,7 +35,7 @@ import sys
 
 
 
-VERSION = '0.26'
+VERSION='0.26'
 pattern = '.flashbake'
 
 def main():
@@ -225,13 +225,13 @@ def __context_only(options, project_dir, control_file, control_config, hot_files
         logging.error('Error: %s' % str(error))
         return 1
     except PluginError, error:
-        handlebadplugin(error)
+        __handle_bad_plugin(error)
         return 1
 
 
 def __handle_bad_plugin(plugin_error):
     logging.debug('Plugin error, %s.' % plugin_error)
-    if plugin_error.reason == PLUGIN_ERRORS.unknown_plugin:
+    if plugin_error.reason == PLUGIN_ERRORS.unknown_plugin or plugin_error.reason == PLUGIN_ERRORS.invalid_plugin:
         logging.error('Cannot load plugin, %s.' % plugin_error.plugin_spec)
         return
 

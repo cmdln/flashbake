@@ -2,10 +2,11 @@
 #
 # setup.py for flashbake
 from setuptools import setup, find_packages
-import flashbake.console
+
+
 
 setup(name='flashbake',
-        version=flashbake.console.VERSION,
+        version='0.26',
         author="Thomas Gideon",
         author_email="cmdln@thecommandline.net",
         url="http://thecommandline.net",
