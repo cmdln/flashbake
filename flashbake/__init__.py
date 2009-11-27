@@ -136,8 +136,9 @@ class ControlConfig:
 
         for plugin in all_plugins:
             plugin.share_properties(self)
-            for dep in with_deps[plugin.plugin_spec]:
-                dep.satisfy(plugin, all_plugins)
+            if plugin.plugin_spec in with_deps:
+                for dep in with_deps[plugin.plugin_spec]:
+                    dep.satisfy(plugin, all_plugins)
 
         if len(Dependency.all) > 0:
             logging.error('Unsatisfied dependencies!')
