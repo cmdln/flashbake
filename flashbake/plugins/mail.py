@@ -32,9 +32,9 @@ import sys
 
 # Import the email modules we'll need
 if sys.hexversion < 0x2050000:
-    from email.MIMEText import MIMEText
+    from email.MIMEText import MIMEText #@UnusedImport
 else:
-    from email.mime.text import MIMEText
+    from email.mime.text import MIMEText #@Reimport
 
 
 
@@ -57,7 +57,7 @@ class Email(plugins.AbstractNotifyPlugin):
             body += '\nThe following files do not exist:\n\n'
 
             for file in hot_files.not_exists:
-               body += '\t' + file + '\n'
+                body += '\t' + file + '\n'
 
             body += '\nMake sure there is not a typo in .flashbake and that you created/saved the file.\n'
 
@@ -65,7 +65,7 @@ class Email(plugins.AbstractNotifyPlugin):
             body += '\nThe following files have been deleted from version control:\n\n'
 
             for file in hot_files.deleted:
-               body += '\t' + file + '\n'
+                body += '\t' + file + '\n'
 
             body += '\nYou may restore these files or remove them from .flashbake after running flashbake --purge '
             body += 'in your project directory.\n'
@@ -85,7 +85,7 @@ class Email(plugins.AbstractNotifyPlugin):
             body += '\nThe following files in .flashbake are not in the project directory.\n\n'
 
             for file in hot_files.outside_files:
-               body += '\t' + file + '\n'
+                body += '\t' + file + '\n'
 
             body += '\nOnly files in the project directory can be tracked and committed.\n'
 

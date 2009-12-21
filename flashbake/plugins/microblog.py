@@ -154,7 +154,7 @@ def propercase(string):
 
 def utc_to_local(t):
     ''' ganked from http://feihonghsu.blogspot.com/2008/02/converting-from-local-time-to-utc.html '''
-    import calendar, time, datetime
+    import calendar, datetime
     # Discard the timezone, python dont like it, and it seems to always be
     # set to UTC, even if the user has their timezone set.
     t = t.replace('+0000 ', '')

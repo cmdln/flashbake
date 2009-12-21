@@ -22,11 +22,7 @@ from flashbake.plugins import AbstractMessagePlugin
 from flashbake.plugins.timezone import findtimezone
 from urllib2 import HTTPError, URLError
 import logging
-import os
-import os.path
 import re
-import string
-import sys
 import timezone
 import urllib
 import urllib2
@@ -112,9 +108,9 @@ class Weather(AbstractMessagePlugin):
             weather = dict()
             weather['city'] = city
             for child in current[0].childNodes:
-               if child.localName == 'icon':
-                   continue
-               weather[child.localName] = child.getAttribute('data').strip()
+                if child.localName == 'icon':
+                    continue
+                weather[child.localName] = child.getAttribute('data').strip()
 
             return weather
         except HTTPError, e:

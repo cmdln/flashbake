@@ -19,8 +19,6 @@
 
 from flashbake import plugins
 import flashbake
-import fnmatch
-import glob
 import logging
 import os
 import re
@@ -48,7 +46,7 @@ class Growl(plugins.AbstractNotifyPlugin):
         
     # TODO: use netgrowl.py (or wait for GNTP support to be finalized
     # so it will support Growl for Windows as well)
-    def growl_notify(self,title,message):
+    def growl_notify(self, title, message):
         args = [ self.growlnotify, '--name', 'flashbake' ]
         if self.host != None:
             args += [ '--udp', '--host', self.host]
@@ -59,8 +57,8 @@ class Growl(plugins.AbstractNotifyPlugin):
 
         title = ' '.join([self.title_prefix, title])
         args += ['--message', message, '--title', title]
-        p = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                             close_fds = True)
+        subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                             close_fds=True)
 
     def warn(self, hot_files, config):
         ''' Emits one message per file, with less explanation than the email plugin.

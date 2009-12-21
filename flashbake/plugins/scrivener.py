@@ -18,9 +18,8 @@
 '''   scrivener.py - Scrivener flashbake plugin
 by Jason Penney, jasonpenney.net'''
 
-from flashbake.plugins import *
-import flashbake
-import flashbake.plugins
+from flashbake.plugins import AbstractFilePlugin, AbstractMessagePlugin, PluginError, PLUGIN_ERRORS
+import flashbake #@UnusedImport
 import fnmatch
 import glob
 import logging
@@ -61,7 +60,7 @@ def _relpath(path, start):
 
 def find_scrivener_project_contents(hot_files, scrivener_project):
     contents = list()
-    for path, dirs, files in os.walk(os.path.join(hot_files.project_dir, scrivener_project)):
+    for path, dirs, files in os.walk(os.path.join(hot_files.project_dir, scrivener_project)): #@UnusedVariable
         if hasattr(os.path, "relpath"):
             rpath = os.path.relpath(path, hot_files.project_dir)
         else:
@@ -105,7 +104,7 @@ class ScrivenerWordcountFile(AbstractFilePlugin):
 
     def init(self, config):
         if not flashbake.executable_available('textutil'):
-            raise PluginError(PLUGIN_ERRORS.ignorable_error, self.plugin_spec, 'Could not find command, textutil.')
+            raise PluginError(PLUGIN_ERRORS.ignorable_error, self.plugin_spec, 'Could not find command, textutil.') #@UndefinedVariable
 
     def pre_process(self, hot_files, config):
         config.scrivener_project_count = dict()

@@ -22,13 +22,11 @@
 
 from flashbake import commit, context, control
 from flashbake.plugins import PluginError, PLUGIN_ERRORS
-from optparse import OptionParser, OptionParser
-from os.path import join, dirname, exists, realpath, abspath
-import flashbake
+from optparse import OptionParser
+from os.path import join, realpath
 import flashbake.git
 import fnmatch
 import logging
-import os
 import os.path
 import subprocess
 import sys
@@ -131,7 +129,7 @@ def multiple_projects():
 
 
 def __locate_projects(root):
-    for path, dirs, files in os.walk(root):
+    for path, dirs, files in os.walk(root): #@UnusedVariable
         for project_path in [os.path.normpath(path) for filename in files if fnmatch.fnmatch(filename, pattern)]:
             yield project_path
 

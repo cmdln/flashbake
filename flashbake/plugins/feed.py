@@ -45,9 +45,9 @@ class Feed(AbstractMessagePlugin):
                 message_file.write('Last %(item_count)d entries from %(feed_title)s by %(author)s:\n'\
                     % {'item_count' : len(last_items), 'feed_title' : title, 'author': self.author})
             for item in last_items:
-              # edit the '%s' if you want to add a label, like 'Title %s' to the output
-              message_file.write('%s\n' % item['title'])
-              message_file.write('%s\n' % item['link'])
+                # edit the '%s' if you want to add a label, like 'Title %s' to the output
+                message_file.write('%s\n' % item['title'])
+                message_file.write('%s\n' % item['link'])
         else:
             message_file.write('Couldn\'t fetch entries from feed, %s.\n' % self.url)
 
@@ -68,14 +68,14 @@ class Feed(AbstractMessagePlugin):
 
             by_creator = []
             for entry in feed.entries:
-               if self.author != None and entry.author != self.author:
-                   continue
-               title = entry.title
-               title = title.encode('ascii', 'replace')
-               link = entry.link
-               by_creator.append({"title" : title, "link" : link})
-               if self.limit <= len(by_creator):
-                   break
+                if self.author != None and entry.author != self.author:
+                    continue
+                title = entry.title
+                title = title.encode('ascii', 'replace')
+                link = entry.link
+                by_creator.append({"title" : title, "link" : link})
+                if self.limit <= len(by_creator):
+                    break
 
             return (feed_title, by_creator)
         except HTTPError, e:

@@ -22,7 +22,6 @@ from subprocess import Popen, PIPE
 import flashbake
 import logging
 import os.path
-import string
 
 
 

@@ -5,7 +5,6 @@ from flashbake.plugins import AbstractMessagePlugin
 from urllib2 import HTTPError, URLError
 from xml.dom import minidom
 import logging
-import os
 import os.path
 import re
 import urllib

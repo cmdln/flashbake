@@ -16,19 +16,18 @@
 #    along with flashbake.  If not, see <http://www.gnu.org/licenses/>.
 
 from enum import Enum
-import logging
 import flashbake
+import logging
 
 
-PLUGIN_ERRORS = Enum(
-        'invalid_plugin',
-        'invalid_type',
-        'unknown_plugin',
-        'missing_attribute',
-        'invalid_attribute',
-        'missing_property',
-        'ignorable_error'
-        )
+
+PLUGIN_ERRORS = Enum('invalid_plugin',
+                     'invalid_type',
+                     'unknown_plugin',
+                     'missing_attribute',
+                     'invalid_attribute',
+                     'missing_property',
+                     'ignorable_error')
 
 
 class PluginError(Exception):

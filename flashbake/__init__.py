@@ -26,7 +26,6 @@ import logging
 import os
 import os.path
 import re
-import sys
 
 
 

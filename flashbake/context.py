@@ -17,12 +17,8 @@
 
 '''  context.py - Build up some descriptive context for automatic commit to git'''
 
-import logging
-import os
 import os.path
 import random
-import string
-import sys
 
 
 

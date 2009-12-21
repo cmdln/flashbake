@@ -18,16 +18,13 @@
 '''  commit.py - Parses a project's control file and wraps git operations, calling the context
 script to build automatic commit messages as needed.'''
 
-import commands
 import context
 import datetime
-import flashbake
 import git
 import logging
 import os
 import re
 import sys
-import time
 
 
 
