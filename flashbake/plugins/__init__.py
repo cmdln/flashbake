@@ -90,11 +90,9 @@ class AbstractPlugin:
         """ This method is optional. """
         pass
 
-
     def dependencies(self):
         """ Optional method via which a plugin can express a dependency on another plugin. """
         return list()
-
 
     def __capture_property(self, config, name, type=None, required=False, default=None):
         """ Move a property, if present, from the ControlConfig to the daughter

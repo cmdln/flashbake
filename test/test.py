@@ -20,8 +20,7 @@
 #    along with flashbake.  If not, see <http://www.gnu.org/licenses/>.
 
 import sys
-import os
-from os.path import join, dirname, exists, realpath, abspath
+from os.path import join, realpath, abspath
 import unittest
 import logging
 

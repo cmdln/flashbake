@@ -1,6 +1,5 @@
 from flashbake import ControlConfig
 from flashbake.plugins import PluginError
-import logging
 import unittest
 
 
@@ -10,7 +9,7 @@ class ConfigTestCase(unittest.TestCase):
 
     def testinvalidspec(self):
         try:
-            plugin = self.config.create_plugin('test.foo')
+            self.config.create_plugin('test.foo')
             self.fail('Should not be able to use unknown')
         except PluginError, error:
             self.assertEquals(str(error.reason), 'invalid_plugin',
@@ -18,7 +17,7 @@ class ConfigTestCase(unittest.TestCase):
 
     def testnoplugin(self):
         try:
-            plugin = self.config.create_plugin('test.foo:Foo')
+            self.config.create_plugin('test.foo:Foo')
             self.fail('Should not be able to use unknown')
         except PluginError, error:
             self.assertEquals(str(error.reason), 'unknown_plugin',
@@ -27,7 +26,7 @@ class ConfigTestCase(unittest.TestCase):
     def testmissingparent(self):
         try:
             plugin_name = 'test.plugins:MissingParent'
-            plugin = self.config.create_plugin(plugin_name)
+            self.config.create_plugin(plugin_name)
             self.fail('Should not have initialized plugin, %s' % plugin_name)
         except PluginError, error:
             reason = 'invalid_type'
