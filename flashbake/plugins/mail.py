@@ -90,7 +90,7 @@ class Email(plugins.AbstractNotifyPlugin):
             body += '\nOnly files in the project directory can be tracked and committed.\n'
 
 
-        if control_config.dryrun:
+        if control_config.dry_run:
             logging.debug(body)
             if self.notice_to != None:
                 logging.info('Dry run, skipping email notice.')
