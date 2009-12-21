@@ -17,7 +17,7 @@
 
 from enum import Enum
 import logging
-
+import flashbake
 
 
 PLUGIN_ERRORS = Enum(
@@ -49,7 +49,7 @@ def service_and_prefix(plugin_spec):
     return service_name, property_prefix
 
 
-class AbstractPlugin():
+class AbstractPlugin:
     """ Common parent for all kinds of plugins, mostly to share option handling
         code. """
     def __init__(self, plugin_spec):
@@ -67,7 +67,8 @@ class AbstractPlugin():
     def share_property(self, name, type=None, plugin_spec=None):
         try:
             if plugin_spec:
-                service_name, property_prefix = service_and_prefix(plugin_spec)
+                parsed = service_and_prefix(plugin_spec)
+                property_prefix = parsed[1]
                 self.__shared_prop_defs.append(('%s_%s' % (property_prefix, name), type))
             else:
                 self.__shared_prop_defs.append((name, type))
