@@ -39,7 +39,7 @@ pattern = '.flashbake'
 def main():
     ''' Entry point used by the setup.py installation script. '''
     # handle options and arguments
-    parser = __build_parser()
+    parser = _build_parser()
 
     (options, args) = parser.parse_args()
 
@@ -60,7 +60,7 @@ def main():
     home_dir = os.path.expanduser('~')
 
     # look for plugin directory
-    __load_plugin_dirs(options, home_dir)
+    _load_plugin_dirs(options, home_dir)
 
     if len(args) < 1:
         parser.error('Must specify project directory.')
@@ -69,16 +69,16 @@ def main():
     project_dir = args[0]
 
     # look for user's default control file
-    hot_files, control_config = __load_user_control(home_dir, project_dir, options)
+    hot_files, control_config = _load_user_control(home_dir, project_dir, options)
 
     # look for project control file
-    control_file = __find_control(parser, project_dir)
+    control_file = _find_control(parser, project_dir)
     if None == control_file:
         sys.exit(1)
 
     # emit the context message and exit
     if options.context_only:
-        sys.exit(__context_only(options, project_dir, control_file, control_config, hot_files))
+        sys.exit(_context_only(options, project_dir, control_file, control_config, hot_files))
 
     quiet_period = 0
     if len(args) == 2:
@@ -101,7 +101,7 @@ def main():
         logging.error('Error: %s' % str(error))
         sys.exit(1)
     except PluginError, error:
-        __handle_bad_plugin(error)
+        _handle_bad_plugin(error)
         sys.exit(1)
 
 
@@ -121,7 +121,7 @@ def multiple_projects():
     LAUNCH_DIR = os.path.abspath(sys.path[0])
     flashbake_cmd = os.path.join(LAUNCH_DIR, "flashbake")
     flashbake_opts = options.flashbake_options.split()
-    for project in __locate_projects(args[0]):
+    for project in _locate_projects(args[0]):
         print(project + ":")
         proc = [ flashbake_cmd ] + flashbake_opts + [project]
         if len(args) > 1:
@@ -129,13 +129,13 @@ def multiple_projects():
         subprocess.call(proc)
 
 
-def __locate_projects(root):
+def _locate_projects(root):
     for path, dirs, files in os.walk(root): #@UnusedVariable
         for project_path in [os.path.normpath(path) for filename in files if fnmatch.fnmatch(filename, pattern)]:
             yield project_path
 
 
-def __build_parser():
+def _build_parser():
     usage = "usage: %prog [options] <project_dir> [quiet_min]"
 
     parser = OptionParser(usage=usage, version='%s %s' % ('%prog', VERSION))
@@ -160,7 +160,7 @@ def __build_parser():
     return parser
 
 
-def __load_plugin_dirs(options, home_dir):
+def _load_plugin_dirs(options, home_dir):
     plugin_dir = join(home_dir, '.flashbake', 'plugins')
     if os.path.exists(plugin_dir):
         real_plugin_dir = realpath(plugin_dir)
@@ -179,7 +179,7 @@ def __load_plugin_dirs(options, home_dir):
 
 
 
-def __load_user_control(home_dir, project_dir, options):
+def _load_user_control(home_dir, project_dir, options):
     control_file = join(home_dir, '.flashbake', 'config')
     if os.path.exists(control_file):
         (hot_files, control_config) = control.parse_control(project_dir, control_file)
@@ -190,7 +190,7 @@ def __load_user_control(home_dir, project_dir, options):
     return hot_files, control_config
 
 
-def __find_control(parser, project_dir):
+def _find_control(parser, project_dir):
     control_file = join(project_dir, '.flashbake')
 
     # look for .control for backwards compatibility
@@ -204,7 +204,7 @@ def __find_control(parser, project_dir):
         return control_file
 
 
-def __context_only(options, project_dir, control_file, control_config, hot_files):
+def _context_only(options, project_dir, control_file, control_config, hot_files):
     try:
         (hot_files, control_config) = control.parse_control(project_dir, control_file, control_config, hot_files)
         control_config.context_only = options.context_only
@@ -224,11 +224,11 @@ def __context_only(options, project_dir, control_file, control_config, hot_files
         logging.error('Error: %s' % str(error))
         return 1
     except PluginError, error:
-        __handle_bad_plugin(error)
+        _handle_bad_plugin(error)
         return 1
 
 
-def __handle_bad_plugin(plugin_error):
+def _handle_bad_plugin(plugin_error):
     logging.debug('Plugin error, %s.' % plugin_error)
     if plugin_error.reason == PLUGIN_ERRORS.unknown_plugin or plugin_error.reason == PLUGIN_ERRORS.invalid_plugin: #@UndefinedVariable
         logging.error('Cannot load plugin, %s.' % plugin_error.plugin_spec)
