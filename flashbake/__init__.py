@@ -385,7 +385,7 @@ class HotFiles:
 
         logging.info('Adding new files, %s.' % to_commit)
         # consolidate the commit to be friendly to how git normally works
-        if not control_config.dryrun:
+        if not control_config.dry_run:
             commit_output = git_obj.commit(message_file, to_commit)
             logging.debug('Commit output, %s' % commit_output)
 
