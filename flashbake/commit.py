@@ -46,7 +46,7 @@ def commit(control_config, hot_files, quiet_mins, dryrun):
     # get the git status for the project
     git_status = git_obj.status()
 
-    __handle_fatal(git_status)
+    __handle_fatal(hot_files, git_status)
 
     # in particular find the existing entries that need a commit
     pending_re = re.compile('#\s*(renamed|copied|modified|new file):.*')
@@ -177,7 +177,7 @@ def __capture_deleted(hot_files, line):
         hot_files.put_deleted(deleted_file)
 
 
-def __handle_fatal(git_status):
+def __handle_fatal(hot_files, git_status):
     if git_status.startswith('fatal'):
         logging.error('Fatal error from git.')
         if 'fatal: Not a git repository' == git_status:

@@ -134,12 +134,14 @@ class Location(AbstractMessagePlugin):
                 if line.find('Hello') > 0:
                     hello_line = line.strip()
                     break
-            if hello_line == None:
-                message_file.write('Failed to parse Hello with public IP address.')
+            if hello_line is None:
+                logging.error('Failed to parse Hello with public IP address.')
+                return None
             logging.debug(hello_line)
             m = re.search('([0-9]+\.){3}([0-9]+){1}', hello_line)
-            if m == None:
-                message_file.write('Failed to parse Hello with public IP address.')
+            if m is None:
+                logging.error('Failed to parse Hello with public IP address.')
+                return None
             ip_addr = m.group(0)
             return ip_addr
         except HTTPError, e:

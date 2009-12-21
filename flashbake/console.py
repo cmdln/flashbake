@@ -231,16 +231,16 @@ def __context_only(options, project_dir, control_file, control_config, hot_files
 
 def __handle_bad_plugin(plugin_error):
     logging.debug('Plugin error, %s.' % plugin_error)
-    if plugin_error.reason == PLUGIN_ERRORS.unknown_plugin or plugin_error.reason == PLUGIN_ERRORS.invalid_plugin:
+    if plugin_error.reason == PLUGIN_ERRORS.unknown_plugin or plugin_error.reason == PLUGIN_ERRORS.invalid_plugin: #@UndefinedVariable
         logging.error('Cannot load plugin, %s.' % plugin_error.plugin_spec)
         return
 
-    if plugin_error.reason == PLUGIN_ERRORS.missing_attribute:
+    if plugin_error.reason == PLUGIN_ERRORS.missing_attribute: #@UndefinedVariable
         logging.error('Plugin, %s, doesn\'t have the needed plugin attribute, %s.' \
                 % (plugin_error.plugin_spec, plugin_error.name))
         return
 
-    if plugin_error.reason == PLUGIN_ERRORS.invalid_attribute:
+    if plugin_error.reason == PLUGIN_ERRORS.invalid_attribute: #@UndefinedVariable
         logging.error('Plugin, %s, has an invalid plugin attribute, %s.' \
                 % (plugin_error.plugin_spec, plugin_error.name))
         return

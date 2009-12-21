@@ -20,7 +20,7 @@
 from flashbake.plugins import PluginError, PLUGIN_ERRORS
 from types import *
 import commands
-import flashbake.plugins
+import flashbake.plugins #@UnresolvedImport
 import glob
 import logging
 import os
@@ -68,8 +68,8 @@ class ControlConfig:
             prop_value = prop_tokens[1].strip()
 
             if 'plugins' == prop_name:
-               self.add_plugins(prop_value.split(','))
-               return True
+                self.add_plugins(prop_value.split(','))
+                return True
 
             # hang onto any extra propeties in case plugins use them
             if not prop_name in self.__dict__:
@@ -83,7 +83,7 @@ class ControlConfig:
             except:
                 raise ConfigError(
                         'The value, %s, for option, %s, could not be parse as %s.'
-                        % (prop_value, prop_name, config.prop_types[prop_name]))
+                        % (prop_value, prop_name, self.prop_types[prop_name]))
 
             return True
 
@@ -128,7 +128,7 @@ class ControlConfig:
                     self.notify_plugins.append(plugin)
             except PluginError, e:
                 # re-raise critical plugin error
-                if not e.reason == PLUGIN_ERRORS.ignorable_error:
+                if not e.reason == PLUGIN_ERRORS.ignorable_error: #@UndefinedVariable
                     raise e
                 # allow ignorable errors through with a warning
                 logging.warning('Skipping plugin, %s, ignorable error: %s' %
@@ -177,7 +177,7 @@ class ControlConfig:
             protocol; not private so it can be used in testing. """
         if plugin_spec.find(':') < 0:
             logging.debug('Plugin spec not validly formed, %s.' % plugin_spec)
-            raise PluginError(PLUGIN_ERRORS.invalid_plugin, plugin_spec)
+            raise PluginError(PLUGIN_ERRORS.invalid_plugin, plugin_spec) #@UndefinedVariable
 
         tokens = plugin_spec.split(':')
         module_name = tokens[0]
@@ -187,7 +187,7 @@ class ControlConfig:
             __import__(module_name)
         except ImportError:
             logging.warn('Invalid module, %s' % plugin_name)
-            raise PluginError(PLUGIN_ERRORS.unknown_plugin, plugin_spec)
+            raise PluginError(PLUGIN_ERRORS.unknown_plugin, plugin_spec) #@UndefinedVariable
 
         try:
             plugin_class = self.__forname(module_name, plugin_name)
@@ -195,12 +195,12 @@ class ControlConfig:
         except Exception, e:
             logging.debug(e)
             logging.debug('Couldn\'t load class %s' % plugin_spec)
-            raise PluginError(PLUGIN_ERRORS.unknown_plugin, plugin_spec)
+            raise PluginError(PLUGIN_ERRORS.unknown_plugin, plugin_spec) #@UndefinedVariable
         is_message_plugin = isinstance(plugin, flashbake.plugins.AbstractMessagePlugin)
         is_file_plugin = isinstance(plugin, flashbake.plugins.AbstractFilePlugin)
         is_notify_plugin = isinstance(plugin, flashbake.plugins.AbstractNotifyPlugin)
         if not is_message_plugin and not is_file_plugin and not is_notify_plugin:
-            raise PluginError(PLUGIN_ERRORS.invalid_type, plugin_spec)
+            raise PluginError(PLUGIN_ERRORS.invalid_type, plugin_spec) #@UndefinedVariable
         if is_message_plugin:
             self.__checkattr(plugin_spec, plugin, 'connectable', bool)
             self.__checkattr(plugin_spec, plugin, 'addcontext', MethodType)
@@ -220,17 +220,17 @@ class ControlConfig:
         try:
             attrib = eval('plugin.%s' % name)
         except AttributeError:
-            raise PluginError(PLUGIN_ERRORS.missing_attribute, plugin_spec, name)
+            raise PluginError(PLUGIN_ERRORS.missing_attribute, plugin_spec, name) #@UndefinedVariable
 
         if not isinstance(attrib, expected_type):
-            raise PluginError(PLUGIN_ERRORS.invalid_attribute, plugin_spec, name)
+            raise PluginError(PLUGIN_ERRORS.invalid_attribute, plugin_spec, name) #@UndefinedVariable
 
 
     # with thanks to Ben Snider
     # http://www.bensnider.com/2008/02/27/dynamically-import-and-instantiate-python-classes/
     def __forname(self, module_name, plugin_name):
         ''' Returns a class of "plugin_name" from module "module_name". '''
-        module = __import__(module_name)
+        __import__(module_name)
         module = sys.modules[module_name]
         classobj = getattr(module, plugin_name)
         return classobj
@@ -372,13 +372,13 @@ class HotFiles:
         if len(self.to_add) == 0:
             return
 
-        message_file = context.buildmessagefile(control_config)
+        message_file = flashbake.context.buildmessagefile(control_config)
 
         to_commit = list()
         for orphan in self.to_add:
             logging.debug('Adding %s.' % orphan)
             add_output = git_obj.add(orphan)
-            logging.debug('Add output, %s' % orphan)
+            logging.debug('Add output, %s' % add_output)
             to_commit.append(orphan)
 
         logging.info('Adding new files, %s.' % to_commit)
@@ -398,7 +398,7 @@ class HotFiles:
     def __check_link(self, filename):
         # add, above, makes sure filename is always relative
         if os.path.islink(filename):
-           return filename
+            return filename
         directory = os.path.dirname(filename)
 
         while (len(directory) > 0):

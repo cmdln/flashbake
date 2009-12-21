@@ -17,14 +17,14 @@
 
 # growl.py - Growl notification flashbake plugin
 
-import flashbake
 from flashbake import plugins
+import flashbake
 import fnmatch
-import os
-import subprocess
 import glob
 import logging
+import os
 import re
+import subprocess
 
 
 
@@ -42,7 +42,7 @@ class Growl(plugins.AbstractNotifyPlugin):
             self.growlnotify = flashbake.find_executable('growlnotify')
 
         if self.growlnotify == None:
-            raise plugins.PluginError(plugins.PLUGIN_ERRORS.ignorable_error,
+            raise plugins.PluginError(plugins.PLUGIN_ERRORS.ignorable_error, #@UndefinedVariable
                                       self.plugin_spec,
                                       'Could not find command, growlnotify.')
         

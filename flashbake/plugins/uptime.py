@@ -48,11 +48,11 @@ class UpTime(AbstractMessagePlugin):
 
         f = open("/proc/uptime")
         try:
-             contents = f.read().split()
+            contents = f.read().split()
         except:
             return None
         finally:
-             f.close()
+            f.close()
 
         total_seconds = float(contents[0])
 
@@ -120,8 +120,8 @@ class UpTime(AbstractMessagePlugin):
                 return None
 
         # Build up output string, might require Python 2.5+
-        uptime = (days + (" day, " if days == "1" else " days, ") +
-                hours + (" hour, " if hours == "1" else " hours, ") +
+        uptime = (days + (" day, " if days == "1" else " days, ") + 
+                hours + (" hour, " if hours == "1" else " hours, ") + 
                 minutes + (" minute" if minutes == "1" else " minutes"))
 
         return uptime

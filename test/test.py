@@ -37,8 +37,9 @@ if __name__ == "__main__":
 
     sys.path.insert(0, realpath(flashbake_dir))
     try:
-        from flashbake.commit import commit, parsecontrol
-        from flashbake.context import buildmessagefile
+        from flashbake.commit import commit #@UnusedImport
+        from flashbake.control import parse_control #@UnusedImport
+        from flashbake.context import buildmessagefile #@UnusedImport
         import test.config
         import test.files
     finally:

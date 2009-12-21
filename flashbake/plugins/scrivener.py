@@ -49,7 +49,7 @@ def _relpath(path, start):
     path = os.path.realpath(path)
     start = os.path.realpath(start)
     if not path.startswith(start):
-        raise Error("unable to calculate paths")
+        raise Exception("unable to calculate paths")
     if os.path.samefile(path, start):
         return "."
 
@@ -66,7 +66,7 @@ def find_scrivener_project_contents(hot_files, scrivener_project):
             rpath = os.path.relpath(path, hot_files.project_dir)
         else:
             try:
-                import pathutils
+                import pathutils #@UnresolvedImport
                 rpath = pathutils.relative(path, hot_files.project_dir)
             except:
                 rpath = _relpath(path, hot_files.project_dir)

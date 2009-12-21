@@ -1,3 +1,4 @@
+from flashbake import ControlConfig
 import flashbake.plugins
 import logging
 import unittest
@@ -16,14 +17,14 @@ class MissingParent():
         pass
 
     def addcontext(self, message_file, control_config):
-        loggin.debug('do nothing')
+        logging.debug('do nothing')
 
 class NoConnectable(flashbake.plugins.AbstractMessagePlugin):
     def __init__(self, plugin_spec):
         pass
 
     def addcontext(self, message_file, control_config):
-        loggin.debug('do nothing')
+        logging.debug('do nothing')
 
 class NoAddContext(flashbake.plugins.AbstractMessagePlugin):
     def __init__(self, plugin_spec):
@@ -34,7 +35,7 @@ class WrongConnectable(flashbake.plugins.AbstractMessagePlugin):
         self.connectable = 1
 
     def addcontext(self, message_file, control_config):
-        loggin.debug('do nothing')
+        logging.debug('do nothing')
 
 class WrongAddContext(flashbake.plugins.AbstractMessagePlugin):
     def __init__(self, plugin_spec):
