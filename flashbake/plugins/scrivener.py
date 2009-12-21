@@ -93,6 +93,9 @@ class ScrivenerFile(AbstractFilePlugin):
             for hotfile in find_scrivener_project_contents(hot_files, f):
                 #logging.debug(" - %s" % hotfile)
                 hot_files.control_files.add(hotfile)
+    
+    def post_process(self, to_commit, hot_files, config):
+        flashbake.commit.purge(config, hot_files)
 
 
 class ScrivenerWordcountFile(AbstractFilePlugin):

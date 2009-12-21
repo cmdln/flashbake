@@ -91,11 +91,12 @@ def main():
     try:
         (hot_files, control_config) = control.parse_control(project_dir, control_file, control_config, hot_files)
         control_config.context_only = options.context_only
+        control_config.dry_run = options.dryrun
         (hot_files, control_config) = control.prepare_control(hot_files, control_config)
         if options.purge:
-            commit.purge(control_config, hot_files, options.dryrun)
+            commit.purge(control_config, hot_files)
         else:
-            commit.commit(control_config, hot_files, quiet_period, options.dryrun)
+            commit.commit(control_config, hot_files, quiet_period)
     except (flashbake.git.VCError, flashbake.ConfigError), error:
         logging.error('Error: %s' % str(error))
         sys.exit(1)

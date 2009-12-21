@@ -41,6 +41,7 @@ class ControlConfig:
         plugins. """
     def __init__(self):
         self.initialized = False
+        self.dry_run = False
         self.extra_props = dict()
 
         self.prop_types = dict()

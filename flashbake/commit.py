@@ -30,20 +30,18 @@ import sys
 
 DELETED_RE = re.compile('#\s*deleted:.*')
 
-def commit(control_config, hot_files, quiet_mins, dryrun):
+def commit(control_config, hot_files, quiet_mins):
     # change to the project directory, necessary to find the .flashbake file and
     # to correctly refer to the project files by relative paths
     os.chdir(hot_files.project_dir)
 
     git_obj = git.Git(hot_files.project_dir, control_config.git_path)
 
-    control_config.dryrun = dryrun
-
     # the wrapper object ensures git is on the path
     # get the git status for the project
     git_status = git_obj.status()
 
-    __handle_fatal(hot_files, git_status)
+    _handle_fatal(hot_files, git_status)
 
     # in particular find the existing entries that need a commit
     pending_re = re.compile('#\s*(renamed|copied|modified|new file):.*')
@@ -56,7 +54,7 @@ def commit(control_config, hot_files, quiet_mins, dryrun):
     logging.debug("Examining git status.")
     for line in git_status.splitlines():
         if pending_re.match(line):
-            pending_file = __trimgit(line)
+            pending_file = _trimgit(line)
 
             # not in the dot-control file, skip it
             if not (hot_files.contains(pending_file)):
@@ -78,7 +76,7 @@ def commit(control_config, hot_files, quiet_mins, dryrun):
                 logging.debug('Flagging file, %s, for commit.' % pending_file)
             else:
                 logging.debug('Change for file, %s, is too recent.' % pending_file)
-        __capture_deleted(hot_files, line)
+        _capture_deleted(hot_files, line)
 
     logging.debug('Examining unknown or unchanged files.')
 
@@ -122,22 +120,22 @@ def commit(control_config, hot_files, quiet_mins, dryrun):
     if len(to_commit) > 0:
         logging.info('Committing changes to known files, %s.' % to_commit)
         message_file = context.buildmessagefile(control_config)
-        if not dryrun:
+        if not control_config.dry_run:
             # consolidate the commit to be friendly to how git normally works
             commit_output = git_obj.commit(message_file, to_commit)
             logging.debug(commit_output)
         os.remove(message_file)
-        __send_commit_notice(control_config, hot_files, to_commit)
+        _send_commit_notice(control_config, hot_files, to_commit)
         logging.info('Commit for known files complete.')
     else:
         logging.info('No changes to known files found to commit.')
 
     if hot_files.needs_warning():
-        __send_warning(control_config, hot_files)
+        _send_warning(control_config, hot_files)
     else:
         logging.info('No missing or untracked files found, not sending warning notice.')
 
-def purge(control_config, hot_files, dry_run):
+def purge(control_config, hot_files):
     # change to the project directory, necessary to find the .flashbake file and
     # to correctly refer to the project files by relative paths
     os.chdir(hot_files.project_dir)
@@ -147,16 +145,16 @@ def purge(control_config, hot_files, dry_run):
     # the wrapper object ensures git is on the path
     git_status = git_obj.status()
 
-    __handle_fatal(git_status)
+    _handle_fatal(hot_files, git_status)
 
     logging.debug("Examining git status.")
     for line in git_status.splitlines():
-        __capture_deleted(hot_files, line)
+        _capture_deleted(hot_files, line)
 
     if len(hot_files.deleted) > 0:
         logging.info('Committing removal of known files, %s.' % hot_files.deleted)
         message_file = context.buildmessagefile(control_config)
-        if not dry_run:
+        if not control_config.dry_run:
             # consolidate the commit to be friendly to how git normally works
             commit_output = git_obj.commit(message_file, hot_files.deleted)
             logging.debug(commit_output)
@@ -166,15 +164,15 @@ def purge(control_config, hot_files, dry_run):
         logging.info('No deleted files to purge')
 
 
-def __capture_deleted(hot_files, line):
+def _capture_deleted(hot_files, line):
     if DELETED_RE.match(line):
-        deleted_file = __trimgit(line)
+        deleted_file = _trimgit(line)
         # remove files that will are known to have been deleted
         hot_files.remove(deleted_file)
         hot_files.put_deleted(deleted_file)
 
 
-def __handle_fatal(hot_files, git_status):
+def _handle_fatal(hot_files, git_status):
     if git_status.startswith('fatal'):
         logging.error('Fatal error from git.')
         if 'fatal: Not a git repository' == git_status:
@@ -185,7 +183,7 @@ def __handle_fatal(hot_files, git_status):
         sys.exit(1)
 
 
-def __trimgit(status_line):
+def _trimgit(status_line):
     if status_line.find('->') >= 0:
         tokens = status_line.split('->')
         return tokens[1].strip()
@@ -194,9 +192,9 @@ def __trimgit(status_line):
     return tokens[1].strip()
 
 
-def __send_warning(control_config, hot_files):
+def _send_warning(control_config, hot_files):
     if (len(control_config.notify_plugins) == 0
-            and not control_config.dryrun):
+            and not control_config.dry_run):
         logging.info('Skipping notice, no notify plugins configured.')
         return
 
@@ -204,9 +202,9 @@ def __send_warning(control_config, hot_files):
         plugin.warn(hot_files, control_config)
 
 
-def __send_commit_notice(control_config, hot_files, to_commit):
+def _send_commit_notice(control_config, hot_files, to_commit):
     if (len(control_config.notify_plugins) == 0
-            and not control_config.dryrun):
+            and not control_config.dry_run):
         logging.info('Skipping notice, no notify plugins configured.')
         return
 
