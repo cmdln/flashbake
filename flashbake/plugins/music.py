@@ -74,7 +74,7 @@ limit %d"""
 
 
 class iTunes(AbstractMessagePlugin):
-    ''' Based on Andrew Wheiss' plugin which is MIT licensed which should be compatible. '''
+    ''' Based on Andrew Heiss' plugin which is MIT licensed which should be compatible. '''
     def __init__(self, plugin_spec):
         AbstractMessagePlugin.__init__(self, plugin_spec)
         self.define_property('osascript')
