@@ -93,7 +93,12 @@ def commit(control_config, hot_files, quiet_mins):
 
         status_output = git_obj.status(control_file)
 
+        # needed for git >= 1.7.0.4
+        if status_output.find('Untracked files') > 0:
+            hot_files.putneedsadd(control_file)
+            continue
         if status_output.startswith('error'):
+            # needed for git < 1.7.0.4
             if status_output.find('did not match') > 0:
                 hot_files.putneedsadd(control_file)
                 logging.debug('%s exists but is unknown by git.' % control_file)

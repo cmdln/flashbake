@@ -6,7 +6,7 @@ from setuptools import setup, find_packages
 
 
 setup(name='flashbake',
-        version='0.26',
+        version='0.26.1',
         author="Thomas Gideon",
         author_email="cmdln@thecommandline.net",
         url="http://thecommandline.net",
@@ -19,5 +19,6 @@ setup(name='flashbake',
         entry_points={
                 'console_scripts': [ 'flashbake = flashbake.console:main',
                                      'flashbakeall = flashbake.console:multiple_projects' ]
-                }
+                },
+        package_data ={'flashbake':['*.scpt',]},
         )
