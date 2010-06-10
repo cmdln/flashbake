@@ -20,5 +20,6 @@ setup(name='flashbake',
                 'console_scripts': [ 'flashbake = flashbake.console:main',
                                      'flashbakeall = flashbake.console:multiple_projects' ]
                 },
-        package_data ={'flashbake':['*.scpt',]},
+        include_package_data = True,
+        exclude_package_data = { '' : [ 'test/*' ] }
         )
