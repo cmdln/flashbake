@@ -32,7 +32,7 @@ class VCError(Exception):
     def __str__(self):
         return repr(self.value)
 
-class Git():
+class Git:
     def __init__(self, cwd, git_path=None):
         # look for git in the environment's PATH var
         path_env = os.getenv('PATH')
