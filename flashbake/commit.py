@@ -36,6 +36,8 @@ def commit(control_config, hot_files, quiet_mins):
     os.chdir(hot_files.project_dir)
 
     git_obj = git.Git(hot_files.project_dir, control_config.git_path)
+    if not control_config.dry_run and control_config.git_origin is not None:
+        git_obj.pull(control_config.git_origin)
 
     # the wrapper object ensures git is on the path
     # get the git status for the project
@@ -129,6 +131,8 @@ def commit(control_config, hot_files, quiet_mins):
             # consolidate the commit to be friendly to how git normally works
             commit_output = git_obj.commit(message_file, to_commit)
             logging.debug(commit_output)
+            if control_config.git_origin is not None:
+                git_obj.push(control_config.git_origin)
         os.remove(message_file)
         _send_commit_notice(control_config, hot_files, to_commit)
         logging.info('Commit for known files complete.')

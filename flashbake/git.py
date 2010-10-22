@@ -79,6 +79,18 @@ class Git:
         options = ['-F', messagefile]
         return self.__run('commit', options, files)
 
+    def pull(self, origin):
+        """ Pull from a remote repository. """
+        output = self.__run('pull', origin.split())
+        logging.info('Pulled from %s.' % origin)
+        logging.debug(output)
+
+    def push(self, origin):
+        """ Push to a remote repository. """
+        output =  self.__run('push', origin.split())
+        logging.info('Pushed to %s.' % origin)
+        logging.debug(output)
+
     def __run(self, cmd, options=None, files=None):
         cmds = list()
         cmds.append('git')
