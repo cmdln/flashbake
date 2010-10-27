@@ -1,4 +1,4 @@
-#    copyright 2009 Jay Penney
+ #    copyright 2009 Jay Penney
 #
 #    This file is part of flashbake.
 #
@@ -26,7 +26,6 @@ import logging
 import os
 import pickle
 import subprocess
-
 
 
 def find_scrivener_projects(hot_files, config, flush_cache=False):
@@ -78,11 +77,13 @@ def find_scrivener_project_contents(hot_files, scrivener_project):
 
 def get_logfile_name(scriv_proj_dir):
     return os.path.join(os.path.dirname(scriv_proj_dir),
-                        ".%s.flashbake.wordcount" % os.path.basename(scriv_proj_dir))
+                        ".%s.flashbake.wordcount" % os.path.basename(
+                            scriv_proj_dir))
 
 
 ## TODO: deal with deleted files
 class ScrivenerFile(AbstractFilePlugin):
+
     def __init__(self, plugin_spec):
         AbstractFilePlugin.__init__(self, plugin_spec)
         self.share_property('scrivener_projects')
@@ -93,13 +94,14 @@ class ScrivenerFile(AbstractFilePlugin):
             for hotfile in find_scrivener_project_contents(hot_files, f):
                 #logging.debug(" - %s" % hotfile)
                 hot_files.control_files.add(hotfile)
-    
+
     def post_process(self, to_commit, hot_files, config):
         flashbake.commit.purge(config, hot_files)
 
 
 class ScrivenerWordcountFile(AbstractFilePlugin):
     """ Record Wordcount for Scrivener Files """
+
     def __init__(self, plugin_spec):
         AbstractFilePlugin.__init__(self, plugin_spec)
         self.share_property('scrivener_projects')
@@ -126,17 +128,35 @@ class ScrivenerWordcountFile(AbstractFilePlugin):
                     'Content': 0,
                     'Synopsis': 0,
                     'Notes' : 0,
-                    'All' :0
+                    'All' : 0
                     }
 
-            newCount = {
-                'Content': self.get_count(scriv_proj_dir, ["*[0-9].rtfd"]),
-                'Synopsis': self.get_count(scriv_proj_dir, ['*_synopsis.txt' ]),
-                'Notes': self.get_count(scriv_proj_dir, [ '*_notes.rtfd' ]),
-                'All':  self.get_count(scriv_proj_dir, ['*.rtfd', '*.txt'])
-                }
+            search_path = os.path.join(scriv_proj_dir, 'Files', 'Docs')
+            if os.path.exists(os.path.join(search_path)):
+                newCount = {
+                    'Content': self.get_count(search_path, ["*[0-9].rtf"]),
+                    'Synopsis': self.get_count(
+                        search_path, ['*_synopsis.txt' ]),
+                    'Notes': self.get_count(
+                        search_path, ['*_notes.rtf' ]),
+                    'All': self.get_count(
+                        search_path, ['*.rtf', '*.txt'])
+                    }
+            else:
+                newCount = {
+                    'Content': self.get_count(scriv_proj_dir, ["*[0-9].rtfd"]),
+                    'Synopsis': self.get_count(
+                        scriv_proj_dir, ['*_synopsis.txt' ]),
+                    'Notes': self.get_count(
+                        scriv_proj_dir, ['*_notes.rtfd' ]),
+                    'All': self.get_count(
+                        scriv_proj_dir, ['*.rtfd', '*.txt'])
+                    }
 
-            config.scrivener_project_count[f] = { 'old': oldCount, 'new': newCount }
+            config.scrivener_project_count[f] = {
+                'old': oldCount,
+                'new': newCount
+                }
             if not config.context_only:
                 log = open(logfile, 'w')
                 pickle.dump(config.scrivener_project_count[f]['new'], log)
@@ -164,6 +184,7 @@ class ScrivenerWordcountFile(AbstractFilePlugin):
 
 class ScrivenerWordcountMessage(AbstractMessagePlugin):
     """ Display Wordcount for Scrivener Files """
+
     def __init__(self, plugin_spec):
         AbstractMessagePlugin.__init__(self, plugin_spec, False)
         self.share_property('scrivener_project_count')
@@ -173,7 +194,7 @@ class ScrivenerWordcountMessage(AbstractMessagePlugin):
         if 'scrivener_project_count' in config.__dict__:
             for proj in config.scrivener_project_count:
                 to_file += "Wordcount: %s\n" % proj
-                for key in [ 'Content', 'Synopsis', 'Notes', 'All' ]:
+                for key in ['Content', 'Synopsis', 'Notes', 'All']:
                     new = config.scrivener_project_count[proj]['new'][key]
                     old = config.scrivener_project_count[proj]['old'][key]
                     diff = new - old
