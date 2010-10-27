@@ -1,4 +1,4 @@
- #    copyright 2009 Jay Penney
+#    copyright 2009 Jason Penney
 #
 #    This file is part of flashbake.
 #
