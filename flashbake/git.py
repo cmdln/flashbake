@@ -32,7 +32,7 @@ class VCError(Exception):
     def __str__(self):
         return repr(self.value)
 
-class Git():
+class Git:
     def __init__(self, cwd, git_path=None):
         # look for git in the environment's PATH var
         path_env = os.getenv('PATH')
@@ -78,6 +78,18 @@ class Git():
         """ Commit a list of files, the files should be strings and quoted. """
         options = ['-F', messagefile]
         return self.__run('commit', options, files)
+
+    def pull(self, origin):
+        """ Pull from a remote repository. """
+        output = self.__run('pull', origin.split())
+        logging.info('Pulled from %s.' % origin)
+        logging.debug(output)
+
+    def push(self, origin):
+        """ Push to a remote repository. """
+        output =  self.__run('push', origin.split())
+        logging.info('Pushed to %s.' % origin)
+        logging.debug(output)
 
     def __run(self, cmd, options=None, files=None):
         cmds = list()

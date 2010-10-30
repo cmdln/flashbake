@@ -52,6 +52,7 @@ class ControlConfig:
         self.notify_plugins = list()
 
         self.git_path = None
+        self.git_origin = None
         self.project_name = None
 
     def capture(self, line):
