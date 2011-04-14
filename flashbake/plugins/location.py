@@ -45,7 +45,7 @@ class Location(AbstractMessagePlugin):
             return False
 
         logging.debug(location)
-        location_str = '%(City)s, %(RegionName)s' % location
+        location_str = '%(cityName)s, %(regionName)s' % location
         config.location_location = location_str
         message_file.write('Current location is %s based on IP %s.\n' % (location_str, ip_addr))
         return True
@@ -55,8 +55,10 @@ class Location(AbstractMessagePlugin):
         if cached.get('ip_addr','') == ip_addr:
             del cached['ip_addr']
             return cached
-        base_url = 'http://ipinfodb.com/ip_query.php?'
-        for_ip = base_url + urllib.urlencode({'ip': ip_addr})
+        base_url = 'http://api.ipinfodb.com/v3/ip-city/?'
+        for_ip = base_url + urllib.urlencode({'key': 'd2e4d26478b0759c225fd4b9113240e1ab7c1bf4f8fb673cba0a2ed52a351916',
+                                              'ip': ip_addr,
+                                              'format': 'xml'})
 
         opener = urllib2.build_opener(urllib2.HTTPCookieProcessor())
 
