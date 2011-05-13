@@ -43,7 +43,10 @@ class LastFM(AbstractMessagePlugin):
         logging.info('API call: %s' % url)
         raw_data = self._fetch_data(url)
 
-        for trackdic in raw_data['recenttracks']['track']:
+        tracks = raw_data['recenttracks']['track']
+        if not type(tracks) == list:
+            tracks = [tracks]
+        for trackdic in tracks:
             track = unicode(trackdic['name']).encode("utf-8")
             artist = unicode(trackdic['artist']['#text']).encode("utf-8")
             message_file.write("Track from Last.fm: %s by %s\n" % (track, artist))
