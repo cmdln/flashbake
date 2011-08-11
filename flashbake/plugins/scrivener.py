@@ -1,4 +1,4 @@
-#    copyright 2009 Jason Penney
+#    copyright 2009-2011 Jason Penney
 #
 #    This file is part of flashbake.
 #
@@ -18,14 +18,43 @@
 '''   scrivener.py - Scrivener flashbake plugin
 by Jason Penney, jasonpenney.net'''
 
-from flashbake.plugins import AbstractFilePlugin, AbstractMessagePlugin, PluginError, PLUGIN_ERRORS
+from flashbake.plugins import (
+    AbstractFilePlugin, AbstractMessagePlugin, PluginError,
+    PLUGIN_ERRORS)
+
 import flashbake #@UnusedImport
 import fnmatch
 import glob
 import logging
 import os
+import os.path
 import pickle
 import subprocess
+import string
+import re
+
+if hasattr(os.path, "relpath"):
+    find_relpath = os.path.relpath
+else:
+    try:
+        import pathutils #@UnresolvedImport
+        find_relpath = pathutils.relative
+    except:
+
+        def _relpath(path, start):
+            path = os.path.realpath(path)
+            start = os.path.realpath(start)
+            if not path.startswith(start):
+                raise Exception("unable to calculate paths")
+            if os.path.samefile(path, start):
+                return "."
+
+            if not start.endswith(os.path.sep):
+                start += os.path.sep
+
+            return path[len(start):]
+
+        find_relpath = _relpath
 
 
 def find_scrivener_projects(hot_files, config, flush_cache=False):
@@ -43,36 +72,12 @@ def find_scrivener_projects(hot_files, config, flush_cache=False):
     return config.scrivener_projects
 
 
-def _relpath(path, start):
-    path = os.path.realpath(path)
-    start = os.path.realpath(start)
-    if not path.startswith(start):
-        raise Exception("unable to calculate paths")
-    if os.path.samefile(path, start):
-        return "."
-
-    if not start.endswith(os.path.sep):
-        start += os.path.sep
-
-    return path[len(start):]
-
-
 def find_scrivener_project_contents(hot_files, scrivener_project):
-    contents = list()
-    for path, dirs, files in os.walk(os.path.join(hot_files.project_dir, scrivener_project)): #@UnusedVariable
-        if hasattr(os.path, "relpath"):
-            rpath = os.path.relpath(path, hot_files.project_dir)
-        else:
-            try:
-                import pathutils #@UnresolvedImport
-                rpath = pathutils.relative(path, hot_files.project_dir)
-            except:
-                rpath = _relpath(path, hot_files.project_dir)
-
+    for path, dirs, files in os.walk(os.path.join(  # @UnusedVariable
+            hot_files.project_dir, scrivener_project)):
+        rpath = find_relpath(path, hot_files.project_dir)
         for filename in files:
-            contents.append(os.path.join(rpath, filename))
-
-    return contents
+            yield os.path.join(rpath, filename)
 
 
 def get_logfile_name(scriv_proj_dir):
@@ -104,12 +109,20 @@ class ScrivenerWordcountFile(AbstractFilePlugin):
 
     def __init__(self, plugin_spec):
         AbstractFilePlugin.__init__(self, plugin_spec)
+
+        self.define_property('use_textutil', type=bool, default=False)
+
         self.share_property('scrivener_projects')
         self.share_property('scrivener_project_count')
 
     def init(self, config):
-        if not flashbake.executable_available('textutil'):
-            raise PluginError(PLUGIN_ERRORS.ignorable_error, self.plugin_spec, 'Could not find command, textutil.') #@UndefinedVariable
+        self.get_count = self._get_count_python
+        if config.use_textutil:
+            if flashbake.executable_available('textutil'):
+                self.get_count = self._get_count_textutil
+            else:
+                logging.warn("unable to find textutil, will use python "
+                             "wordcount calculation")
 
     def pre_process(self, hot_files, config):
         config.scrivener_project_count = dict()
@@ -127,36 +140,34 @@ class ScrivenerWordcountFile(AbstractFilePlugin):
                 oldCount = {
                     'Content': 0,
                     'Synopsis': 0,
-                    'Notes' : 0,
-                    'All' : 0
-                    }
+                    'Notes': 0,
+                    'All': 0}
 
             search_path = os.path.join(scriv_proj_dir, 'Files', 'Docs')
             if os.path.exists(os.path.join(search_path)):
                 newCount = {
                     'Content': self.get_count(search_path, ["*[0-9].rtf"]),
                     'Synopsis': self.get_count(
-                        search_path, ['*_synopsis.txt' ]),
+                        search_path, ['*_synopsis.txt']),
                     'Notes': self.get_count(
-                        search_path, ['*_notes.rtf' ]),
+                        search_path, ['*_notes.rtf']),
                     'All': self.get_count(
-                        search_path, ['*.rtf', '*.txt'])
-                    }
+                        search_path, ['*.rtf', '*.txt'])}
+
             else:
                 newCount = {
                     'Content': self.get_count(scriv_proj_dir, ["*[0-9].rtfd"]),
                     'Synopsis': self.get_count(
-                        scriv_proj_dir, ['*_synopsis.txt' ]),
+                        scriv_proj_dir, ['*_synopsis.txt']),
                     'Notes': self.get_count(
-                        scriv_proj_dir, ['*_notes.rtfd' ]),
+                        scriv_proj_dir, ['*_notes.rtfd']),
                     'All': self.get_count(
-                        scriv_proj_dir, ['*.rtfd', '*.txt'])
-                    }
+                        scriv_proj_dir, ['*.rtfd', '*.txt'])}
 
             config.scrivener_project_count[f] = {
                 'old': oldCount,
-                'new': newCount
-                }
+                'new': newCount}
+
             if not config.context_only:
                 log = open(logfile, 'w')
                 pickle.dump(config.scrivener_project_count[f]['new'], log)
@@ -164,11 +175,37 @@ class ScrivenerWordcountFile(AbstractFilePlugin):
                 if not hot_logfile in hot_files.control_files:
                     hot_files.control_files.add(logfile)
 
-    def get_count(self, file, matches):
+    RTF_RE = re.compile('(\{[^}]+\}|\\\\\\\\END_SCRV[^\}]+\}|'
+                        '\\\\\'\d+|\\\\(\\\\|[-=A-Za-z0-9\.])*|\}$|'
+                        '\W[%s]\W)' % (re.escape(string.punctuation)),
+                        re.MULTILINE | re.IGNORECASE)
+
+    def _get_count_python(self, file, matches):
+        count = 0
+        for match in matches:
+            for f in glob.glob(os.path.normpath(os.path.join(file, match))):
+                if f.endswith('.rtfd'):
+                    new_f = os.path.join(f, 'TXT.rtf')
+                    if os.path.exists(new_f):
+                        f = new_f
+
+                if f.endswith('.txt'):
+                    count += len(open(f).read().split(None))
+                elif f.endswith('.rtf'):
+                    words = self.RTF_RE.sub('', open(f).read()).split(None)
+                    count += len(words)
+                else:
+                    raise PluginError(
+                        PLUGIN_ERRORS.ignorable_error,
+                        self.plugin_spec,
+                        'Unsupported file type: %s' % f)
+        return count
+
+    def _get_count_textutil(self, file, matches):
         count = 0
         args = ['textutil', '-stdout', '-cat', 'txt']
         do_count = False
-        for match in list(matches):
+        for match in matches:
             for f in glob.glob(os.path.normpath(os.path.join(file, match))):
                 do_count = True
                 args.append(f)
@@ -176,9 +213,8 @@ class ScrivenerWordcountFile(AbstractFilePlugin):
         if do_count:
             p = subprocess.Popen(args, stdout=subprocess.PIPE,
                              close_fds=True)
+            count += len(p.stdout.read().split(None))
 
-            for line in p.stdout:
-                count += len(line.split(None))
         return count
 
 
