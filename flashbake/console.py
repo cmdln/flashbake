@@ -30,7 +30,7 @@ import logging
 import os.path
 import sys
 
-VERSION = '0.26.3'
+VERSION = flashbake.__version__
 pattern = '.flashbake'
 
 

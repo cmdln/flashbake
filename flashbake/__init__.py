@@ -29,7 +29,7 @@ import re
 import sys #@Reimport
 
 
-
+__version__ = '0.26.3'
 
 class ConfigError(Exception):
     pass
