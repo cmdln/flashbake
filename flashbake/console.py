@@ -89,11 +89,21 @@ def main():
         (hot_files, control_config) = control.parse_control(project_dir, control_file, control_config, hot_files)
         control_config.context_only = options.context_only
         control_config.dry_run = options.dryrun
+        if (options.dryrun):
+            logging.info('========================================')
+            logging.info('!!! Running in dry run mode.         !!!')
+            logging.info('!!! No changes will be committed.    !!!')
+            logging.info('========================================\n\n')
         (hot_files, control_config) = control.prepare_control(hot_files, control_config)
         if options.purge:
             commit.purge(control_config, hot_files)
         else:
             commit.commit(control_config, hot_files, quiet_period)
+        if (options.dryrun):
+            logging.info('\n\n========================================')
+            logging.info('!!! Running in dry run mode.         !!!')
+            logging.info('!!! No changes will be committed.    !!!')
+            logging.info('========================================')
     except (flashbake.git.VCError, flashbake.ConfigError), error:
         logging.error('Error: %s' % str(error))
         sys.exit(1)
