@@ -117,7 +117,7 @@ class ScrivenerWordcountFile(AbstractFilePlugin):
 
     def init(self, config):
         self.get_count = self._get_count_python
-        if config.use_textutil:
+        if self.use_textutil:
             if flashbake.executable_available('textutil'):
                 self.get_count = self._get_count_textutil
             else:
