@@ -27,7 +27,7 @@ import os
 import os.path
 import re
 import sys #@Reimport
-
+import __builtin__
 
 __version__ = '0.26.3'
 
@@ -430,16 +430,19 @@ class HotFiles:
         else:
             return os.path.relpath(filepath, prefix)
 
-
 def find_executable(executable):
-    found = filter(lambda ex: os.path.exists(ex),
-                   map(lambda path_token:
-                       os.path.join(path_token, executable),
-                       os.getenv('PATH').split(os.pathsep)))
-    if (len(found) == 0):
-        return None
-    return found[0]
-
+    ex_paths = (os.path.join(path, executable) for path in \
+                    os.getenv('PATH').split(os.pathsep))
+    paths = (ex_path for ex_path in ex_paths \
+                 if os.path.exists(ex_path))
+    if hasattr(__builtin__, 'next'):
+        return next(paths, None)
+    else:
+        # pre python 2.6 
+        try: 
+            return paths.next()
+        except StopIteration:
+            return None
 
 def executable_available(executable):
     return find_executable(executable) != None
