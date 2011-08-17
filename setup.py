@@ -11,7 +11,8 @@ setup(name='flashbake',
         author_email="cmdln@thecommandline.net",
         url="http://thecommandline.net",
         license="GPLv3",
-        packages=find_packages(exclude=['test.*']),
+        package_dir={'': 'src'},
+        packages=find_packages(where='./src/', exclude=('./test/')),
         install_requires='''
             enum >=0.4.3
             feedparser >=4.1
