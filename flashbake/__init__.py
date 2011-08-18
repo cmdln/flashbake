@@ -18,6 +18,7 @@
 '''  __init__.py - Shared classes and functions for the flashbake package.'''
 
 from flashbake.plugins import PluginError, PLUGIN_ERRORS
+from flashbake.compat import relpath, next_, iglob
 from types import *
 import commands
 import flashbake.plugins #@UnresolvedImport
@@ -279,18 +280,14 @@ class HotFiles:
         file_exists = False
         logging.debug('%s: %s'
                % (filename, glob.glob(to_expand)))
-        if sys.hexversion < 0x2050000:
-            glob_iter = glob.glob(to_expand)
-        else:
-            glob_iter = glob.iglob(to_expand)
-
+        
         pattern = re.compile('(\[.+\]|\*|\?)')
         if pattern.search(filename):
             glob_re = re.sub('\*', '.*', filename)
             glob_re = re.sub('\?', '.', glob_re)
             self.globs[filename] = glob_re
 
-        for expanded_file in glob_iter:
+        for expanded_file in iglob(to_expand):
             # track whether iglob iterates at all, if it does not, then the line
             # didn't expand to anything meaningful
             if not file_exists:
@@ -420,29 +417,14 @@ class HotFiles:
         return self.__drop_prefix(self.project_dir, filepath)
 
     def __drop_prefix(self, prefix, filepath):
-        if not filepath.startswith(prefix):
-            return filepath
-
-        if not prefix.endswith(os.sep):
-            prefix += os.sep
-        if sys.hexversion < 0x2060000:
-            return filepath.replace(prefix, "")
-        else:
-            return os.path.relpath(filepath, prefix)
+        return relpath(filepath, prefix)
 
 def find_executable(executable):
     ex_paths = (os.path.join(path, executable) for path in \
                     os.getenv('PATH').split(os.pathsep))
     paths = (ex_path for ex_path in ex_paths \
                  if os.path.exists(ex_path))
-    if hasattr(__builtin__, 'next'):
-        return next(paths, None)
-    else:
-        # pre python 2.6 
-        try: 
-            return paths.next()
-        except StopIteration:
-            return None
+    return next_(paths, None)
 
 def executable_available(executable):
     return find_executable(executable) != None

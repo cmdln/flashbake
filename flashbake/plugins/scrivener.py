@@ -1,4 +1,4 @@
-#    copyright 2009-2011 Jason Penney
+#    copyright 2009-2011 Thomas Gideon, Jason Penney
 #
 #    This file is part of flashbake.
 #
@@ -28,34 +28,11 @@ import glob
 import logging
 import os
 import os.path
-import pickle
 import subprocess
 import string
 import re
 
-if hasattr(os.path, "relpath"):
-    find_relpath = os.path.relpath
-else:
-    try:
-        import pathutils #@UnresolvedImport
-        find_relpath = pathutils.relative
-    except:
-
-        def _relpath(path, start):
-            path = os.path.realpath(path)
-            start = os.path.realpath(start)
-            if not path.startswith(start):
-                raise Exception("unable to calculate paths")
-            if os.path.samefile(path, start):
-                return "."
-
-            if not start.endswith(os.path.sep):
-                start += os.path.sep
-
-            return path[len(start):]
-
-        find_relpath = _relpath
-
+from flashbake.compat import relpath, pickle
 
 def find_scrivener_projects(hot_files, config, flush_cache=False):
     if flush_cache:
@@ -75,7 +52,7 @@ def find_scrivener_projects(hot_files, config, flush_cache=False):
 def find_scrivener_project_contents(hot_files, scrivener_project):
     for path, dirs, files in os.walk(os.path.join(  # @UnusedVariable
             hot_files.project_dir, scrivener_project)):
-        rpath = find_relpath(path, hot_files.project_dir)
+        rpath = relpath(path, hot_files.project_dir)
         for filename in files:
             yield os.path.join(rpath, filename)
 
