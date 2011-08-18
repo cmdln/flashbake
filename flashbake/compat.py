@@ -1,4 +1,4 @@
-#    copyright 2009-2011 Jason Penney
+#    copyright 2009-2011 Thomas Gideon, Jason Penney
 #
 #    This file is part of flashbake.
 #
