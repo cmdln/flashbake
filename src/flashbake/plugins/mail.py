@@ -24,18 +24,11 @@ mail.py - plug-in to send notices via smtp.
 '''
 
 from flashbake import plugins
+from flashbake.compat import MIMEText
 import logging
 import os
 import smtplib
 import sys
-
-
-# Import the email modules we'll need
-if sys.hexversion < 0x2050000:
-    from email.MIMEText import MIMEText #@UnusedImport
-else:
-    from email.mime.text import MIMEText #@Reimport
-
 
 
 class Email(plugins.AbstractNotifyPlugin):

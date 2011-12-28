@@ -28,18 +28,16 @@ import flashbake.git
 import fnmatch
 import logging
 import os.path
-import subprocess
 import sys
 
-
-
-VERSION = '0.26.3'
+VERSION = flashbake.__version__
 pattern = '.flashbake'
+
 
 def main():
     ''' Entry point used by the setup.py installation script. '''
     # handle options and arguments
-    parser = _build_parser()
+    parser = _build_main_parser()
 
     (options, args) = parser.parse_args()
 
@@ -87,7 +85,6 @@ def main():
         except:
             parser.error('Quiet minutes, "%s", must be a valid number.' % args[1])
             sys.exit(1)
-
     try:
         (hot_files, control_config) = control.parse_control(project_dir, control_file, control_config, hot_files)
         control_config.context_only = options.context_only
@@ -116,39 +113,86 @@ def main():
 
 
 def multiple_projects():
-    usage = "usage: %prog [options] <search_root> [quiet_min]"
-    parser = OptionParser(usage=usage, version='%s %s' % ('%prog', VERSION))
-    parser.add_option('-o', '--options', dest='flashbake_options', default='',
-                      action='store', type='string', metavar='FLASHBAKE_OPTS',
-                      help="options to pass through to the 'flashbake' command. Use quotes to pass multiple arguments.")
-
+    parser = _build_multi_parser()
     (options, args) = parser.parse_args()
-
     if len(args) < 1:
         parser.error('Must specify root search directory.')
         sys.exit(1)
 
-    LAUNCH_DIR = os.path.abspath(sys.path[0])
-    flashbake_cmd = os.path.join(LAUNCH_DIR, "flashbake")
     flashbake_opts = options.flashbake_options.split()
+
+    # verify --options will pass to main flashbake program
+    test_argv = sys.argv[0:1] + flashbake_opts + ['.'] + args[1:]
+    main_parser = _build_main_parser()
+    main_parser.suppress_exit = True
+
+    try:
+        (test_options, test_args) = main_parser.parse_args(test_argv)
+    except ParserError, err:
+        msg = "error with arguments passed to main flashbake: %s\n%s" % (
+            "'" + "' '".join(
+                flashbake_opts + ['<project_dir>'] + args[1:]) + "'",
+            err.msg.replace(parser.get_prog_name() + ':', '> '))
+        parser.exit(err.code, msg)
+    exit_code = 0
     for project in _locate_projects(args[0]):
-        print(project + ":")
-        proc = [ flashbake_cmd ] + flashbake_opts + [project]
-        if len(args) > 1:
-            proc.append(args[1])
-        subprocess.call(proc)
+        print "project: %s" % project
+        sys.argv = sys.argv[0:1] + flashbake_opts + [project] + args[1:]
+        try:
+            main()
+        except SystemExit, err:
+            if err.code != 0:
+                exit_code = err.code
+            logging.error("Error: 'flashbake' had an error for '%s'"
+                          % project)
+    sys.exit(exit_code)
 
 
 def _locate_projects(root):
     for path, dirs, files in os.walk(root): #@UnusedVariable
-        for project_path in [os.path.normpath(path) for filename in files if fnmatch.fnmatch(filename, pattern)]:
+        for project_path in (
+            os.path.normpath(path) for filename in files \
+                if fnmatch.fnmatch(filename, pattern)):
             yield project_path
 
 
-def _build_parser():
+class ParserError(RuntimeError):
+
+    def __init__(self, code=0, msg=''):
+        RuntimeError.__init__(self, code, msg)
+
+    def _get_msg(self):
+        return self.args[1]
+
+    def _get_code(self):
+        return self.args[0]
+
+    msg = property(_get_msg)
+    code = property(_get_code)
+
+
+class FlashbakeOptionParser(OptionParser):
+
+    def __init__(self, *args, **kwargs):
+        OptionParser.__init__(self, *args, **kwargs)
+        self.suppress_exit = False
+
+    def print_usage(self, file=None):
+        if not self.suppress_exit:
+            OptionParser.print_usage(self, file)
+
+    def exit(self, status=0, msg=None):
+        if self.suppress_exit:
+            raise ParserError(status, msg)
+        else:
+            OptionParser.exit(self, status, msg)
+
+
+def _build_main_parser():
     usage = "usage: %prog [options] <project_dir> [quiet_min]"
 
-    parser = OptionParser(usage=usage, version='%s %s' % ('%prog', VERSION))
+    parser = FlashbakeOptionParser(
+        usage=usage, version='%s %s' % ('%prog', VERSION))
     parser.add_option('-c', '--context', dest='context_only',
             action='store_true', default=False,
             help='just generate and show the commit message, don\'t check for changes')
@@ -167,6 +211,17 @@ def _build_parser():
     parser.add_option('-r', '--purge', dest='purge',
             action='store_true', default=False,
             help='purge any files that have been deleted from source control')
+    return parser
+
+
+def _build_multi_parser():
+    usage = "usage: %prog [options] <search_root> [quiet_min]"
+    parser = FlashbakeOptionParser(
+        usage=usage, version='%s %s' % ('%prog', VERSION))
+    parser.add_option('-o', '--options', dest='flashbake_options', default='',
+                      action='store', type='string', metavar='FLASHBAKE_OPTS',
+                      help=("options to pass through to the 'flashbake' "
+                            "command. Use quotes to pass multiple arguments."))
     return parser
 
 
