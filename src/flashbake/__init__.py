@@ -30,7 +30,7 @@ import re
 import sys #@Reimport
 import __builtin__
 
-__version__ = '0.26.3'
+__version__ = '0.27'
 
 class ConfigError(Exception):
     pass
