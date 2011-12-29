@@ -20,11 +20,11 @@
 #    along with flashbake.  If not, see <http://www.gnu.org/licenses/>.
 
 
-from flashbake import commit, context, control
-from flashbake.plugins import PluginError, PLUGIN_ERRORS
+from flashbake import commit, context, control, ConfigError
+from flashbake.plugins import VCError, PluginError, PLUGIN_ERRORS
 from optparse import OptionParser
 from os.path import join, realpath
-import flashbake.git
+import flashbake
 import fnmatch
 import logging
 import os.path
@@ -104,7 +104,7 @@ def main():
             logging.info('!!! Running in dry run mode.         !!!')
             logging.info('!!! No changes will be committed.    !!!')
             logging.info('========================================')
-    except (flashbake.git.VCError, flashbake.ConfigError), error:
+    except (VCError, ConfigError), error:
         logging.error('Error: %s' % str(error))
         sys.exit(1)
     except PluginError, error:
@@ -285,7 +285,7 @@ def _context_only(options, project_dir, control_file, control_config, hot_files)
             message_file.close()
             os.remove(msg_filename)
         return 0
-    except (flashbake.git.VCError, flashbake.ConfigError), error:
+    except (VCError, ConfigError), error:
         logging.error('Error: %s' % str(error))
         return 1
     except PluginError, error:

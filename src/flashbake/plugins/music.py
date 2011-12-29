@@ -20,7 +20,7 @@
 
 '''  music.py - Plugin for gathering last played tracks from music player. '''
 
-from flashbake.plugins import AbstractMessagePlugin
+from . import AbstractMessagePlugin
 import flashbake
 import logging
 import os.path

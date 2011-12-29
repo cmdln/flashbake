@@ -21,7 +21,7 @@
 import logging
 import urllib
 import json
-from flashbake.plugins import AbstractMessagePlugin
+from . import AbstractMessagePlugin
 
 
 

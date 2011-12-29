@@ -18,8 +18,8 @@
 '''  weather.py - Stock plugin for adding weather information to context, must have TZ or
  /etc/localtime available to determine city from ISO ID. '''
 
-from flashbake.plugins import AbstractMessagePlugin
-from flashbake.plugins.timezone import findtimezone
+from . import AbstractMessagePlugin
+from timezone import findtimezone
 from urllib2 import HTTPError, URLError
 import logging
 import re

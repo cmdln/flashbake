@@ -16,7 +16,7 @@
 #    along with flashbake.  If not, see <http://www.gnu.org/licenses/>.
 '''  microblog.py - microblog plugins by Ben Snider, bensnider.com '''
 
-from flashbake.plugins import AbstractMessagePlugin
+from . import AbstractMessagePlugin
 from urllib2 import HTTPError, URLError
 from xml.etree.ElementTree import ElementTree
 import logging

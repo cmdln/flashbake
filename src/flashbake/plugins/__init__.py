@@ -42,6 +42,15 @@ class PluginError(Exception):
             return '%s, %s: %s' % (self.plugin_spec, self.reason, self.name)
 
 
+class VCError(Exception):
+    """ Error when the version control wrapper object cannot be set up. """
+    def __init__(self, value):
+        self.value = value
+
+    def __str__(self):
+        return repr(self.value)
+
+
 def service_and_prefix(plugin_spec):
     service_name = plugin_spec.split(':')[-1]
     property_prefix = '_'.join(service_name.lower().strip().split(' '))
@@ -58,12 +67,17 @@ class AbstractPlugin:
         self.__shared_prop_defs = []
 
     def define_property(self, name, type=None, required=False, default=None):
+        """ Define a property that this plugin will consume from the config file,
+            removing it from the parsed config file so that it won't be accessible for
+            other plugins or in the config file when plugin initialization is complete. """
         try:
             self.__property_defs.append((name, type, required, default))
         except AttributeError:
             raise Exception('Call AbstractPlugin.__init__ in your plugin\'s __init__.')
 
     def share_property(self, name, type=None, plugin_spec=None):
+        """ Define a property that this plugin will read but not entirely consume so
+            that other plugins can read or consume it from the parsed config file. """
         try:
             if plugin_spec:
                 parsed = service_and_prefix(plugin_spec)
@@ -75,10 +89,13 @@ class AbstractPlugin:
             raise Exception('Call AbstractPlugin.__init__ in your plugin\'s __init__.')
 
     def share_properties(self, config):
+        """ Convenience method to define multiple shared properties at one go. """
         for name, type in self.__shared_prop_defs:
             config.share_property(name, type)
 
     def capture_properties(self, config):
+        """ Capture the properties that this plugin will consumer from the parsed config;
+            shared properties are parsed and handled by the ConfigFile class. """
         try:
             for prop in self.__property_defs:
                 assert len(prop) == 4, "Property definition, %s, is invalid" % (prop,)
@@ -165,3 +182,19 @@ class AbstractNotifyPlugin(AbstractPlugin):
         ''' Option method to notify when a commit is performed, probably most useful
             for services like desktop notifiers. '''
         pass
+
+
+class AbstractVcsPlugin(AbstractPlugin):
+    """ Common parent class for all VCS back end plugins. """
+    def status(self, filename=None):
+        """ Produce the status of the working copies from the VCS. """
+        self.abstract()
+
+    def add(self, file):
+        """ Optional method to add prior to a commit. """
+        pass
+
+    def commit(self, messagefile, files):
+        """ Commit a list of files, the files should be strings and quoted, messagefile
+            is the message built up by the various, configured message plugins. """
+        self.abstract()

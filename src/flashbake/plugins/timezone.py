@@ -18,7 +18,7 @@
 
 '''  timezone.py - Stock plugin to find the system's time zone add to the commit message.'''
 
-from flashbake.plugins import AbstractMessagePlugin
+from . import AbstractMessagePlugin
 import logging
 import os
 

@@ -20,7 +20,7 @@ script to build automatic commit messages as needed.'''
 
 import context
 import datetime
-import git
+from plugins import git
 import logging
 import os
 import re
@@ -35,7 +35,7 @@ def commit(control_config, hot_files, quiet_mins):
     # to correctly refer to the project files by relative paths
     os.chdir(hot_files.project_dir)
 
-    git_obj = git.Git(hot_files.project_dir, control_config.git_path)
+    git_obj = git.OldGit(hot_files.project_dir, control_config.git_path)
 
     # the wrapper object ensures git is on the path
     # get the git status for the project
@@ -145,7 +145,7 @@ def purge(control_config, hot_files):
     # to correctly refer to the project files by relative paths
     os.chdir(hot_files.project_dir)
 
-    git_obj = git.Git(hot_files.project_dir, control_config.git_path)
+    git_obj = git.OldGit(hot_files.project_dir, control_config.git_path)
 
     # the wrapper object ensures git is on the path
     git_status = git_obj.status()

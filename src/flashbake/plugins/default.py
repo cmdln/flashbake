@@ -17,8 +17,7 @@
 
 '''  default.py - Stock plugin to add in some statically configured text into a commit message.'''
 
-from flashbake.plugins import AbstractMessagePlugin
-import flashbake
+from . import AbstractMessagePlugin
 
 
 class Default(AbstractMessagePlugin):

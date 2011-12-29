@@ -20,7 +20,7 @@
 import feedparser
 import logging
 from urllib2 import HTTPError, URLError
-from flashbake.plugins import AbstractMessagePlugin
+from . import AbstractMessagePlugin
 
 
 

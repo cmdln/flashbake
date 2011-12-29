@@ -17,7 +17,8 @@
 
 # growl.py - Growl notification flashbake plugin
 
-from flashbake import plugins
+from . import AbstractNotifyPlugin
+from . import AbstractPlugin
 import flashbake
 import logging
 import os
@@ -26,9 +27,9 @@ import subprocess
 
 
 
-class Growl(plugins.AbstractNotifyPlugin):
+class Growl(AbstractNotifyPlugin):
     def __init__(self, plugin_spec):
-        plugins.AbstractPlugin.__init__(self, plugin_spec)
+        AbstractPlugin.__init__(self, plugin_spec)
         self.define_property('host')
         self.define_property('port')
         self.define_property('password')

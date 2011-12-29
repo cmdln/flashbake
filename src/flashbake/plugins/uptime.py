@@ -17,7 +17,7 @@
 
 '''  uptime.py - Stock plugin to calculate the system's uptime and add to the commit message.'''
 
-from flashbake.plugins import AbstractMessagePlugin
+from . import AbstractMessagePlugin
 from subprocess import Popen, PIPE
 import flashbake
 import logging

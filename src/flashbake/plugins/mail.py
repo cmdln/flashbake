@@ -23,17 +23,16 @@ mail.py - plug-in to send notices via smtp.
 @author: cmdln
 '''
 
-from flashbake import plugins
+from . import AbstractNotifyPlugin, AbstractPlugin
 from flashbake.compat import MIMEText
 import logging
 import os
 import smtplib
-import sys
 
 
-class Email(plugins.AbstractNotifyPlugin):
+class Email(AbstractNotifyPlugin):
     def __init__(self, plugin_spec):
-        plugins.AbstractPlugin.__init__(self, plugin_spec)
+        AbstractPlugin.__init__(self, plugin_spec)
         self.define_property('notice_to', required=True)
         self.define_property('notice_from')
         self.define_property('smtp_host', default='localhost')

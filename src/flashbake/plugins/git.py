@@ -21,18 +21,12 @@ needed.'''
 import logging
 import os
 import subprocess
+from . import AbstractVcsPlugin
+from . import VCError
 
 
 
-class VCError(Exception):
-    """ Error when the version control wrapper object cannot be set up. """
-    def __init__(self, value):
-        self.value = value
-
-    def __str__(self):
-        return repr(self.value)
-
-class Git:
+class OldGit(AbstractVcsPlugin):
     def __init__(self, cwd, git_path=None):
         # look for git in the environment's PATH var
         path_env = os.getenv('PATH')
@@ -102,9 +96,9 @@ class Git:
 if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG,
             format='%(message)s')
-    git = Git('../foo', '/opt/local/bin')
+    git = OldGit('../foo', '/opt/local/bin')
     try:
-        git = Git('../foo')
+        git = OldGit('../foo')
     except VCError, e:
         logging.info(e)
     os.chdir('../foo')

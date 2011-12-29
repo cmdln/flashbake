@@ -18,7 +18,7 @@
 '''   scrivener.py - Scrivener flashbake plugin
 by Jason Penney, jasonpenney.net'''
 
-from flashbake.plugins import (
+from . import (
     AbstractFilePlugin, AbstractMessagePlugin, PluginError,
     PLUGIN_ERRORS)
 
@@ -26,7 +26,6 @@ import flashbake #@UnusedImport
 import fnmatch
 import glob
 import logging
-import os
 import os.path
 import subprocess
 import string
