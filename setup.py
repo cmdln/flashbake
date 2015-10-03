@@ -34,7 +34,7 @@ history.""",
         package_dir={'': 'src'},
         packages=find_packages(where='./src/', exclude=('./test/')),
         install_requires='''
-            enum >=0.4.3
+            enum34 >=1.0.3
             feedparser >=4.1
             ''',
         entry_points={
