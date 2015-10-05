@@ -21,13 +21,17 @@ import logging
 
 
 
-PLUGIN_ERRORS = Enum('invalid_plugin',
-                     'invalid_type',
-                     'unknown_plugin',
-                     'missing_attribute',
-                     'invalid_attribute',
-                     'missing_property',
-                     'ignorable_error')
+class PLUGIN_ERRORS(Enum):
+    invalid_plugin = 1
+    invalid_type = 2
+    unknown_plugin = 3
+    missing_attribute = 4
+    invalid_attribute = 5
+    missing_property = 6
+    ignorable_error = 7
+
+    def __str__(self):
+        return self._name_
 
 
 class PluginError(Exception):
@@ -156,7 +160,7 @@ class AbstractNotifyPlugin(AbstractPlugin):
     def warn(self, hot_files, config):
         ''' Implementations will provide messages about the problem files in the
             hot_files argument through different mechanisms.
-        
+
             N.B. This method is required, it will asplode if not overridden by
             daughter classes. '''
         self.abstract()
