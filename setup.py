@@ -42,5 +42,6 @@ history.""",
                                      'flashbakeall = flashbake.console:multiple_projects' ]
                 },
         include_package_data = True,
-        exclude_package_data = { '' : [ 'test/*' ] }
+        exclude_package_data = { '' : [ 'test/*' ] },
+        test_suite="test",
         )
