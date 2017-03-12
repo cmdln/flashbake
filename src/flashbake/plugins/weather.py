@@ -36,6 +36,7 @@ class Weather(AbstractMessagePlugin):
         AbstractMessagePlugin.__init__(self, plugin_spec, True)
         self.define_property('city')
         self.define_property('units', required=False, default='imperial')
+        self.define_property('appid', required=False)
         self.share_property('tz', plugin_spec=timezone.PLUGIN_SPEC)
         ## plugin uses location_location from Location plugin
         self.share_property('location_location')
@@ -60,8 +61,12 @@ class Weather(AbstractMessagePlugin):
             message_file.write('Couldn\'t determine city to fetch weather.\n')
             return False
 
+        if self.appid == None:
+            message_file.write('Open Weather Map requires an API key. For more information see: https://github.com/commandline/flashbake/wiki/Plugins')
+            return False
+
         # call the open weather map API with the city
-        weather = self.__getweather(city, self.units)
+        weather = self.__getweather(city, self.appid, self.units)
 
         if len(weather) > 0:
             message_file.write('Current weather for %(city)s: %(description)s. %(temp)i%(temp_units)s. %(humidity)s%% humidity\n'
@@ -70,12 +75,12 @@ class Weather(AbstractMessagePlugin):
             message_file.write('Couldn\'t fetch current weather for city, %s.\n' % city)
         return len(weather) > 0
 
-    def __getweather(self, city, units='imperial'):
+    def __getweather(self, city, appid, units='imperial'):
         """ This relies on Open Weather Map's API which may change without notice. """
 
         baseurl = 'http://api.openweathermap.org/data/2.5/weather?'
         # encode the parameters
-        for_city = baseurl + urllib.urlencode({'q': city, 'units': units})
+        for_city = baseurl + urllib.urlencode({'q': city, 'units': units, 'appid': appid})
 
         try:
             logging.debug('Requesting page for %s.' % for_city)
