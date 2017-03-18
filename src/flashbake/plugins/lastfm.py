@@ -40,7 +40,7 @@ class LastFM(AbstractMessagePlugin):
 
         # last n items for m creator
         url = "%suser.getrecentTracks&user=%s&api_key=%s&limit=%s&format=json" % (LASTFM, self.user_name, self.api_key, self.limit)
-        logging.info('API call: %s' % url)
+        logging.debug('API call: %s' % url)
         raw_data = self._fetch_data(url)
 
         tracks = raw_data['recenttracks']['track']
