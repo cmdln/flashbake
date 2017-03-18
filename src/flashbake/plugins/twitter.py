@@ -26,7 +26,26 @@ from urllib2 import HTTPError, URLError
 from xml.etree.ElementTree import ElementTree
 import logging
 import urllib
-import tweepy
+import twython
+
+class Tweeter(AbstractMessagePlugin):
+      def _init_(self, plugin_spec):
+          AbstractMessagePlugin._init_(self, plugin_spec, True)
+          self.define_property('cons_key', required = False)
+          self.define_property('cons_secret', required = False)
+
+class checkForKeys(self, message_file, config):
+      '''Check for Consumer Key and Consumer Secret. If they are not present, print an error message to the terminal.'''
+      if self.cons_key == None and self.cons_secret == None:
+      message_file.write('This script requires you to obtain a consumer key and consumer secret from Twitter. Check the wiki for detailed instrcutions: https://github.com/commandline/flashbake/wiki/Plugins')
+      return False
+
+class TwitterWrapper(self, message_file, self.cons_key, self.cons_secret):
+      APP_KEY = cons_key
+      APP_SECRET = cons_secret
+
+      twitter = Twython(APP_KEY, APP_SECRET)
+      message_file.write('The app key is %s.' % APP_KEY 'The app secret is %s.' % APP_SECRET)
 
 
 
