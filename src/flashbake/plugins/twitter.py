@@ -27,7 +27,7 @@ import urllib
 from twython import Twython
 
 class Tweeter(AbstractMessagePlugin):
-      def __init__(self,plugin_spec):
+      def __init__(self, plugin_spec):
           AbstractMessagePlugin.__init__(self, plugin_spec, True)
           self.define_property('cons_key', required=False)
           self.define_property('cons_sec', required=False)
