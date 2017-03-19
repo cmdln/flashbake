@@ -23,7 +23,6 @@
 
 from flashbake.plugins import AbstractMessagePlugin
 import logging
-import urllib
 from twython import Twython
 
 class Tweeter(AbstractMessagePlugin):
