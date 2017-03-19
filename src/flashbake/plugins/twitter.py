@@ -34,8 +34,9 @@ class Tweeter(AbstractMessagePlugin):
       def addcontext(self, message_file, config):
           if self.cons_key == None and self.cons_sec == None:
               message_file.write('Sorry, you need a consumer key and secret to commit your tweets')
-              return False
-
+          else:
+              message_file.write('Great job! You have everything we need!')
+              return True
 
 
 
