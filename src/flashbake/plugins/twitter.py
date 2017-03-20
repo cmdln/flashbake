@@ -22,8 +22,6 @@
     As of 2017, users must use this script to capture their tweets. '''
 
 from flashbake.plugins import AbstractMessagePlugin
-import logging
-from twython import Twython
 
 class Tweeter(AbstractMessagePlugin):
       def __init__(self, plugin_spec):
@@ -34,9 +32,7 @@ class Tweeter(AbstractMessagePlugin):
       def addcontext(self, message_file, config):
           if self.cons_key == None and self.cons_sec == None:
               message_file.write('Sorry, you need a consumer key and secret to commit your tweets')
-          else:
-              message_file.write('Great job! You have everything we need!')
-              return True
+          return True 
 
 
 
