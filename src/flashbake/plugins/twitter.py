@@ -36,13 +36,13 @@ class Tweeter(AbstractMessagePlugin):
           self.define_property('username', required=True)
 
       def addcontext(self, message_file, config):
-          auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
-          auth.set_access_token(access_key, access_secret)
+          auth = tweepy.OAuthHandler(self.consumer_key, self.consumer_secret)
+          auth.set_access_token(self.access_key, self.access_secret)
           api = tweepy.API(auth)
 
-          public_tweets = api.user_timeline(screen_name = username, count = tweet_limit)
+          public_tweets = api.user_timeline(screen_name = self.username, count = self.tweet_limit)
           for tweet in public_tweets:
-              print tweet.text 
+              print tweet.text.encode('utf-8') 
           return True
 
       def addcontext(self, message_file, config):
