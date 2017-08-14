@@ -44,7 +44,3 @@ class Tweeter(AbstractMessagePlugin):
           for tweet in public_tweets:
               print tweet.text.encode('utf-8') 
           return True
-
-      def addcontext(self, message_file, config):
-
-
