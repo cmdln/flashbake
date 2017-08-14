@@ -21,18 +21,30 @@
     for those users who still need it to work with legacy Identica accounts.
     As of 2017, users must use this script to capture their tweets. '''
 
+import tweepy
+
 from flashbake.plugins import AbstractMessagePlugin
 
 class Tweeter(AbstractMessagePlugin):
       def __init__(self, plugin_spec):
           AbstractMessagePlugin.__init__(self, plugin_spec, True)
-          self.define_property('cons_key', required=False)
-          self.define_property('cons_sec', required=False)
+          self.define_property('consumer_key', required=False)
+          self.define_property('consumer_secret', required=False)
+          self.define_property('access_key', required=False)
+          self.define_property('access_secret', required=False)
+          self.define_property('tweet_limit', required=True)
+          self.define_property('username', required=True)
 
       def addcontext(self, message_file, config):
-          if self.cons_key == None and self.cons_sec == None:
-              message_file.write('Sorry, you need a consumer key and secret to commit your tweets')
-          return True 
+          auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
+          auth.set_access_token(access_key, access_secret)
+          api = tweepy.API(auth)
 
+          public_tweets = api.user_timeline(screen_name = username, count = tweet_limit)
+          for tweet in public_tweets:
+              print tweet.text 
+          return True
+
+      def addcontext(self, message_file, config):
 
 
