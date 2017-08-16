@@ -25,7 +25,7 @@ import tweepy
 
 from flashbake.plugins import AbstractMessagePlugin
 
-class Tweeter(AbstractMessagePlugin):
+class Twitter(AbstractMessagePlugin):
       def __init__(self, plugin_spec):
           AbstractMessagePlugin.__init__(self, plugin_spec, True)
           self.define_property('consumer_key', required=False)
@@ -40,7 +40,7 @@ class Tweeter(AbstractMessagePlugin):
           auth.set_access_token(self.access_key, self.access_secret)
           api = tweepy.API(auth)
 
-          public_tweets = api.user_timeline(screen_name = self.username, count = self.tweet_limit)
+          public_tweets = api.user_timeline(screen_name = self.username, count = self.tweet_limit, tweet_mode='extended')
           for tweet in public_tweets:
-              print tweet.text.encode('utf-8') 
+              message_file.write(tweet.full_text.encode('utf-8') + '\n') 
           return True
