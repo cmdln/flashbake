@@ -1,5 +1,5 @@
-#    Copyright 2009 Ben Snider (bensnider.com), Thomas Gideon
-#    Modified 2017 Ian Paul ian@ianpaul.net
+#    Copyright 2017 Ian Paul
+#    Copyright 2009 Thomas Gideon
 #
 #    This file is part of flashbake.
 #
@@ -16,10 +16,7 @@
 #    You should have received a copy of the GNU General Public License
 #    along with flashbake.  If not, see <http://www.gnu.org/licenses/>.
 
-''' Twitter no longer publishes RSS feeds for individual users and now requires 
-    all applications to authenticate with OAuth. The microblog.py script remains
-    for those users who still need it to work with legacy Identica accounts.
-    As of 2017, users must use this script to capture their tweets. '''
+''' Twitter plugin pulls the last 'n' tweets from your Twitter profile including retweets. '''
 
 import tweepy
 
