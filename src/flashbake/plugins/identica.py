@@ -16,6 +16,12 @@
 #    along with flashbake.  If not, see <http://www.gnu.org/licenses/>.
 '''  microblog.py - microblog plugins by Ben Snider, bensnider.com '''
 
+'''  Twitter no longer publishes RSS feeds for individual users and now requires
+     all applications to authenticate with OAuth. Please use twitter.py instead.  
+     This script remains for users with legacy Identica accounts;
+     however, this plugin may no longer work as it has not been tested recently. 
+     Active Identica users are encouraged to modify this plugin and submit a pull request. '''
+
 from flashbake.plugins import AbstractMessagePlugin
 from urllib2 import HTTPError, URLError
 from xml.etree.ElementTree import ElementTree
