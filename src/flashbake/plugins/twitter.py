@@ -42,5 +42,8 @@ class Twitter(AbstractMessagePlugin):
 
           public_tweets = api.user_timeline(screen_name = self.username, count = self.tweet_limit, tweet_mode='extended')
           for tweet in public_tweets:
-              message_file.write(tweet.full_text.encode('utf-8') + '\n') 
+              if hasattr(tweet, 'retweeted_status'):
+                  message_file.write('RT: ' + tweet.retweeted_status.full_text.encode('utf-8') + '\n')
+              else:
+                  message_file.write('By Me: ' + tweet.full_text.encode('utf-8') + '\n')
           return True
