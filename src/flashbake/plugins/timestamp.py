@@ -16,9 +16,11 @@
 #    You should have received a copy of the GNU General Public License
 #    along with flashbake.  If not, see <http://www.gnu.org/licenses/>.
 
-''' timestamp.py displays the timestamp for a current commit in local or UTC time. '''
+''' timestamp.py displays the timestamp for a current commit in local or UTC time using a 12- or 24-hour clock.
+    thanks to @carlosalonso (on GitHub) for the suggestion. '''
 
 from flashbake.plugins import AbstractMessagePlugin
+from flashbake.plugins.timezone import findtimezone 
 import datetime
 
 
@@ -26,18 +28,23 @@ class Timestamp(AbstractMessagePlugin):
     def __init__(self, plugin_spec):
         AbstractMessagePlugin.__init__(self, plugin_spec, False)
         self.define_property('time_format', required=False)
+        self.define_property('time_hours', required=False)
 
     def addcontext(self, message_file, config):
 
-        ''' add a timestamp in local or UTC time '''
-        if self.time_format == 'utc':
-           message_file.write(str(datetime.datetime.utcnow().strftime('%A, %d %B, %Y %I:%M%p')) + '\n')
-        elif self.time_format == 'local':
-           message_file.write(str(datetime.datetime.now().strftime('%A, %d %B, %Y %I:%M%p')) + '\n')
+        ''' Determine whether the timestamp is in local or UTC time, and whether it uses a 12- or 24-hour clock. '''
+
+        if self.time_format == 'utc' and self.time_hours == '24':
+           zone = findtimezone(config)
+           message_file.write(str(datetime.datetime.utcnow().strftime('%A, %B %d, %Y %H:%M UTC in ') + str(zone) + '\n'))
+        elif self.time_format == 'utc' and self.time_hours == '12':
+           zone = findtimezone(config)
+           message_file.write(str(datetime.datetime.utcnow().strftime('%A, %B %d, %Y %I:%M %p UTC in ') + str(zone) + '\n'))
+        elif self.time_format == 'local' and self.time_hours == '24':
+           zone = findtimezone(config)
+           message_file.write(str(datetime.datetime.now().strftime('%A, %B %d, %Y %H:%M in ') + str(zone) + '\n'))
+        elif self.time_format == 'local' and self.time_hours == '12':
+           zone = findtimezone(config)
+           message_file.write(str(datetime.datetime.now().strftime('%A, %B %d, %Y %I:%M %p in ') + str(zone) + '\n'))
         else:
-           message_file.write('Time format could not be determined. Please specify utc or local time in your configuration file. \n')
-
-        return True
-
-
-
+           message_file.write('Time format could not be determined. Please specify utc or local time, and a 12- or 24-hour clock in your configuration file. \n')
