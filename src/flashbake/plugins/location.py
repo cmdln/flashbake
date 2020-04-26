@@ -26,6 +26,7 @@ import os.path
 import re
 import urllib
 import urllib2
+from requests import get
 
 
 
@@ -141,26 +142,10 @@ class Location(AbstractMessagePlugin):
         return text_value
 
     def __get_ip(self):
-        no_reply = 'http://www.noreply.org'
-        opener = urllib2.build_opener(urllib2.HTTPCookieProcessor())
+        ip_me = get('https://api.ipify.org').text 
 
         try:
-            # open the weather API page
-            ping_reply = opener.open(urllib2.Request(no_reply)).read()
-            hello_line = None
-            for line in ping_reply.split('\n'):
-                if line.find('Hello') > 0:
-                    hello_line = line.strip()
-                    break
-            if hello_line is None:
-                logging.error('Failed to parse Hello with public IP address.')
-                return None
-            logging.debug(hello_line)
-            m = re.search('([0-9]+\.){3}([0-9]+){1}', hello_line)
-            if m is None:
-                logging.error('Failed to parse Hello with public IP address.')
-                return None
-            ip_addr = m.group(0)
+            ip_addr = ip_me
             return ip_addr
         except HTTPError, e:
             logging.error('Failed with HTTP status code %d' % e.code)
