@@ -120,8 +120,8 @@ class ControlConfig:
                 if isinstance(plugin, flashbake.plugins.AbstractMessagePlugin):
                     logging.debug("Message Plugin: %s" % plugin_name)
                     # TODO add notion of dependency for ordering
-                    if 'flashbake.plugins.location:Location' == plugin_name:
-                        self.msg_plugins.insert(0, plugin)
+                    #if 'flashbake.plugins.location:Location' == plugin_name:
+                    #    self.msg_plugins.insert(0, plugin)
                     else:
                         self.msg_plugins.append(plugin)
                 if isinstance(plugin, flashbake.plugins.AbstractFilePlugin):
