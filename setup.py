@@ -36,6 +36,7 @@ history.""",
         install_requires='''
             enum34 >=1.0.3
             feedparser >=4.1
+            requests >=2.23.0
             ''',
         entry_points={
                 'console_scripts': [ 'flashbake = flashbake.console:main',
