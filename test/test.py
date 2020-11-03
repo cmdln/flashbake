@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 '''  test -  test runner script '''
+from __future__ import absolute_import
 
 #    copyright 2009 Thomas Gideon
 #
@@ -39,8 +40,8 @@ if __name__ == "__main__":
         from flashbake.commit import commit #@UnusedImport
         from flashbake.control import parse_control #@UnusedImport
         from flashbake.context import buildmessagefile #@UnusedImport
-        import test.config
-        import test.files
+        from . import test.config
+        from . import test.files
     finally:
         del sys.path[0]
 

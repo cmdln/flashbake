@@ -87,10 +87,10 @@ class Location(AbstractMessagePlugin):
                 location[key] = self.__get_text(child.childNodes)
             self.__save_cache(ip_addr, location)
             return location
-        except HTTPError, e:
+        except HTTPError as e:
             logging.error('Failed with HTTP status code %d' % e.code)
             return {}
-        except URLError, e:
+        except URLError as e:
             logging.error('Plugin, %s, failed to connect with network.' % self.__class__)
             logging.debug('Network failure reason, %s.' % e.reason)
             return {}
@@ -147,10 +147,10 @@ class Location(AbstractMessagePlugin):
         try:
             ip_addr = ip_me
             return ip_addr
-        except HTTPError, e:
+        except HTTPError as e:
             logging.error('Failed with HTTP status code %d' % e.code)
             return None
-        except URLError, e:
+        except URLError as e:
             logging.error('Plugin, %s, failed to connect with network.' % self.__class__)
             logging.debug('Network failure reason, %s.' % e.reason)
             return None
