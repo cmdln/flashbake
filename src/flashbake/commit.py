@@ -19,6 +19,7 @@
 script to build automatic commit messages as needed.'''
 
 import context
+"""the above import statement is for Flashbake's context.py file"""
 import datetime
 import git
 import logging
