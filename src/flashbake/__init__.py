@@ -20,7 +20,7 @@
 from flashbake.plugins import PluginError, PLUGIN_ERRORS
 from flashbake.compat import relpath, next_, iglob
 from types import *
-import commands
+import subprocess
 import flashbake.plugins #@UnresolvedImport
 import glob
 import logging
@@ -28,7 +28,7 @@ import os
 import os.path
 import re
 import sys #@Reimport
-import __builtin__
+import builtins
 
 __version__ = '0.27.1'
 
@@ -130,7 +130,7 @@ class ControlConfig:
                 if isinstance(plugin, flashbake.plugins.AbstractNotifyPlugin):
                     logging.debug('Notify Plugin: %s' % plugin_name)
                     self.notify_plugins.append(plugin)
-            except PluginError, e:
+            except PluginError as e:
                 # re-raise critical plugin error
                 if not e.reason == PLUGIN_ERRORS.ignorable_error: #@UndefinedVariable
                     raise e
@@ -196,7 +196,7 @@ class ControlConfig:
         try:
             plugin_class = self.__forname(module_name, plugin_name)
             plugin = plugin_class(plugin_spec)
-        except Exception, e:
+        except Exception as e:
             logging.debug(e)
             logging.debug('Couldn\'t load class %s' % plugin_spec)
             raise PluginError(PLUGIN_ERRORS.unknown_plugin, plugin_spec) #@UndefinedVariable

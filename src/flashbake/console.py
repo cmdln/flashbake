@@ -104,10 +104,10 @@ def main():
             logging.info('!!! Running in dry run mode.         !!!')
             logging.info('!!! No changes will be committed.    !!!')
             logging.info('========================================')
-    except (flashbake.git.VCError, flashbake.ConfigError), error:
+    except (flashbake.git.VCError, flashbake.ConfigError) as error:
         logging.error('Error: %s' % str(error))
         sys.exit(1)
-    except PluginError, error:
+    except PluginError as error:
         _handle_bad_plugin(error)
         sys.exit(1)
 
@@ -128,7 +128,7 @@ def multiple_projects():
 
     try:
         (test_options, test_args) = main_parser.parse_args(test_argv)
-    except ParserError, err:
+    except ParserError as err:
         msg = "error with arguments passed to main flashbake: %s\n%s" % (
             "'" + "' '".join(
                 flashbake_opts + ['<project_dir>'] + args[1:]) + "'",
@@ -136,11 +136,11 @@ def multiple_projects():
         parser.exit(err.code, msg)
     exit_code = 0
     for project in _locate_projects(args[0]):
-        print "project: %s" % project
+        print ("project: %s" % project)
         sys.argv = sys.argv[0:1] + flashbake_opts + [project] + args[1:]
         try:
             main()
-        except SystemExit, err:
+        except SystemExit as err:
             if err.code != 0:
                 exit_code = err.code
             logging.error("Error: 'flashbake' had an error for '%s'"
@@ -280,15 +280,15 @@ def _context_only(options, project_dir, control_file, control_config, hot_files)
 
         try:
             for line in message_file:
-                print line.strip()
+                print (line.strip())
         finally:
             message_file.close()
             os.remove(msg_filename)
         return 0
-    except (flashbake.git.VCError, flashbake.ConfigError), error:
+    except (flashbake.git.VCError, flashbake.ConfigError) as error:
         logging.error('Error: %s' % str(error))
         return 1
-    except PluginError, error:
+    except PluginError as error:
         _handle_bad_plugin(error)
         return 1
 

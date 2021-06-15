@@ -18,10 +18,8 @@
 '''  commit.py - Parses a project's control file and wraps git operations, calling the context
 script to build automatic commit messages as needed.'''
 
-import context
-"""the above import statement is for Flashbake's context.py file"""
+from flashbake import context, git
 import datetime
-import git
 import logging
 import os
 import re
@@ -54,7 +52,7 @@ def commit(control_config, hot_files, quiet_mins):
     # first look in the files git already knows about
     logging.debug("Examining git status.")
     for line in git_status.splitlines():
-        if pending_re.match(line):
+        if pending_re.match(line.decode('utf-8')):
             pending_file = _trimgit(line)
 
             # not in the dot-control file, skip it
@@ -95,10 +93,10 @@ def commit(control_config, hot_files, quiet_mins):
         status_output = git_obj.status(control_file)
 
         # needed for git >= 1.7.0.4
-        if status_output.find('Untracked files') > 0:
+        if status_output.find(b'Untracked files') > 0:
             hot_files.putneedsadd(control_file)
             continue
-        if status_output.startswith('error'):
+        if str(status_output).startswith('error'):
             # needed for git < 1.7.0.4
             if status_output.find('did not match') > 0:
                 hot_files.putneedsadd(control_file)
@@ -111,7 +109,7 @@ def commit(control_config, hot_files, quiet_mins):
         # substring matchs, otherwise 'foo.txt~' causes a false report of an
         # error
         control_re = re.compile('\<' + re.escape(control_file) + '\>')
-        if control_re.search(status_output) == None:
+        if control_re.search(status_output.decode('utf-8')) == None:
             logging.debug('%s has no uncommitted changes.' % control_file)
         # if anything hits this block, we need to figure out why
         else:
@@ -171,7 +169,7 @@ def purge(control_config, hot_files):
 
 
 def _capture_deleted(hot_files, line):
-    if DELETED_RE.match(line):
+    if DELETED_RE.match(line.decode('utf-8')):
         deleted_file = _trimgit(line)
         # remove files that will are known to have been deleted
         hot_files.remove(deleted_file)
@@ -179,7 +177,7 @@ def _capture_deleted(hot_files, line):
 
 
 def _handle_fatal(hot_files, git_status):
-    if git_status.startswith('fatal'):
+    if str(git_status).startswith('fatal'):
         logging.error('Fatal error from git.')
         if 'fatal: Not a git repository' == git_status:
             logging.error('Make sure "git init" was run in %s'
@@ -190,11 +188,11 @@ def _handle_fatal(hot_files, git_status):
 
 
 def _trimgit(status_line):
-    if status_line.find('->') >= 0:
+    if status_line.find(b'->') >= 0:
         tokens = status_line.split('->')
         return tokens[1].strip()
 
-    tokens = status_line.split(':')
+    tokens = status_line.split(b':')
     return tokens[1].strip()
 
 

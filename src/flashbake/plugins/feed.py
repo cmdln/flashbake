@@ -78,10 +78,10 @@ class Feed(AbstractMessagePlugin):
                     break
 
             return (feed_title, by_creator)
-        except HTTPError, e:
+        except HTTPError as e:
             logging.error('Failed with HTTP status code %d' % e.code)
             return (None, {})
-        except URLError, e:
+        except URLError as e:
             logging.error('Plugin, %s, failed to connect with network.' % self.__class__)
             logging.debug('Network failure reason, %s.' % e.reason)
             return (None, {})

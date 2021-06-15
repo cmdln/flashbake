@@ -11,7 +11,7 @@ class ConfigTestCase(unittest.TestCase):
         try:
             self.config.create_plugin('test.foo')
             self.fail('Should not be able to use unknown')
-        except PluginError, error:
+        except PluginError as error:
             self.assertEquals(str(error.reason), 'invalid_plugin',
                     'Should not be able to load invalid plugin.')
 
@@ -19,7 +19,7 @@ class ConfigTestCase(unittest.TestCase):
         try:
             self.config.create_plugin('test.foo:Foo')
             self.fail('Should not be able to use unknown')
-        except PluginError, error:
+        except PluginError as error:
             self.assertEquals(str(error.reason), 'unknown_plugin',
                     'Should not be able to load unknown plugin.')
 
@@ -28,7 +28,7 @@ class ConfigTestCase(unittest.TestCase):
             plugin_name = 'test.plugins:MissingParent'
             self.config.create_plugin(plugin_name)
             self.fail('Should not have initialized plugin, %s' % plugin_name)
-        except PluginError, error:
+        except PluginError as error:
             reason = 'invalid_type'
             self.assertEquals(str(error.reason), reason,
                     'Error should specify failure reason, %s.' % reason)
@@ -76,7 +76,7 @@ class ConfigTestCase(unittest.TestCase):
             plugin = self.config.create_plugin('flashbake.plugins.feed:Feed')
             plugin.capture_properties(self.config)
             self.fail('Should not be able to initialize without full plugin props.')
-        except PluginError, error:
+        except PluginError as error:
             self.assertEquals(str(error.reason), 'missing_property',
                     'Feed plugin should fail missing property.')
             self.assertEquals(error.name, 'feed_url',
@@ -87,7 +87,7 @@ class ConfigTestCase(unittest.TestCase):
         try:
             plugin = self.config.create_plugin('flashbake.plugins.feed:Feed')
             plugin.capture_properties(self.config)
-        except PluginError, error:
+        except PluginError as error:
             self.fail('Should be able to initialize with just the url.')
 
     def __testattr(self, plugin_name, name, reason):
@@ -96,7 +96,7 @@ class ConfigTestCase(unittest.TestCase):
             plugin.capture_properties(self.config)
             plugin.init(self.config)
             self.fail('Should not have initialized plugin, %s' % plugin_name)
-        except PluginError, error:
+        except PluginError as error:
             self.assertEquals(str(error.reason), reason,
                     'Error should specify failure reason, %s.' % reason)
             self.assertEquals(error.name, name,

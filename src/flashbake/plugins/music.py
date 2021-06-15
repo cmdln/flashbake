@@ -66,7 +66,7 @@ limit %d"""
                 message_file.write('"%s", by %s (%s)' %
                         (result[0], result[1], last_played))
                 message_file.write('\n')
-        except Exception, error:
+        except Exception as error:
             logging.error(error)
             conn.close()
 
