@@ -28,6 +28,8 @@ import sys
 
 
 DELETED_RE = re.compile('#\s*deleted:.*')
+# takes the following regular expression pattern and turns it into a 
+# regular expression object. This is used to identify deleted files.
 
 def commit(control_config, hot_files, quiet_mins):
     # change to the project directory, necessary to find the .flashbake file and
