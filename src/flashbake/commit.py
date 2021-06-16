@@ -27,7 +27,7 @@ import sys
 
 
 
-DELETED_RE = re.compile('#\s*deleted:.*')
+DELETED_RE = re.compile(b'#\s*deleted:.*')
 # takes the following regular expression pattern and turns it into a 
 # regular expression object. This is used to identify deleted files.
 
@@ -45,7 +45,7 @@ def commit(control_config, hot_files, quiet_mins):
     _handle_fatal(hot_files, git_status)
 
     # in particular find the existing entries that need a commit
-    pending_re = re.compile("\s*(renamed|copied|modified|new file):.*")
+    pending_re = re.compile(b"\s*(renamed|copied|modified|new file):.*")
 
     now = datetime.datetime.today()
     quiet_period = datetime.timedelta(minutes=quiet_mins)
@@ -54,7 +54,7 @@ def commit(control_config, hot_files, quiet_mins):
     # first look in the files git already knows about
     logging.debug("Examining git status.")
     for line in git_status.splitlines():
-        if pending_re.match(line.decode('utf-8')):
+        if pending_re.match(line):
             pending_file = _trimgit(line)
 
             # not in the dot-control file, skip it
@@ -171,7 +171,7 @@ def purge(control_config, hot_files):
 
 
 def _capture_deleted(hot_files, line):
-    if DELETED_RE.match(line.decode('utf-8')):
+    if DELETED_RE.match(line):
         deleted_file = _trimgit(line)
         # remove files that will are known to have been deleted
         hot_files.remove(deleted_file)
