@@ -27,7 +27,7 @@ import sys
 
 
 
-DELETED_RE = re.compile(b'#\s*deleted:.*')
+DELETED_RE = re.compile('#\s*deleted:.*')
 # takes the following regular expression pattern and turns it into a 
 # regular expression object. This is used to identify deleted files.
 
@@ -40,12 +40,12 @@ def commit(control_config, hot_files, quiet_mins):
 
     # the wrapper object ensures git is on the path
     # get the git status for the project
-    git_status = git_obj.status()
+    git_status = git_obj.status().decode('utf-8')
 
     _handle_fatal(hot_files, git_status)
 
     # in particular find the existing entries that need a commit
-    pending_re = re.compile(b"\s*(renamed|copied|modified|new file):.*")
+    pending_re = re.compile("\s*(renamed|copied|modified|new file):.*")
 
     now = datetime.datetime.today()
     quiet_period = datetime.timedelta(minutes=quiet_mins)
@@ -92,15 +92,15 @@ def commit(control_config, hot_files, quiet_mins):
             hot_files.putabsent(control_file)
             continue
 
-        status_output = git_obj.status(control_file)
+        status_output = git_obj.status(control_file).decode('utf-8')
 
         # needed for git >= 1.7.0.4
-        if status_output.find(b'Untracked files') > 0:
+        if status_output.find('Untracked files') > 0:
             hot_files.putneedsadd(control_file)
             continue
-        if status_output.startswith(b'error'):
+        if status_output.startswith('error'):
             # needed for git < 1.7.0.4
-            if status_output.find(b'did not match') > 0:
+            if status_output.find('did not match') > 0:
                 hot_files.putneedsadd(control_file)
                 logging.debug('%s exists but is unknown by git.' % control_file)
             else:
@@ -149,7 +149,7 @@ def purge(control_config, hot_files):
     git_obj = git.Git(hot_files.project_dir, control_config.git_path)
 
     # the wrapper object ensures git is on the path
-    git_status = git_obj.status()
+    git_status = git_obj.status().decode('utf-8')
 
     _handle_fatal(hot_files, git_status)
 
@@ -179,9 +179,9 @@ def _capture_deleted(hot_files, line):
 
 
 def _handle_fatal(hot_files, git_status):
-    if git_status.startswith(b'fatal'):
+    if git_status.startswith('fatal'):
         logging.error('Fatal error from git.')
-        if git_status.startswith(b'fatal:'):
+        if git_status.startswith('fatal:'):
             logging.error('Make sure "git init" was run in %s'
                 % os.path.realpath(hot_files.project_dir))
         else:
@@ -190,11 +190,11 @@ def _handle_fatal(hot_files, git_status):
 
 
 def _trimgit(status_line):
-    if status_line.find(b'->') >= 0:
+    if status_line.find('->') >= 0:
         tokens = status_line.decode('utf-8').split('->')
         return tokens[1].strip()
 
-    tokens = status_line.split(b':')
+    tokens = status_line.split(':')
     return tokens[1].strip()
 
 
