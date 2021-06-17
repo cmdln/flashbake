@@ -377,7 +377,7 @@ class HotFiles:
         to_commit = list()
         for orphan in self.to_add:
             logging.debug('Adding {}.'.format(orphan))
-            add_output = git_obj.add(orphan)
+            add_output = git_obj.add(orphan).decode('utf-8')
             logging.debug('Add output, {}'.format(add_output))
             to_commit.append(orphan)
 

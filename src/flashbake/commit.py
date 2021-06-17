@@ -111,7 +111,7 @@ def commit(control_config, hot_files, quiet_mins):
         # substring matchs, otherwise 'foo.txt~' causes a false report of an
         # error
         control_re = re.compile('\<' + re.escape(control_file) + '\>')
-        if control_re.search(status_output.decode('utf-8')) == None:
+        if control_re.search(status_output) == None:
             logging.debug('%s has no uncommitted changes.' % control_file)
         # if anything hits this block, we need to figure out why
         else:
