@@ -19,13 +19,12 @@
 #    along with flashbake.  If not, see <http://www.gnu.org/licenses/>.
 
 from flashbake.plugins import AbstractMessagePlugin
-from urllib2 import HTTPError, URLError
+from urllib.request import error, urlopen
 from xml.dom import minidom
 import logging
 import os.path
 import re
 import urllib
-import urllib2
 from requests import get
 
 

@@ -75,7 +75,7 @@ class ControlConfig:
                 self.add_plugins(prop_value.split(','))
                 return True
 
-            # hang onto any extra propeties in case plugins use them
+            # hang onto any extra properties in case plugins use them
             if not prop_name in self.__dict__:
                 self.extra_props[prop_name] = prop_value;
                 return True

@@ -45,6 +45,8 @@ def commit(control_config, hot_files, quiet_mins):
     _handle_fatal(hot_files, git_status)
 
     # in particular find the existing entries that need a commit
+    # this command is used in `to_commit` on files returned from 
+    # `def status` in git.py.
     pending_re = re.compile("\s*(renamed|copied|modified|new file):.*")
 
     now = datetime.datetime.today()

@@ -1,4 +1,4 @@
-import commands
+import subprocess
 import flashbake
 import os.path
 import unittest
@@ -7,13 +7,13 @@ class FilesTestCase(unittest.TestCase):
     def setUp(self):
         test_dir = os.path.join(os.getcwd(), 'test')
         test_zip = os.path.join(test_dir, 'project.zip')
-        commands.getoutput('unzip -d %s %s' % (test_dir, test_zip))
+        subprocess.getoutput('unzip -d %s %s' % (test_dir, test_zip))
         self.files = flashbake.HotFiles(os.path.join(test_dir, 'project'))
         self.project_files = [ 'todo.txt', 'stickies.txt', 'my stuff.txt',
         'bar/novel.txt', 'baz/novel.txt', 'quux/novel.txt' ]
 
     def tearDown(self):
-        commands.getoutput('rm -rf %s' % self.files.project_dir)
+        subprocess.getoutput('rm -rf %s' % self.files.project_dir)
 
     def testrelative(self):
         for file in self.project_files:

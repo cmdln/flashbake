@@ -61,7 +61,7 @@ class Git:
 
     def status(self, filename=None):
         """ Get the git status for the specified files, or the entire current
-            directory. """
+            directory. Run `git status` for invididual files."""
         if filename != None:
             files = list()
             files.append(filename)
