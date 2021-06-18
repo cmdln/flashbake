@@ -190,7 +190,7 @@ class ControlConfig:
         try:
             __import__(module_name)
         except ImportError:
-            logging.warn('Invalid module, {}'.format(plugin_name))
+            logging.warning('Invalid module, {}'.format(plugin_name))
             raise PluginError(PLUGIN_ERRORS.unknown_plugin, plugin_spec) #@UndefinedVariable
 
         try:

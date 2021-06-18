@@ -19,7 +19,7 @@
 
 import feedparser
 import logging
-from urllib2 import HTTPError, URLError
+import urllib.request
 from flashbake.plugins import AbstractMessagePlugin
 
 

@@ -12,7 +12,7 @@ class ConfigTestCase(unittest.TestCase):
             self.config.create_plugin('test.foo')
             self.fail('Should not be able to use unknown')
         except PluginError as error:
-            self.assertEquals(str(error.reason), 'invalid_plugin',
+            self.assertEqual(str(error.reason), 'invalid_plugin',
                     'Should not be able to load invalid plugin.')
 
     def testnoplugin(self):
@@ -20,7 +20,7 @@ class ConfigTestCase(unittest.TestCase):
             self.config.create_plugin('test.foo:Foo')
             self.fail('Should not be able to use unknown')
         except PluginError as error:
-            self.assertEquals(str(error.reason), 'unknown_plugin',
+            self.assertEqual(str(error.reason), 'unknown_plugin',
                     'Should not be able to load unknown plugin.')
 
     def testmissingparent(self):
@@ -30,7 +30,7 @@ class ConfigTestCase(unittest.TestCase):
             self.fail('Should not have initialized plugin, %s' % plugin_name)
         except PluginError as error:
             reason = 'invalid_type'
-            self.assertEquals(str(error.reason), reason,
+            self.assertEqual(str(error.reason), reason,
                     'Error should specify failure reason, %s.' % reason)
 
     def testnoconnectable(self):
@@ -77,9 +77,9 @@ class ConfigTestCase(unittest.TestCase):
             plugin.capture_properties(self.config)
             self.fail('Should not be able to initialize without full plugin props.')
         except PluginError as error:
-            self.assertEquals(str(error.reason), 'missing_property',
+            self.assertEqual(str(error.reason), 'missing_property',
                     'Feed plugin should fail missing property.')
-            self.assertEquals(error.name, 'feed_url',
+            self.assertEqual(error.name, 'feed_url',
                     'Missing property should be feed.')
 
         self.config.extra_props['feed_url'] = "http://random.com/feed"
@@ -97,7 +97,7 @@ class ConfigTestCase(unittest.TestCase):
             plugin.init(self.config)
             self.fail('Should not have initialized plugin, %s' % plugin_name)
         except PluginError as error:
-            self.assertEquals(str(error.reason), reason,
+            self.assertEqual(str(error.reason), reason,
                     'Error should specify failure reason, %s.' % reason)
-            self.assertEquals(error.name, name,
+            self.assertEqual(error.name, name,
                     'Error should specify failed name, %s' % name)
