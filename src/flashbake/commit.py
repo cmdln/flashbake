@@ -98,8 +98,9 @@ def commit(control_config, hot_files, quiet_mins):
 
         # needed for git >= 1.7.0.4
         if status_output.find('Untracked files') > 0:
-            hot_files.putneedsadd(control_file)
-            continue
+            if not control_config.dry_run:
+                hot_files.putneedsadd(control_file)
+                continue
         if status_output.startswith('error'):
             # needed for git < 1.7.0.4
             if status_output.find('did not match') > 0:
