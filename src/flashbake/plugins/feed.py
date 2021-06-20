@@ -43,7 +43,7 @@ class Feed(AbstractMessagePlugin):
                     % {'item_count' : len(last_items), 'feed_title' : title})
             else:
                 message_file.write('Last %(item_count)d entries from %(feed_title)s by %(author)s:\n'\
-                    % {'item_count' : len(last_items), 'feed_title' : title, 'author': self.author})
+                    % {'item_count' : len(last_items), 'feed_title' : title, 'author' or 'dc:creator' : self.author})
             for item in last_items:
                 # edit the '%s' if you want to add a label, like 'Title %s' to the output
                 message_file.write('%s\n' % item['title'])
