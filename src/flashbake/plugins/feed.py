@@ -71,17 +71,17 @@ class Feed(AbstractMessagePlugin):
                 if self.author != None and entry.author != self.author:
                     continue
                 title = entry.title
-                title = title.encode('ascii', 'replace')
+                title = title.encode('utf-8', 'replace').decode('utf-8')
                 link = entry.link
                 by_creator.append({"title" : title, "link" : link})
                 if self.limit <= len(by_creator):
                     break
 
             return (feed_title, by_creator)
-        except HTTPError as e:
+        except urllib.error.HTTPError as e:
             logging.error('Failed with HTTP status code %d' % e.code)
             return (None, {})
-        except URLError as e:
+        except urllib.error.URLError as e:
             logging.error('Plugin, %s, failed to connect with network.' % self.__class__)
             logging.debug('Network failure reason, %s.' % e.reason)
             return (None, {})
