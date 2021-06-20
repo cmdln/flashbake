@@ -57,7 +57,7 @@ class Weather(AbstractMessagePlugin):
         weather = self.__getweather(self.city, self.appid, self.units)
 
         if len(weather) > 0:
-            message_file.write('Current weather for %(city)s: %(description)s. %(temp)i%(temp_units)s. %(humidity)s%% humidity\n' % weather)
+            message_file.write("Current weather for {city}: {description}, {temp}\u00b0{temp_units}, {humidity}% humidity\n".format_map(weather))
         else:
             message_file.write('Couldn\'t fetch current weather for city, {}.\n'.format(self.city))
         return len(weather) > 0
