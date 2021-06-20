@@ -23,7 +23,7 @@ from flashbake.plugins import AbstractMessagePlugin
 from flashbake.plugins.timezone import findtimezone
 from flashbake.plugins import timezone
 import urllib.request
-import urllib
+from urllib.parse import urlencode
 import json
 import logging
 
@@ -57,7 +57,7 @@ class Weather(AbstractMessagePlugin):
         weather = self.__getweather(self.city, self.appid, self.units)
 
         if len(weather) > 0:
-            message_file.write("Current weather for {city}: {description}. {temp}{temp_units}. {humidity}'%' humidity\n".format(weather))
+            message_file.write('Current weather for %(city)s: %(description)s. %(temp)i%(temp_units)s. %(humidity)s%% humidity\n' % weather)
         else:
             message_file.write('Couldn\'t fetch current weather for city, {}.\n'.format(self.city))
         return len(weather) > 0
@@ -65,10 +65,10 @@ class Weather(AbstractMessagePlugin):
     def __getweather(self, city, appid, units='imperial'):
         """ This relies on Open Weather Map's API which may change without notice. """
 
-        baseurl = 'http://api.openweathermap.org/data/2.5/weather?'
+        baseurl = 'https://api.openweathermap.org/data/2.5/weather?'
         # encode the parameters
-        params = {'q=': city, 'units=': units, 'appid=': appid}
-        for_city = baseurl + urllib.parse.urlencode(params)
+        params = {'q': city, 'units': units, 'appid': appid}
+        for_city = baseurl + urlencode(params)
  
         try:
             logging.debug('Requesting page for {}.'.format(for_city))
