@@ -18,15 +18,13 @@
 
 '''  lastfm.py - Plugin that pulls latest n items from your last.fm account. '''
 
-import logging
-import urllib
-import json
 from flashbake.plugins import AbstractMessagePlugin
+import urllib.request
+import json
+import logging
 
-
-
-LASTFM = "http://ws.audioscrobbler.com/2.0/?method="
 PLUGIN_SPEC = 'flashbake.plugins.lastfm:LastFM'
+LASTFM = "http://ws.audioscrobbler.com/2.0/?method="
 
 class LastFM(AbstractMessagePlugin):
     def __init__(self, plugin_spec):
@@ -47,12 +45,12 @@ class LastFM(AbstractMessagePlugin):
         if not type(tracks) == list:
             tracks = [tracks]
         for trackdic in tracks:
-            track = unicode(trackdic['name']).encode("utf-8")
-            artist = unicode(trackdic['artist']['#text']).encode("utf-8")
+            track =  (trackdic['name']).encode("utf-8").decode("utf-8")
+            artist = (trackdic['artist']['#text']).encode("utf-8").decode("utf-8")
             message_file.write("Track from Last.fm: %s by %s\n" % (track, artist))
 
     def _fetch_data(self, url):
-        raw_data = urllib.urlopen(url)
+        raw_data = urllib.request.urlopen(url)
         data = json.loads(raw_data.read())
 
         return data
