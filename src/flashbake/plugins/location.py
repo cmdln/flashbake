@@ -19,12 +19,13 @@
 #    along with flashbake.  If not, see <http://www.gnu.org/licenses/>.
 
 from flashbake.plugins import AbstractMessagePlugin
-from urllib.request import error, urlopen
+import urllib.request
+from urllib.parse import urlencode
 from xml.dom import minidom
 import logging
 import os.path
 import re
-import urllib
+import json
 from requests import get
 
 
@@ -43,9 +44,8 @@ class Location(AbstractMessagePlugin):
         if len(location) == 0:
             message_file.write('Failed to parse location data for IP address.\n')
             return False
-
         logging.debug(location)
-        location_str = '%(cityName)s, %(regionName)s' % location
+        location_str = '%(city)s, %(regionName)s' % location
         config.location_location = location_str
         message_file.write('Current location is %s based on IP %s.\n' % (location_str, ip_addr))
         return True
@@ -55,41 +55,29 @@ class Location(AbstractMessagePlugin):
         if cached.get('ip_addr','') == ip_addr:
             del cached['ip_addr']
             return cached
-        base_url = 'http://api.ipinfodb.com/v3/ip-city/?'
-        for_ip = base_url + urllib.urlencode({'key': 'd2e4d26478b0759c225fd4b9113240e1ab7c1bf4f8fb673cba0a2ed52a351916',
-                                              'ip': ip_addr,
-                                              'format': 'xml'})
-
-        opener = urllib2.build_opener(urllib2.HTTPCookieProcessor())
+        base_url = 'http://ip-api.com/json/'
+        for_ip = base_url + (ip_addr)
 
         try:
             logging.debug('Requesting page for %s.' % for_ip)
 
             # open the location API page
-            location_xml = opener.open(urllib2.Request(for_ip)).read()
+            location_xml = urllib.request.Request(for_ip)
+            with urllib.request.urlopen(location_xml) as response:
+                the_page = response.read()
 
-            # the weather API returns some nice, parsable XML
-            location_dom = minidom.parseString(location_xml)
-
-            # just interested in the conditions at the moment
-            response = location_dom.getElementsByTagName("Response")
-
-            if response == None or len(response) == 0:
-                return dict()
+            data = json.loads(the_page)
 
             location = dict()
-            for child in response[0].childNodes:
-                if child.localName == None:
-                    continue
-                key = child.localName
-                key = key.encode('ASCII', 'replace')
-                location[key] = self.__get_text(child.childNodes)
-            self.__save_cache(ip_addr, location)
+
+            for k,v in data.items():
+              location[k] = v
+
             return location
-        except HTTPError as e:
+        except urllib.error.HTTPError as e:
             logging.error('Failed with HTTP status code %d' % e.code)
             return {}
-        except URLError as e:
+        except urllib.error.URLError as e:
             logging.error('Plugin, %s, failed to connect with network.' % self.__class__)
             logging.debug('Network failure reason, %s.' % e.reason)
             return {}
@@ -127,7 +115,7 @@ class Location(AbstractMessagePlugin):
         cache_file = open(os.path.join(fb_dir, 'ip_cache'), 'w')
         try:
             cache_file.write('ip_addr:%s\n' % ip_addr)
-            for key in location.iterkeys():
+            for key in location.keys():
                 cache_file.write('location.%s:%s\n' % (key, location[key]))
         finally:
             cache_file.close()
@@ -141,15 +129,15 @@ class Location(AbstractMessagePlugin):
         return text_value
 
     def __get_ip(self):
-        ip_me = get('https://api.ipify.org').text 
+        ip_me = get('https://api.ipify.org').text
 
         try:
             ip_addr = ip_me
             return ip_addr
-        except HTTPError as e:
+        except urllib.error.HTTPError as e:
             logging.error('Failed with HTTP status code %d' % e.code)
             return None
-        except URLError as e:
+        except urllib.error.URLError as e:
             logging.error('Plugin, %s, failed to connect with network.' % self.__class__)
             logging.debug('Network failure reason, %s.' % e.reason)
             return None
