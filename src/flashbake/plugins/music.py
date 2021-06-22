@@ -27,6 +27,7 @@ import os.path
 import sqlite3
 import subprocess
 import time
+import xml.etree.ElementTree as ET
 
 
 
@@ -107,3 +108,32 @@ class iTunes(AbstractMessagePlugin):
                              close_fds=True)
 
         return proc.communicate()[0]
+
+class Rhythmbox(AbstractMessagePlugin):
+    def __init__(self, plugin_spec):
+        AbstractMessagePlugin.__init__(self, plugin_spec)
+        self.define_property('db', default=os.path.join(os.path.expanduser('~'), '.local', 'rhythmbox', 'rhythmdb.xml'))
+        self.define_property('limit', int, default=3)
+        self.define_property('last_played')
+
+    def addcontext(self, message_file, config):
+        
+
+    def get_rhythmbox_songs(db, typ="song")
+        listSongs = []
+        tree = ET.parse('db')
+        root = tree.getroot()
+        for child in root('song'):
+            listSongs.append(child.attrib['title', 'last-played'])
+        
+        return 
+
+
+            
+
+
+
+
+
+
+
