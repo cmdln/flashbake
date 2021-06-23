@@ -112,25 +112,17 @@ class iTunes(AbstractMessagePlugin):
 class Rhythmbox(AbstractMessagePlugin):
     def __init__(self, plugin_spec):
         AbstractMessagePlugin.__init__(self, plugin_spec)
-        self.define_property('db', default=os.path.join(os.path.expanduser('~'), '.local', 'rhythmbox', 'rhythmdb1.xml'))
+        self.define_property('db', default=os.path.join(os.path.expanduser('~'), '.local', 'share', 'rhythmbox', 'rhythmdb.xml'))
         self.define_property('limit', int, default=3)
         self.define_property('last_played')
-        encode = os.fsencode(self.db)
 
     def addcontext(self, message_file, config):
+        
+        parser = ET.XMLParser(encoding="utf-8")
+        tree = ET.parse(self.db, parser=parser)
+        value = tree.findall(".//last_played/..[@type='song']")
+        message_file.write('Here it is: %s' % value)
 
-        listSongs = self.get_rhythmbox_songs(encode)
-        message_file.write(listSongs)
-        
-    def get_rhythmbox_songs(self):
-        listSongs = []
-        tree = ET.parse(encode)
-        root = tree.getroot()
-        for child in root('song'):
-            if child.tag == "title" or "last_played":
-                listSongs.append(child.attrib)
-        
-        return listSongs
 
 
             
