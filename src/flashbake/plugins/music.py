@@ -122,8 +122,9 @@ class Rhythmbox(AbstractMessagePlugin):
         tree = ET.parse(self.db, parser=parser)
         root = tree.getroot()
         for entry in root.findall('entry'):
-            thing = entry.find('title').text
-            message_file.write(thing)
+            if entry.attrib['type'] == "song":
+                title = entry.find('title').text
+                message_file.write(title)
 
 
 
