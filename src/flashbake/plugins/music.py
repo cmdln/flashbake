@@ -120,8 +120,10 @@ class Rhythmbox(AbstractMessagePlugin):
         
         parser = ET.XMLParser(encoding="utf-8")
         tree = ET.parse(self.db, parser=parser)
-        value = tree.findall(".//last_played/..[@type='song']")
-        message_file.write('Here it is: %s' % value)
+        root = tree.getroot()
+        for entry in root.findall('entry'):
+            thing = entry.find('title').text
+            message_file.write(thing)
 
 
 
