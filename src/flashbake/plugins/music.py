@@ -125,3 +125,4 @@ class Rhythmbox(AbstractMessagePlugin):
             if entry.attrib['type'] == "song":
                 title = entry.find('title').text
                 message_file.write("You recently played {}.\n".format(title))
+                
