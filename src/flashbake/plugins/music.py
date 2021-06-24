@@ -121,9 +121,9 @@ class Rhythmbox(AbstractMessagePlugin):
         parser = ET.XMLParser(encoding="utf-8")
         tree = ET.parse(self.db, parser=parser)
         root = tree.getroot()
+        recents = []
         for entry in root.findall('entry'):
             if entry.attrib['type'] == "song":
-                last_played = entry.find('last-played')
-                last_played = time.ctime()
-                title = entry.find('title').text
-                message_file.write("You recently played {} on {}.\n".format(title, last_played))
+                title = entry.find("title").text
+                recents.append(title)
+        message_file.write("You recently played {}\n".format(recents[-1]))
