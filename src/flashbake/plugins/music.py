@@ -114,8 +114,6 @@ class Rhythmbox(AbstractMessagePlugin):
     def __init__(self, plugin_spec):
         AbstractMessagePlugin.__init__(self, plugin_spec)
         self.define_property('db', default=os.path.join(os.path.expanduser('~'), '.local', 'share', 'rhythmbox', 'rhythmdb.xml'))
-        self.define_property('limit', int, default=3)
-        self.define_property('last_played')
 
     def addcontext(self, message_file, config):
         
