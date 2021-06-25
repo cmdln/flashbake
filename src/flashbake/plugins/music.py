@@ -27,6 +27,7 @@ import os.path
 import sqlite3
 import subprocess
 import time
+import datetime
 import xml.etree.ElementTree as ET
 
 
@@ -118,12 +119,15 @@ class Rhythmbox(AbstractMessagePlugin):
 
     def addcontext(self, message_file, config):
         
+        ts = datetime.datetime.now() - datetime.timedelta(minutes=10)
         parser = ET.XMLParser(encoding="utf-8")
         tree = ET.parse(self.db, parser=parser)
         root = tree.getroot()
-        recents = []
         for entry in root.findall('entry'):
             if entry.attrib['type'] == "song":
-                title = entry.find("title").text
-                recents.append(title)
-        message_file.write("You recently played {}\n".format(recents[-1]))
+                last_played = entry.find("last-played").text
+                last_played = int(last_played)
+                last_played = datetime.datetime.fromtimestamp(last_played)
+                if last_played >= ts:
+                    title = entry.find("title").text
+                    message_file.write("You recently played {}\n".format(title))
