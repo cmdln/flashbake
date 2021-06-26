@@ -75,7 +75,7 @@ limit %d"""
         return True
 
 
-class iTunes(AbstractMessagePlugin):
+class Music(AbstractMessagePlugin):
     ''' Based on Andrew Heiss' plugin which is MIT licensed which should be compatible. '''
     def __init__(self, plugin_spec):
         AbstractMessagePlugin.__init__(self, plugin_spec)
@@ -88,7 +88,7 @@ class iTunes(AbstractMessagePlugin):
     def addcontext(self, message_file, config):
         """ Get the track info and write it to the commit message """
 
-        info = self.trackinfo()
+        info = self.trackinfo().decode('utf-8')
 
         if info is None:
             message_file.write('Couldn\'t get current track.\n')
@@ -102,7 +102,7 @@ class iTunes(AbstractMessagePlugin):
         if self.osascript is None:
             return None
         directory = os.path.dirname(__file__)
-        script_path = os.path.join(directory, 'current_track.scpt')
+        script_path = os.path.join(os.path.expanduser('~'), 'Documents', 'current_track.scpt')
 
         args = [self.osascript, script_path]
         proc = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,

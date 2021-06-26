@@ -1,5 +1,5 @@
-if checkProcess("iTunes") then
-	tell application "iTunes"
+if checkProcess("Music") then
+	tell application "Music"
 		if player state is playing then
 			set trck to current track
 			set title_text to (get name of trck)
@@ -21,11 +21,11 @@ if checkProcess("iTunes") then
 " & displayTime & "/" & title_time & " - " & rate_text
 		
 		else
-			set body_text to "Nothing playing in iTunes"
+			set body_text to "Nothing playing in Music"
 		end if
 	end tell
 else
-	set body_text to "iTunes is not open"
+	set body_text to "Music is not open"
 end if
 
 ----------------------------------------------------------------
