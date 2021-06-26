@@ -123,9 +123,11 @@ class Rhythmbox(AbstractMessagePlugin):
         root = tree.getroot()
         for entry in root.findall('entry'):
             if entry.attrib['type'] == "song":
-                last_played = entry.find("last-played").text
-                last_played = int(last_played)
-                last_played = datetime.datetime.fromtimestamp(last_played)
-                if last_played >= ts:
-                    title = entry.find("title").text
-                    message_file.write("You recently played {}\n".format(title))
+                last_played = entry.find("last-played")
+                if last_played is not None:
+                    last_played = last_played.text
+                    last_played = int(last_played)
+                    last_played = datetime.datetime.fromtimestamp(last_played)
+                    if last_played >= ts:
+                        title = entry.find("title").text
+                        message_file.write("You recently played {}\n".format(title))
