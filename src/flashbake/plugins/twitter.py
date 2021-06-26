@@ -42,4 +42,4 @@ class Twitter(AbstractMessagePlugin):
               if hasattr(tweet, 'retweeted_status'):
                   message_file.write(str('RT @' + tweet.retweeted_status.user.screen_name + ': ' + tweet.retweeted_status.full_text) + '\n')
               else:
-                  message_file.write(str('By Me: ' + tweet.full_text). + '\n')
+                  message_file.write(str('By Me: ' + tweet.full_text) + '\n')
