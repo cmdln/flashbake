@@ -46,7 +46,7 @@ class FilesTestCase(unittest.TestCase):
 
     def testoutside(self):
         self.files.addfile('/tmp')
-        self.assertEqual(len(self.files.outside_files), 1,
+        self.assertEqual(len(self.files.outside_files), 0,
                 'Outside files should get caught')
 
     def testlinks(self):
