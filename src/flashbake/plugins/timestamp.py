@@ -34,10 +34,10 @@ class Timestamp(AbstractMessagePlugin):
 
         ''' Determine whether the timestamp is in local or UTC time, and whether it uses a 12- or 24-hour clock. '''
 
-        if self.time_format == 'utc' or 'UTC' and self.time_hours == '24':
+        if self.time_format == 'UTC'.casefold() and self.time_hours == '24':
            zone = findtimezone(config)
            message_file.write(str(datetime.datetime.utcnow().strftime('%A, %B %d, %Y %H:%M UTC in ') + str(zone) + '\n'))
-        elif self.time_format == 'utc' or 'UTC' and self.time_hours == '12':
+        elif self.time_format == 'UTC'.casefold() and self.time_hours == '12':
            zone = findtimezone(config)
            message_file.write(str(datetime.datetime.utcnow().strftime('%A, %B %d, %Y %I:%M %p UTC in ') + str(zone) + '\n'))
         elif self.time_format == 'local' and self.time_hours == '24':
