@@ -68,14 +68,18 @@ class Feed(AbstractMessagePlugin):
 
             by_creator = []
             for entry in feed.entries:
-                if self.author != None and entry.author != self.author:
-                    continue
-                title = entry.title
-                title = title.encode('utf-8', 'replace').decode('utf-8')
-                link = entry.link
-                by_creator.append({"title" : title, "link" : link})
-                if self.limit <= len(by_creator):
-                    break
+                try:
+                    if self.author != None and entry.author != self.author:
+                        continue
+                        title = entry.title
+                        title = title.encode('utf-8', 'replace').decode('utf-8')
+                        link = entry.link
+                        by_creator.append({"title" : title, "link" : link})
+                        if self.limit <= len(by_creator):
+                            break
+                except:
+                    logging.error('There are no entries for the specified author.')
+                    return (None, {})
 
             return (feed_title, by_creator)
         except urllib.error.HTTPError as e:
