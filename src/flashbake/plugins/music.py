@@ -1,5 +1,5 @@
 #    copyright 2009 Thomas Gideon
-#
+#    Modified 2021 Ian Paul
 #    This file is part of flashbake.
 #
 #    flashbake is free software: you can redistribute it and/or modify
@@ -15,8 +15,11 @@
 #    You should have received a copy of the GNU General Public License
 #    along with flashbake.  If not, see <http://www.gnu.org/licenses/>.
 #
-# the iTunes class is based on the itunes.py by Andrew Wheiss, originally
-# licensed under an MIT License
+#    The Music class is based on itunes.py by Andrew Heiss, originally
+#    licensed under an MIT License
+#
+#    The Rhythmbox class was created by Ian Paul and is distirubted under
+#    the same general license as flashbake
 
 '''  music.py - Plugin for gathering last played tracks from music player. '''
 
@@ -24,56 +27,10 @@ from flashbake.plugins import AbstractMessagePlugin
 import flashbake
 import logging
 import os.path
-import sqlite3
 import subprocess
 import time
 import datetime
 import xml.etree.ElementTree as ET
-
-
-
-class Banshee(AbstractMessagePlugin):
-    def __init__(self, plugin_spec):
-        """ Add an optional property for specifying a different location for the
-            Banshee database. """
-        AbstractMessagePlugin.__init__(self, plugin_spec)
-        self.define_property('db', default=os.path.join(os.path.expanduser('~'), '.config', 'banshee-1', 'banshee.db'))
-        self.define_property('limit', int, default=3)
-        self.define_property('last_played_format')
-
-    def addcontext(self, message_file, config):
-        """ Open the Banshee database and query for the last played tracks. """
-        query = """\
-select t.Title, a.Name, t.LastPlayedStamp
-from CoreTracks t
-join CoreArtists a on t.ArtistID = a.ArtistID
-order by LastPlayedStamp desc
-limit %d"""
-        query = query.strip() % self.limit
-        conn = sqlite3.connect(self.db)
-        try:
-            cursor = conn.cursor()
-            logging.debug('Executing %s' % query)
-            cursor.execute(query)
-            results = cursor.fetchall()
-            message_file.write('Last %d track(s) played in Banshee:\n' % len(results))
-            for result in results:
-                last_played = time.localtime(result[2])
-                if self.last_played_format != None:
-                    logging.debug('Using format %s' % self.last_played_format)
-                    last_played = time.strftime(self.last_played_format,
-                            last_played)
-                else:
-                    last_played = time.ctime(result[2])
-                message_file.write('"%s", by %s (%s)' %
-                        (result[0], result[1], last_played))
-                message_file.write('\n')
-        except Exception as error:
-            logging.error(error)
-            conn.close()
-
-        return True
-
 
 class Music(AbstractMessagePlugin):
     ''' Based on Andrew Heiss' plugin which is MIT licensed which should be compatible. '''
@@ -93,7 +50,7 @@ class Music(AbstractMessagePlugin):
         if info is None:
             message_file.write('Couldn\'t get current track.\n')
         else:
-            message_file.write('Currently playing in iTunes:\n%s' % info)
+            message_file.write('Currently playing in Music:\n%s' % info)
 
         return True
 
