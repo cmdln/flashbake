@@ -97,10 +97,10 @@ class UpTime(AbstractMessagePlugin):
         # if len == 10 or 11, uptime is less than a day
         if len(output) in [10, 11]:
             days = "00"
-            hours_and_minutes = output[2].strip(",")
+            hours_and_minutes = output[2].decode('utf-8').strip(",")
         elif len(output) == 12:
-            days = output[2]
-            hours_and_minutes = output[4].strip(",")
+            days = output[2].decode('utf-8')
+            hours_and_minutes = output[4].decode('utf-8').strip(",")
         else:
             return None
 
@@ -109,10 +109,10 @@ class UpTime(AbstractMessagePlugin):
         try:
             hours, minutes = hours_and_minutes.split(":")
         except ValueError:
-            if output[3].startswith("hr"):
+            if output[3].decode('utf-8').startswith("hr"):
                 hours = hours_and_minutes
                 minutes = "00"
-            elif output[3].startwwith("min"):
+            elif output[3].decode('utf-8').startswith("min"):
                 hours = "00"
                 minutes = hours_and_minutes
             else:
