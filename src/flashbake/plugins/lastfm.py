@@ -37,8 +37,8 @@ class LastFM(AbstractMessagePlugin):
         """ Add the matching items to the commit context. """
 
         # last n items for m creator
-        url = "%suser.getrecentTracks&user=%s&api_key=%s&limit=%s&format=json" % (LASTFM, self.user_name, self.api_key, self.limit)
-        logging.debug('API call: %s' % url)
+        url = f"{LASTFM}user.getrecentTracks&user={self.user_name}&api_key={self.api_key}&limit={self.limit}&format=json" 
+        logging.debug(f'API call: {url}')
         raw_data = self._fetch_data(url)
 
         tracks = raw_data['recenttracks']['track']
@@ -47,7 +47,7 @@ class LastFM(AbstractMessagePlugin):
         for trackdic in tracks:
             track =  (trackdic['name']).encode("utf-8").decode("utf-8")
             artist = (trackdic['artist']['#text']).encode("utf-8").decode("utf-8")
-            message_file.write("Track from Last.fm: %s by %s\n" % (track, artist))
+            message_file.write(f"Track from Last.fm: {track} by {artist}\n" )
 
     def _fetch_data(self, url):
         raw_data = urllib.request.urlopen(url)

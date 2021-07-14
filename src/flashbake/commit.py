@@ -63,7 +63,7 @@ def commit(control_config, hot_files, quiet_mins):
             if not (hot_files.contains(pending_file)):
                 continue
 
-            logging.debug('Parsing status line %s to determine commit action' % line)
+            logging.debug(f'Parsing status line {line} to determine commit action')
 
             # remove files that will be considered for commit
             hot_files.remove(pending_file)
@@ -76,9 +76,9 @@ def commit(control_config, hot_files, quiet_mins):
             # add the file to the list to include in the commit
             if pending_mod < now:
                 to_commit.append(pending_file)
-                logging.debug('Flagging file, %s, for commit.' % pending_file)
+                logging.debug(f'Flagging file, {pending_file}, for commit.' )
             else:
-                logging.debug('Change for file, %s, is too recent.' % pending_file)
+                logging.debug(f'Change for file, {pending_file}, is too recent.')
         _capture_deleted(hot_files, line)
 
     logging.debug('Examining unknown or unchanged files.')
@@ -90,7 +90,7 @@ def commit(control_config, hot_files, quiet_mins):
         # this shouldn't happen since HotFiles.addfile uses glob.iglob to expand
         # the original file lines which does so based on what is in project_dir
         if not os.path.exists(control_file):
-            logging.debug('%s does not exist yet.' % control_file)
+            logging.debug(f'{control_file} does not exist yet.' )
             hot_files.putabsent(control_file)
             continue
 
@@ -105,7 +105,7 @@ def commit(control_config, hot_files, quiet_mins):
             # needed for git < 1.7.0.4
             if status_output.find('did not match') > 0:
                 hot_files.putneedsadd(control_file)
-                logging.debug('%s exists but is unknown by git.' % control_file)
+                logging.debug(f'{control_file} exists but is unknown by git.')
             else:
                 logging.error('Unknown error occurred!')
                 logging.error(status_output)
@@ -115,11 +115,11 @@ def commit(control_config, hot_files, quiet_mins):
         # error
         control_re = re.compile('\<' + re.escape(control_file) + '\>')
         if control_re.search(status_output) == None:
-            logging.debug('%s has no uncommitted changes.' % control_file)
+            logging.debug(f'{control_file} has no uncommitted changes.')
         # if anything hits this block, we need to figure out why
         else:
-            logging.error('%s is in the status message but failed other tests.' % control_file)
-            logging.error('Try \'git status "%s"\' for more info.' % control_file)
+            logging.error(f'{control_file} is in the status message but failed other tests.'  )
+            logging.error(f'Try \'git status "{control_file}"\' for more info.')
 
     hot_files.addorphans(git_obj, control_config)
 
@@ -127,7 +127,7 @@ def commit(control_config, hot_files, quiet_mins):
         plugin.post_process(to_commit, hot_files, control_config)
 
     if len(to_commit) > 0:
-        logging.info('Committing changes to known files, %s.' % to_commit)
+        logging.info(f'Committing changes to known files, {to_commit}.' )
         message_file = context.buildmessagefile(control_config)
         if not control_config.dry_run:
             # consolidate the commit to be friendly to how git normally works
@@ -161,7 +161,7 @@ def purge(control_config, hot_files):
         _capture_deleted(hot_files, line)
 
     if len(hot_files.deleted) > 0:
-        logging.info('Committing removal of known files, %s.' % hot_files.deleted)
+        logging.info(f'Committing removal of known files, {hot_files.deleted}.' )
         message_file = context.buildmessagefile(control_config)
         if not control_config.dry_run:
             # consolidate the commit to be friendly to how git normally works
@@ -185,8 +185,7 @@ def _handle_fatal(hot_files, git_status):
     if git_status.startswith('fatal'):
         logging.error('Fatal error from git.')
         if git_status.startswith('fatal:'):
-            logging.error('Make sure "git init" was run in %s'
-                % os.path.realpath(hot_files.project_dir))
+            logging.error('Make sure "git init" was run in {}'.format(os.path.realpath(hot_files.project_dir)))
         else:
             logging.error(git_status)
         sys.exit(1)

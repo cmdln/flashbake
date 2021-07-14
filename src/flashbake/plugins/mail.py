@@ -92,20 +92,18 @@ class Email(plugins.AbstractNotifyPlugin):
         # Create a text/plain message
         msg = MIMEText(body, 'plain')
 
-        msg['Subject'] = ('Some files in %s do not exist'
-                % os.path.realpath(hot_files.project_dir))
+        msg['Subject'] = ('Some files in {} do not exist'.format(os.path.realpath(hot_files.project_dir)))
         msg['From'] = self.notice_from
         msg['To'] = self.notice_to
 
         # Send the message via our own SMTP server, but don't include the
         # envelope header.
-        logging.debug('\nConnecting to SMTP on host %s, port %d'
-                % (self.smtp_host, self.smtp_port))
+        logging.debug(f'\nConnecting to SMTP on host {self.smtp_host}, port {self.smtp_port}')
 
         try:
             s = smtplib.SMTP()
             s.connect(host=self.smtp_host, port=self.smtp_port)
-            logging.info('Sending notice to %s.' % self.notice_to)
+            logging.info(f'Sending notice to {self.notice_to}.')
             logging.debug(body)
             s.sendmail(self.notice_from, [self.notice_to], msg.as_string())
             logging.info('Notice sent.')
