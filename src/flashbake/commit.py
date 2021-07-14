@@ -18,9 +18,8 @@
 '''  commit.py - Parses a project's control file and wraps git operations, calling the context
 script to build automatic commit messages as needed.'''
 
-import context
+from flashbake import context, git
 import datetime
-import git
 import logging
 import os
 import re
@@ -29,6 +28,8 @@ import sys
 
 
 DELETED_RE = re.compile('#\s*deleted:.*')
+# takes the following regular expression pattern and turns it into a 
+# regular expression object. This is used to identify deleted files.
 
 def commit(control_config, hot_files, quiet_mins):
     # change to the project directory, necessary to find the .flashbake file and
@@ -39,12 +40,14 @@ def commit(control_config, hot_files, quiet_mins):
 
     # the wrapper object ensures git is on the path
     # get the git status for the project
-    git_status = git_obj.status()
+    git_status = git_obj.status().decode('utf-8')
 
     _handle_fatal(hot_files, git_status)
 
     # in particular find the existing entries that need a commit
-    pending_re = re.compile('\s*(renamed|copied|modified|new file):.*')
+    # this command is used in `to_commit` on files returned from 
+    # `def status` in git.py.
+    pending_re = re.compile("\s*(renamed|copied|modified|new file):.*")
 
     now = datetime.datetime.today()
     quiet_period = datetime.timedelta(minutes=quiet_mins)
@@ -91,12 +94,13 @@ def commit(control_config, hot_files, quiet_mins):
             hot_files.putabsent(control_file)
             continue
 
-        status_output = git_obj.status(control_file)
+        status_output = git_obj.status(control_file).decode('utf-8')
 
         # needed for git >= 1.7.0.4
         if status_output.find('Untracked files') > 0:
-            hot_files.putneedsadd(control_file)
-            continue
+            if not control_config.dry_run or control_config.context_only:
+                hot_files.putneedsadd(control_file)
+                continue
         if status_output.startswith('error'):
             # needed for git < 1.7.0.4
             if status_output.find('did not match') > 0:
@@ -148,7 +152,7 @@ def purge(control_config, hot_files):
     git_obj = git.Git(hot_files.project_dir, control_config.git_path)
 
     # the wrapper object ensures git is on the path
-    git_status = git_obj.status()
+    git_status = git_obj.status().decode('utf-8')
 
     _handle_fatal(hot_files, git_status)
 
@@ -180,7 +184,7 @@ def _capture_deleted(hot_files, line):
 def _handle_fatal(hot_files, git_status):
     if git_status.startswith('fatal'):
         logging.error('Fatal error from git.')
-        if 'fatal: Not a git repository' == git_status:
+        if git_status.startswith('fatal:'):
             logging.error('Make sure "git init" was run in %s'
                 % os.path.realpath(hot_files.project_dir))
         else:
@@ -190,7 +194,7 @@ def _handle_fatal(hot_files, git_status):
 
 def _trimgit(status_line):
     if status_line.find('->') >= 0:
-        tokens = status_line.split('->')
+        tokens = status_line.decode('utf-8').split('->')
         return tokens[1].strip()
 
     tokens = status_line.split(':')

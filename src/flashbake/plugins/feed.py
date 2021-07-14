@@ -19,7 +19,7 @@
 
 import feedparser
 import logging
-from urllib2 import HTTPError, URLError
+import urllib.request
 from flashbake.plugins import AbstractMessagePlugin
 
 
@@ -43,7 +43,7 @@ class Feed(AbstractMessagePlugin):
                     % {'item_count' : len(last_items), 'feed_title' : title})
             else:
                 message_file.write('Last %(item_count)d entries from %(feed_title)s by %(author)s:\n'\
-                    % {'item_count' : len(last_items), 'feed_title' : title, 'author': self.author})
+                    % {'item_count' : len(last_items), 'feed_title' : title, 'author' or 'dc:creator' : self.author})
             for item in last_items:
                 # edit the '%s' if you want to add a label, like 'Title %s' to the output
                 message_file.write('%s\n' % item['title'])
@@ -68,20 +68,24 @@ class Feed(AbstractMessagePlugin):
 
             by_creator = []
             for entry in feed.entries:
-                if self.author != None and entry.author != self.author:
-                    continue
-                title = entry.title
-                title = title.encode('ascii', 'replace')
-                link = entry.link
-                by_creator.append({"title" : title, "link" : link})
-                if self.limit <= len(by_creator):
-                    break
+                try:
+                    if self.author != None and entry.author != self.author:
+                        continue
+                    title = entry.title
+                    title = title.encode('utf-8', 'replace').decode('utf-8')
+                    link = entry.link
+                    by_creator.append({"title" : title, "link" : link})
+                    if self.limit <= len(by_creator):
+                        break
+                except:
+                    logging.error('There are no entries for the specified author.')
+                    return (None, {})
 
             return (feed_title, by_creator)
-        except HTTPError, e:
+        except urllib.error.HTTPError as e:
             logging.error('Failed with HTTP status code %d' % e.code)
             return (None, {})
-        except URLError, e:
+        except urllib.error.URLError as e:
             logging.error('Plugin, %s, failed to connect with network.' % self.__class__)
             logging.debug('Network failure reason, %s.' % e.reason)
             return (None, {})

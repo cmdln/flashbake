@@ -22,12 +22,12 @@
 from flashbake.plugins import AbstractMessagePlugin
 from flashbake.plugins.timezone import findtimezone
 from flashbake.plugins import timezone
-from urllib2 import HTTPError, URLError
+import urllib.request
+from urllib.parse import urlencode
 import json
 import logging
-import re
-import urllib
-import urllib2
+
+PLUGIN_SPEC = 'flashbake.plugins.weather:Weather'
 
 
 
@@ -45,19 +45,7 @@ class Weather(AbstractMessagePlugin):
         """ Add weather information to the commit message. Looks for
             weather_city: first in the config information but if that is not
             set, will try to use the system time zone to identify a city. """
-        if config.location_location == None and self.city == None:
-            zone = findtimezone(config)
-            if zone == None:
-                city = None
-            else:
-                city = self.__parsecity(zone)
-        else:
-            if config.location_location == None:
-                city = self.city
-            else:
-                city = config.location_location
-
-        if None == city:
+        if self.city == None:
             message_file.write('Couldn\'t determine city to fetch weather.\n')
             return False
 
@@ -66,30 +54,32 @@ class Weather(AbstractMessagePlugin):
             return False
 
         # call the open weather map API with the city
-        weather = self.__getweather(city, self.appid, self.units)
+        weather = self.__getweather(self.city, self.appid, self.units)
 
         if len(weather) > 0:
-            message_file.write('Current weather for %(city)s: %(description)s. %(temp)i%(temp_units)s. %(humidity)s%% humidity\n'
-                    % weather)
+            message_file.write("Current weather for {city}: {description}, {temp}\u00b0{temp_units}, {humidity}% humidity\n".format_map(weather))
         else:
-            message_file.write('Couldn\'t fetch current weather for city, %s.\n' % city)
+            message_file.write('Couldn\'t fetch current weather for city, {}.\n'.format(self.city))
         return len(weather) > 0
 
     def __getweather(self, city, appid, units='imperial'):
         """ This relies on Open Weather Map's API which may change without notice. """
 
-        baseurl = 'http://api.openweathermap.org/data/2.5/weather?'
+        baseurl = 'https://api.openweathermap.org/data/2.5/weather?'
         # encode the parameters
-        for_city = baseurl + urllib.urlencode({'q': city, 'units': units, 'appid': appid})
-
+        params = {'q': city, 'units': units, 'appid': appid}
+        for_city = baseurl + urlencode(params)
+ 
         try:
-            logging.debug('Requesting page for %s.' % for_city)
+            logging.debug('Requesting page for {}.'.format(for_city))
             
             # Get the json-encoded string
-            raw = urllib2.urlopen(for_city).read()
+            raw = urllib.request.Request(for_city)
+            with urllib.request.urlopen(raw) as response:
+                the_page = response.read()
         
             # Convert it to something usable
-            data = json.loads(raw)
+            data = json.loads(the_page)
 
             # Grab the information we want
             weather = dict()
@@ -110,12 +100,12 @@ class Weather(AbstractMessagePlugin):
               weather['temp_units'] = 'K'
 
             return weather
-        except HTTPError, e:
+        except urllib.error.HTTPError as e:
             logging.error('Failed with HTTP status code %d' % e.code)
             return {}
-        except URLError, e:
-            logging.error('Plugin, %s, failed to connect with network.' % self.__class__)
-            logging.debug('Network failure reason, %s.' % e.reason)
+        except urllib.error.URLError as e:
+            logging.error('Plugin, {}, failed to connect with network.'.format(self.__class__))
+            logging.debug('Network failure reason, {}.'.format(e.reason))
             return {}
 
     def __parsecity(self, zone):
@@ -123,7 +113,7 @@ class Weather(AbstractMessagePlugin):
             return None
         tokens = zone.split("/")
         if len(tokens) != 2:
-            logging.warning('Zone id, "%s", doesn''t appear to contain a city.' % zone)
+            logging.warning('Zone id, "{}", doesn''t appear to contain a city.'.format(zone))
             # return non-zero so calling shell script can catch
             return None
 

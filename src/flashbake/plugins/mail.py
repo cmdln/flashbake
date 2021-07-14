@@ -110,6 +110,6 @@ class Email(plugins.AbstractNotifyPlugin):
             s.sendmail(self.notice_from, [self.notice_to], msg.as_string())
             logging.info('Notice sent.')
             s.close()
-        except Exception, e:
+        except Exception as e:
             logging.error('Couldn\'t connect, will send later.')
             logging.debug("SMTP Error:\n" + str(e));

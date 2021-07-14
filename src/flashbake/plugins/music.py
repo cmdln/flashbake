@@ -1,5 +1,5 @@
 #    copyright 2009 Thomas Gideon
-#
+#    Modified 2021 Ian Paul
 #    This file is part of flashbake.
 #
 #    flashbake is free software: you can redistribute it and/or modify
@@ -15,8 +15,11 @@
 #    You should have received a copy of the GNU General Public License
 #    along with flashbake.  If not, see <http://www.gnu.org/licenses/>.
 #
-# the iTunes class is based on the itunes.py by Andrew Wheiss, originally
-# licensed under an MIT License
+#    The Music class is based on itunes.py by Andrew Heiss, originally
+#    licensed under an MIT License
+#
+#    The Rhythmbox class was created by Ian Paul and is distirubted under
+#    the same general license as flashbake
 
 '''  music.py - Plugin for gathering last played tracks from music player. '''
 
@@ -24,56 +27,12 @@ from flashbake.plugins import AbstractMessagePlugin
 import flashbake
 import logging
 import os.path
-import sqlite3
 import subprocess
 import time
+import datetime
+import xml.etree.ElementTree as ET
 
-
-
-class Banshee(AbstractMessagePlugin):
-    def __init__(self, plugin_spec):
-        """ Add an optional property for specifying a different location for the
-            Banshee database. """
-        AbstractMessagePlugin.__init__(self, plugin_spec)
-        self.define_property('db', default=os.path.join(os.path.expanduser('~'), '.config', 'banshee-1', 'banshee.db'))
-        self.define_property('limit', int, default=3)
-        self.define_property('last_played_format')
-
-    def addcontext(self, message_file, config):
-        """ Open the Banshee database and query for the last played tracks. """
-        query = """\
-select t.Title, a.Name, t.LastPlayedStamp
-from CoreTracks t
-join CoreArtists a on t.ArtistID = a.ArtistID
-order by LastPlayedStamp desc
-limit %d"""
-        query = query.strip() % self.limit
-        conn = sqlite3.connect(self.db)
-        try:
-            cursor = conn.cursor()
-            logging.debug('Executing %s' % query)
-            cursor.execute(query)
-            results = cursor.fetchall()
-            message_file.write('Last %d track(s) played in Banshee:\n' % len(results))
-            for result in results:
-                last_played = time.localtime(result[2])
-                if self.last_played_format != None:
-                    logging.debug('Using format %s' % self.last_played_format)
-                    last_played = time.strftime(self.last_played_format,
-                            last_played)
-                else:
-                    last_played = time.ctime(result[2])
-                message_file.write('"%s", by %s (%s)' %
-                        (result[0], result[1], last_played))
-                message_file.write('\n')
-        except Exception, error:
-            logging.error(error)
-            conn.close()
-
-        return True
-
-
-class iTunes(AbstractMessagePlugin):
+class Music(AbstractMessagePlugin):
     ''' Based on Andrew Heiss' plugin which is MIT licensed which should be compatible. '''
     def __init__(self, plugin_spec):
         AbstractMessagePlugin.__init__(self, plugin_spec)
@@ -86,12 +45,12 @@ class iTunes(AbstractMessagePlugin):
     def addcontext(self, message_file, config):
         """ Get the track info and write it to the commit message """
 
-        info = self.trackinfo()
+        info = self.trackinfo().decode('utf-8')
 
         if info is None:
             message_file.write('Couldn\'t get current track.\n')
         else:
-            message_file.write('Currently playing in iTunes:\n%s' % info)
+            message_file.write('Currently playing in Music:\n%s' % info)
 
         return True
 
@@ -100,10 +59,32 @@ class iTunes(AbstractMessagePlugin):
         if self.osascript is None:
             return None
         directory = os.path.dirname(__file__)
-        script_path = os.path.join(directory, 'current_track.scpt')
+        script_path = os.path.join(os.path.expanduser('~'), 'Documents', 'current_track.scpt')
 
         args = [self.osascript, script_path]
         proc = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                              close_fds=True)
 
         return proc.communicate()[0]
+
+class Rhythmbox(AbstractMessagePlugin):
+    def __init__(self, plugin_spec):
+        AbstractMessagePlugin.__init__(self, plugin_spec)
+        self.define_property('db', default=os.path.join(os.path.expanduser('~'), '.local', 'share', 'rhythmbox', 'rhythmdb.xml'))
+
+    def addcontext(self, message_file, config):
+        
+        ts = datetime.datetime.now() - datetime.timedelta(minutes=10)
+        parser = ET.XMLParser(encoding="utf-8")
+        tree = ET.parse(self.db, parser=parser)
+        root = tree.getroot()
+        for entry in root.findall('entry'):
+            if entry.attrib['type'] == "song":
+                last_played = entry.find("last-played")
+                if last_played is not None:
+                    last_played = last_played.text
+                    last_played = int(last_played)
+                    last_played = datetime.datetime.fromtimestamp(last_played)
+                    if last_played >= ts:
+                        title = entry.find("title").text
+                        message_file.write("You recently played {}\n".format(title))

@@ -20,7 +20,7 @@
 from flashbake.plugins import PluginError, PLUGIN_ERRORS
 from flashbake.compat import relpath, next_, iglob
 from types import *
-import commands
+import subprocess
 import flashbake.plugins #@UnresolvedImport
 import glob
 import logging
@@ -28,7 +28,7 @@ import os
 import os.path
 import re
 import sys #@Reimport
-import __builtin__
+import builtins
 
 __version__ = '0.27.1'
 
@@ -75,7 +75,7 @@ class ControlConfig:
                 self.add_plugins(prop_value.split(','))
                 return True
 
-            # hang onto any extra propeties in case plugins use them
+            # hang onto any extra properties in case plugins use them
             if not prop_name in self.__dict__:
                 self.extra_props[prop_name] = prop_value;
                 return True
@@ -86,8 +86,8 @@ class ControlConfig:
                 self.__dict__[prop_name] = prop_value
             except:
                 raise ConfigError(
-                        'The value, %s, for option, %s, could not be parse as %s.'
-                        % (prop_value, prop_name, self.prop_types[prop_name]))
+                        'The value, {}, for option, {}, could not be parsed as {}.'.format(
+                        prop_value, prop_name, self.prop_types[prop_name]))
 
             return True
 
@@ -109,7 +109,7 @@ class ControlConfig:
         all_plugins = list()
         with_deps = dict()
         for plugin_name in self.plugin_names:
-            logging.debug("initalizing plugin: %s" % plugin_name)
+            logging.debug("initalizing plugin: {}".format(plugin_name))
             try:
                 plugin = self.create_plugin(plugin_name)
                 if len(plugin.dependencies()) == 0:
@@ -118,25 +118,25 @@ class ControlConfig:
                     dep = Dependency(plugin)
                     dep.map(with_deps)
                 if isinstance(plugin, flashbake.plugins.AbstractMessagePlugin):
-                    logging.debug("Message Plugin: %s" % plugin_name)
+                    logging.debug("Message Plugin: {}".format(plugin_name))
                     # TODO add notion of dependency for ordering
                     # if 'flashbake.plugins.location:Location' == plugin_name:
                     #    self.msg_plugins.insert(0, plugin)
                     # else:
                     self.msg_plugins.append(plugin)
                 if isinstance(plugin, flashbake.plugins.AbstractFilePlugin):
-                    logging.debug("File Plugin: %s" % plugin_name)
+                    logging.debug("File Plugin: {}".format(plugin_name))
                     self.file_plugins.append(plugin)
                 if isinstance(plugin, flashbake.plugins.AbstractNotifyPlugin):
-                    logging.debug('Notify Plugin: %s' % plugin_name)
+                    logging.debug('Notify Plugin: {}'.format(plugin_name))
                     self.notify_plugins.append(plugin)
-            except PluginError, e:
+            except PluginError as e:
                 # re-raise critical plugin error
                 if not e.reason == PLUGIN_ERRORS.ignorable_error: #@UndefinedVariable
                     raise e
                 # allow ignorable errors through with a warning
-                logging.warning('Skipping plugin, %s, ignorable error: %s' %
-                        (plugin_name, e.name))
+                logging.warning('Skipping plugin, {}, ignorable error: {}'.format(
+                        plugin_name, e.name))
 
         for plugin in all_plugins:
             plugin.share_properties(self)
@@ -167,8 +167,8 @@ class ControlConfig:
                 try:
                     value = type(value)
                 except:
-                    raise ConfigError('Problem parsing %s for option %s'
-                            % (name, value))
+                    raise ConfigError('Problem parsing {} for option {}'.format(
+                            name, value))
 
         self.__dict__[name] = value
 
@@ -180,7 +180,7 @@ class ControlConfig:
         """ Initialize a plugin, including vetting that it meets the correct
             protocol; not private so it can be used in testing. """
         if plugin_spec.find(':') < 0:
-            logging.debug('Plugin spec not validly formed, %s.' % plugin_spec)
+            logging.debug('Plugin spec not validly formed, {}.'.format(plugin_spec))
             raise PluginError(PLUGIN_ERRORS.invalid_plugin, plugin_spec) #@UndefinedVariable
 
         tokens = plugin_spec.split(':')
@@ -190,15 +190,15 @@ class ControlConfig:
         try:
             __import__(module_name)
         except ImportError:
-            logging.warn('Invalid module, %s' % plugin_name)
+            logging.warning('Invalid module, {}'.format(plugin_name))
             raise PluginError(PLUGIN_ERRORS.unknown_plugin, plugin_spec) #@UndefinedVariable
 
         try:
             plugin_class = self.__forname(module_name, plugin_name)
             plugin = plugin_class(plugin_spec)
-        except Exception, e:
+        except Exception as e:
             logging.debug(e)
-            logging.debug('Couldn\'t load class %s' % plugin_spec)
+            logging.debug('Couldn\'t load class {}'.format(plugin_spec))
             raise PluginError(PLUGIN_ERRORS.unknown_plugin, plugin_spec) #@UndefinedVariable
         is_message_plugin = isinstance(plugin, flashbake.plugins.AbstractMessagePlugin)
         is_file_plugin = isinstance(plugin, flashbake.plugins.AbstractFilePlugin)
@@ -222,7 +222,7 @@ class ControlConfig:
 
     def __checkattr(self, plugin_spec, plugin, name, expected_type):
         try:
-            attrib = eval('plugin.%s' % name)
+            attrib = eval('plugin.{}'.format(name))
         except AttributeError:
             raise PluginError(PLUGIN_ERRORS.missing_attribute, plugin_spec, name) #@UndefinedVariable
 
@@ -278,8 +278,8 @@ class HotFiles:
     def addfile(self, filename):
         to_expand = os.path.join(self.project_dir, filename)
         file_exists = False
-        logging.debug('%s: %s'
-               % (filename, glob.glob(to_expand)))
+        logging.debug('{}: {}'.format(
+               filename, glob.glob(to_expand)))
         
         pattern = re.compile('(\[.+\]|\*|\?)')
         if pattern.search(filename):
@@ -338,7 +338,7 @@ class HotFiles:
         def __in_target(file_spec):
             return file_spec in self.not_exists
         to_delete = self.from_glob(filename)
-        logging.debug('To delete after matching %s' % to_delete)
+        logging.debug('To delete after matching {}'.format(to_delete))
         to_delete.append(filename)
         to_delete = filter(__in_target, to_delete)
         [self.not_exists.remove(file_spec) for file_spec in to_delete]
@@ -357,16 +357,16 @@ class HotFiles:
     def warnproblems(self):
         # print warnings for linked files
         for filename in self.linked_files.keys():
-            logging.info('%s is a link or its directory path contains a link.' % filename)
+            logging.info('{} is a link or its directory path contains a link.'.format(filename))
         # print warnings for files outside the project
         for filename in self.outside_files:
-            logging.info('%s is outside the project directory.' % filename)
+            logging.info('{} is outside the project directory.'.format(filename))
         # print warnings for files that do not exists
         for filename in self.not_exists:
-            logging.info('%s does not exist.' % filename)
+            logging.info('{} does not exist.'.format(filename))
         # print warnings for files that were once under version control but have been deleted
         for filename in self.deleted:
-            logging.info('%s has been deleted from version control.' % filename)
+            logging.info('{} has been deleted from version control.'.format(filename))
 
     def addorphans(self, git_obj, control_config):
         if len(self.to_add) == 0:
@@ -376,16 +376,16 @@ class HotFiles:
 
         to_commit = list()
         for orphan in self.to_add:
-            logging.debug('Adding %s.' % orphan)
-            add_output = git_obj.add(orphan)
-            logging.debug('Add output, %s' % add_output)
+            logging.debug('Adding {}.'.format(orphan))
+            add_output = git_obj.add(orphan).decode('utf-8')
+            logging.debug('Add output, {}'.format(add_output))
             to_commit.append(orphan)
 
-        logging.info('Adding new files, %s.' % to_commit)
+        logging.info('Adding new files, {}.'.format(to_commit))
         # consolidate the commit to be friendly to how git normally works
         if not control_config.dry_run:
             commit_output = git_obj.commit(message_file, to_commit)
-            logging.debug('Commit output, %s' % commit_output)
+            logging.debug('Commit output, {}'.format(commit_output))
 
         os.remove(message_file)
 

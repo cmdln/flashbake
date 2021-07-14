@@ -19,7 +19,7 @@
 '''   compat.py - compatability layer for different versions of python '''
 
 import os.path
-import __builtin__
+import builtins
 import sys
 
 __all__ = [ 'relpath', 'next_', 'iglob', 'MIMEText' ]
@@ -96,8 +96,8 @@ else:
         relpath = __fallback_relpath
     
 #next_
-if hasattr(__builtin__, 'next'):
-    next_=__builtin__.next
+if hasattr(builtins, 'next'):
+    next_=builtins.next
 else:
     next_ = __fallback_next
 
