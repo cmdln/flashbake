@@ -41,16 +41,27 @@ class LastFM(AbstractMessagePlugin):
         logging.debug('API call: %s' % url)
         raw_data = self._fetch_data(url)
 
-        tracks = raw_data['recenttracks']['track']
-        if not type(tracks) == list:
-            tracks = [tracks]
-        for trackdic in tracks:
-            track =  (trackdic['name']).encode("utf-8").decode("utf-8")
-            artist = (trackdic['artist']['#text']).encode("utf-8").decode("utf-8")
-            message_file.write("Track from Last.fm: %s by %s\n" % (track, artist))
+        if raw_data:
+            tracks = raw_data['recenttracks']['track']
+            if not type(tracks) == list:
+                tracks = [tracks]
+            for trackdic in tracks:
+                track =  (trackdic['name']).encode("utf-8").decode("utf-8")
+                artist = (trackdic['artist']['#text']).encode("utf-8").decode("utf-8")
+                message_file.write("Track from Last.fm: %s by %s\n" % (track, artist))
+        else:
+            message_file.write('Coudlnt fetch data from lastfm, %s.\n' % url)
 
     def _fetch_data(self, url):
-        raw_data = urllib.request.urlopen(url)
-        data = json.loads(raw_data.read())
+        try:
+            raw_data = urllib.request.urlopen(url)
+            data = json.loads(raw_data.read())
 
-        return data
+            return data
+        except urllib.error.HTTPError as e:
+            logging.error('Failed with HTTP status code %d' % e.code)
+            return None
+        except urllib.error.URLError as e:
+            logging.error('Plugin, %s, failed to connect with network.' % self.__class__)
+            logging.debug('Network failure reason, %s.' % e.reason)
+            return None
