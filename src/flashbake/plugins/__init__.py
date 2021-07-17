@@ -116,7 +116,8 @@ class AbstractPlugin:
                 value = type(value)
             except:
                 raise flashbake.ConfigError(
-                        f'The value, {value}, for option, {name}, could not be parsed as {type}.'
+                        f"The value, {value}, for option, {name}, could not be parsed as {type}."
+                        )
                     
         self.__dict__[name] = value
 
