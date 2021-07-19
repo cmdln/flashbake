@@ -50,7 +50,7 @@ class LastFM(AbstractMessagePlugin):
                 artist = (trackdic['artist']['#text']).encode("utf-8").decode("utf-8")
                 message_file.write("Track from Last.fm: %s by %s\n" % (track, artist))
         else:
-            message_file.write('Coudlnt fetch data from lastfm, %s.\n' % url)
+            message_file.write('Couldn\'t fetch data from lastfm, %s.\n' % url)
 
     def _fetch_data(self, url):
         try:
