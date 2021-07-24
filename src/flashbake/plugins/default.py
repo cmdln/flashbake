@@ -30,6 +30,6 @@ class Default(AbstractMessagePlugin):
         """ Add a static message to the commit context. """
 
         if self.message is not None:
-            message_file.write('%s\n' % self.message)
+            message_file.write(f'{self.message}\n' )
 
         return True

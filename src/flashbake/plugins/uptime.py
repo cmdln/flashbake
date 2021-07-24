@@ -34,7 +34,7 @@ class UpTime(AbstractMessagePlugin):
         if uptime == None:
             message_file.write('Couldn\'t determine up time.\n')
         else:
-            message_file.write('System has been up %s\n' % uptime)
+            message_file.write(f'System has been up {uptime}\n')
 
         return True
 

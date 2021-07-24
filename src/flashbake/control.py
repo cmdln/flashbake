@@ -29,7 +29,7 @@ import logging
 def parse_control(project_dir, control_file, config=None, results=None):
     """ Parse the dot-control file to get config options and hot files. """
 
-    logging.debug('Checking %s' % control_file)
+    logging.debug(f'Checking {control_file}' )
 
     if None == results:
         hot_files = flashbake.HotFiles(project_dir)
@@ -58,7 +58,7 @@ def prepare_control(hot_files, control_config):
     control_config.init()
     logging.debug("loading file plugins")
     for plugin in control_config.file_plugins:
-        logging.debug("running plugin %s" % plugin)
+        logging.debug(f"running plugin {plugin}" )
         plugin.pre_process(hot_files, control_config)
     return (hot_files, control_config)
 

@@ -27,11 +27,11 @@ class ConfigTestCase(unittest.TestCase):
         try:
             plugin_name = 'test.plugins:MissingParent'
             self.config.create_plugin(plugin_name)
-            self.fail('Should not have initialized plugin, %s' % plugin_name)
+            self.fail(f'Should not have initialized plugin, {plugin_name}')
         except PluginError as error:
             reason = 'invalid_type'
             self.assertEqual(str(error.reason), reason,
-                    'Error should specify failure reason, %s.' % reason)
+                    f'Error should specify failure reason, {reason}.')
 
     def testnoconnectable(self):
         self.__testattr('test.plugins:NoConnectable', 'connectable', 'missing_attribute')
@@ -95,9 +95,9 @@ class ConfigTestCase(unittest.TestCase):
             plugin = self.config.create_plugin(plugin_name)
             plugin.capture_properties(self.config)
             plugin.init(self.config)
-            self.fail('Should not have initialized plugin, %s' % plugin_name)
+            self.fail(f'Should not have initialized plugin, {plugin_name}')
         except PluginError as error:
             self.assertEqual(str(error.reason), reason,
-                    'Error should specify failure reason, %s.' % reason)
+                    f'Error should specify failure reason, {reason}.')
             self.assertEqual(error.name, name,
-                    'Error should specify failed name, %s' % name)
+                    f'Error should specify failed name, {name}')

@@ -47,7 +47,7 @@ class Location(AbstractMessagePlugin):
         logging.debug(location)
         location_str = '%(city)s, %(regionName)s' % location
         config.location_location = location_str
-        message_file.write('Current location is %s based on IP %s.\n' % (location_str, ip_addr))
+        message_file.write(f'Current location is {location_str} based on IP {ip_addr}.\n')
         return True
 
     def __locate_ip(self, ip_addr):
@@ -59,7 +59,7 @@ class Location(AbstractMessagePlugin):
         for_ip = base_url + (ip_addr)
 
         try:
-            logging.debug('Requesting page for %s.' % for_ip)
+            logging.debug(f'Requesting page for {for_ip}.' )
 
             # open the location API page
             location_xml = urllib.request.Request(for_ip)
@@ -75,11 +75,11 @@ class Location(AbstractMessagePlugin):
 
             return location
         except urllib.error.HTTPError as e:
-            logging.error('Failed with HTTP status code %d' % e.code)
+            logging.error(f'Failed with HTTP status code {e.code}')
             return {}
         except urllib.error.URLError as e:
-            logging.error('Plugin, %s, failed to connect with network.' % self.__class__)
-            logging.debug('Network failure reason, %s.' % e.reason)
+            logging.error(f'Plugin, {self.__class__}, failed to connect with network.')
+            logging.debug(f'Network failure reason, {e.reason}.')
             return {}
 
     def __load_cache(self):
@@ -101,7 +101,7 @@ class Location(AbstractMessagePlugin):
                 if key.startswith('location.'):
                     key = key.replace('location.', '')
                 cache[key] = value
-            logging.debug('Loaded cache %s' % cache)
+            logging.debug(f'Loaded cache {cache}')
         finally:
             cache_file.close()
         return cache
@@ -114,9 +114,9 @@ class Location(AbstractMessagePlugin):
             os.mkdir(fb_dir)
         cache_file = open(os.path.join(fb_dir, 'ip_cache'), 'w')
         try:
-            cache_file.write('ip_addr:%s\n' % ip_addr)
+            cache_file.write(f'ip_addr:{ip_adder}\n')
             for key in location.keys():
-                cache_file.write('location.%s:%s\n' % (key, location[key]))
+                cache_file.write(f'location.{key}:{location[key]}\n' )
         finally:
             cache_file.close()
 
@@ -124,7 +124,7 @@ class Location(AbstractMessagePlugin):
         text_value = ''
         for node in node_list:
             if node.nodeType != node.TEXT_NODE:
-                continue;
+                continue
             text_value += node.data
         return text_value
 
@@ -135,9 +135,9 @@ class Location(AbstractMessagePlugin):
             ip_addr = ip_me
             return ip_addr
         except urllib.error.HTTPError as e:
-            logging.error('Failed with HTTP status code %d' % e.code)
+            logging.error(f'Failed with HTTP status code {e.code}' )
             return None
         except urllib.error.URLError as e:
-            logging.error('Plugin, %s, failed to connect with network.' % self.__class__)
-            logging.debug('Network failure reason, %s.' % e.reason)
+            logging.error(f'Plugin, {self.__class__}, failed to connect with network.' )
+            logging.debug(f'Network failure reason, {e.reason}.')
             return None

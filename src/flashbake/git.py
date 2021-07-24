@@ -96,7 +96,7 @@ class Git:
         self.env.update(os.environ)
         if git_path != None:
             new_path = self.env['PATH']
-            new_path = '%s%s%s' % (git_path, os.pathsep, new_path)
+            new_path = '{0}{1}{2}'.format(git_path, os.pathsep, new_path)
             self.env['PATH'] = new_path
 
 if __name__ == "__main__":
