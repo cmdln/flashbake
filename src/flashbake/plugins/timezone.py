@@ -39,7 +39,7 @@ class TimeZone(AbstractMessagePlugin):
         if zone == None:
             message_file.write('Couldn\'t determine time zone.\n')
         else:
-            message_file.write('Current time zone is %s\n' % zone)
+            message_file.write(f'Current time zone is {zone}\n')
 
         return True
 
@@ -47,7 +47,7 @@ def findtimezone(config):
     # check the environment for the zone value
     zone = os.environ.get("TZ")
 
-    logging.debug('Zone from env is %s.' % zone)
+    logging.debug(f'Zone from env is {zone}.')
 
     # some desktops don't set the env var but /etc/timezone should
     # have the value regardless

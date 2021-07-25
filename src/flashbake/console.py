@@ -83,7 +83,7 @@ def main():
         try:
             quiet_period = int(args[1])
         except:
-            parser.error('Quiet minutes, "%s", must be a valid number.' % args[1])
+            parser.error(f'Quiet minutes, "{args[1]}", must be a valid number.' )
             sys.exit(1)
     try:
         (hot_files, control_config) = control.parse_control(project_dir, control_file, control_config, hot_files)
@@ -105,7 +105,7 @@ def main():
             logging.info('!!! No changes will be committed.    !!!')
             logging.info('========================================')
     except (flashbake.git.VCError, flashbake.ConfigError) as error:
-        logging.error('Error: %s' % str(error))
+        logging.error(f'Error: {str(error)}' )
         sys.exit(1)
     except PluginError as error:
         _handle_bad_plugin(error)
@@ -136,15 +136,15 @@ def multiple_projects():
         parser.exit(err.code, msg)
     exit_code = 0
     for project in _locate_projects(args[0]):
-        print ("project: %s" % project)
+        print (f"project: {project}")
         sys.argv = sys.argv[0:1] + flashbake_opts + [project] + args[1:]
         try:
             main()
         except SystemExit as err:
             if err.code != 0:
                 exit_code = err.code
-            logging.error("Error: 'flashbake' had an error for '%s'"
-                          % project)
+            logging.error(f"Error: 'flashbake' had an error for '{project}'"
+                          )
     sys.exit(exit_code)
 
 
@@ -192,7 +192,7 @@ def _build_main_parser():
     usage = "usage: %prog [options] <project_dir> [quiet_min]"
 
     parser = FlashbakeOptionParser(
-        usage=usage, version='%s %s' % ('%prog', VERSION))
+        usage=usage, version='{0} {1}'.format('%prog', VERSION))
     parser.add_option('-c', '--context', dest='context_only',
             action='store_true', default=False,
             help='just generate and show the commit message, don\'t check for changes')
@@ -217,7 +217,7 @@ def _build_main_parser():
 def _build_multi_parser():
     usage = "usage: %prog [options] <search_root> [quiet_min]"
     parser = FlashbakeOptionParser(
-        usage=usage, version='%s %s' % ('%prog', VERSION))
+        usage=usage, version='{0} {1}'.format ('%prog', VERSION))
     parser.add_option('-o', '--options', dest='flashbake_options', default='',
                       action='store', type='string', metavar='FLASHBAKE_OPTS',
                       help=("options to pass through to the 'flashbake' "
@@ -229,7 +229,7 @@ def _load_plugin_dirs(options, home_dir):
     plugin_dir = join(home_dir, '.flashbake', 'plugins')
     if os.path.exists(plugin_dir):
         real_plugin_dir = realpath(plugin_dir)
-        logging.debug('3rd party plugin directory exists, adding: %s' % real_plugin_dir)
+        logging.debug(f'3rd party plugin directory exists, adding: {real_plugin_dir}'  )
         sys.path.insert(0, real_plugin_dir)
     else:
         logging.debug('3rd party plugin directory doesn\'t exist, skipping.')
@@ -237,10 +237,10 @@ def _load_plugin_dirs(options, home_dir):
 
     if options.plugin_dir != None:
         if os.path.exists(options.plugin_dir):
-            logging.debug('Adding plugin directory, %s.' % options.plugin_dir)
+            logging.debug(f'Adding plugin directory, {options.plugin_dir}.' )
             sys.path.insert(0, realpath(options.plugin_dir))
         else:
-            logging.warn('Plugin directory, %s, doesn\'t exist.' % options.plugin_dir)
+            logging.warn(f'Plugin directory, {options.plugin_dir}, doesn\'t exist.')
 
 
 
@@ -263,7 +263,7 @@ def _find_control(parser, project_dir):
         control_file = join(project_dir, '.control')
 
     if not os.path.exists(control_file):
-        parser.error('Could not find .flashbake or .control file in directory, "%s".' % project_dir)
+        parser.error(f'Could not find .flashbake or .control file in directory, "{project_dir}".' )
         return None
     else:
         return control_file
@@ -286,7 +286,7 @@ def _context_only(options, project_dir, control_file, control_config, hot_files)
             os.remove(msg_filename)
         return 0
     except (flashbake.git.VCError, flashbake.ConfigError) as error:
-        logging.error('Error: %s' % str(error))
+        logging.error('Error: {}'.format(str(error)))
         return 1
     except PluginError as error:
         _handle_bad_plugin(error)
@@ -294,22 +294,22 @@ def _context_only(options, project_dir, control_file, control_config, hot_files)
 
 
 def _handle_bad_plugin(plugin_error):
-    logging.debug('Plugin error, %s.' % plugin_error)
+    logging.debug(f'Plugin error, {plugin_error}.'  )
     if plugin_error.reason == PLUGIN_ERRORS.unknown_plugin or plugin_error.reason == PLUGIN_ERRORS.invalid_plugin: #@UndefinedVariable
-        logging.error('Cannot load plugin, %s.' % plugin_error.plugin_spec)
+        logging.error(f'Cannot load plugin, {plugin_error.plugin_spec}.' )
         return
 
     if plugin_error.reason == PLUGIN_ERRORS.missing_attribute: #@UndefinedVariable
-        logging.error('Plugin, %s, doesn\'t have the needed plugin attribute, %s.' \
-                % (plugin_error.plugin_spec, plugin_error.name))
+        logging.error(f'Plugin, {plugin_error.plugin_spec}, doesn\'t have the needed plugin attribute, {plugin_error.name}.' \
+            )
         return
 
     if plugin_error.reason == PLUGIN_ERRORS.invalid_attribute: #@UndefinedVariable
-        logging.error('Plugin, %s, has an invalid plugin attribute, %s.' \
-                % (plugin_error.plugin_spec, plugin_error.name))
+        logging.error(f'Plugin, {plugin_error.plugin_spec}, has an invalid plugin attribute, {plugin_error.name}.' \
+            )
         return
 
     if plugin_error.reason == PLUGIN_ERRORS.missing_property:
-        logging.error('Plugin, %s, requires the config option, %s, but it was missing.' \
-                % (plugin_error.plugin_spec, plugin_error.name))
+        logging.error(f'Plugin, {plugin_error.plugin_spec}, requires the config option, {plugin_error.name}, but it was missing.' \
+                )
         return

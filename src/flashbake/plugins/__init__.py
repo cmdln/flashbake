@@ -41,9 +41,9 @@ class PluginError(Exception):
         self.name = name
     def __str__(self):
         if self.name == None:
-            return '%s: %s' % (self.reason, self.plugin_spec)
+            return f'{self.reason}: {self.plugin_spec}' 
         else:
-            return '%s, %s: %s' % (self.plugin_spec, self.reason, self.name)
+            return f'{self.plugin_spec}, {self.reason}: {self.name}' 
 
 
 def service_and_prefix(plugin_spec):
@@ -72,7 +72,7 @@ class AbstractPlugin:
             if plugin_spec:
                 parsed = service_and_prefix(plugin_spec)
                 property_prefix = parsed[1]
-                self.__shared_prop_defs.append(('%s_%s' % (property_prefix, name), type))
+                self.__shared_prop_defs.append((f'{property_prefix}_{name}', type))
             else:
                 self.__shared_prop_defs.append((name, type))
         except AttributeError:
@@ -85,7 +85,7 @@ class AbstractPlugin:
     def capture_properties(self, config):
         try:
             for prop in self.__property_defs:
-                assert len(prop) == 4, "Property definition, %s, is invalid" % (prop,)
+                assert len(prop) == 4, f"Property definition, {prop}, is invalid" 
                 self.__capture_property(config, *prop)
         except AttributeError:
             raise Exception('Call AbstractPlugin.__init__ in your plugin\'s __init__.')
@@ -101,7 +101,7 @@ class AbstractPlugin:
     def __capture_property(self, config, name, type=None, required=False, default=None):
         """ Move a property, if present, from the ControlConfig to the daughter
             plugin. """
-        config_name = '%s_%s' % (self.property_prefix, name)
+        config_name = f'{self.property_prefix}_{name}' 
         if required and not config_name in config.extra_props:
             raise PluginError(PLUGIN_ERRORS.missing_property, self.plugin_spec, config_name)
 
@@ -116,8 +116,9 @@ class AbstractPlugin:
                 value = type(value)
             except:
                 raise flashbake.ConfigError(
-                        'The value, %s, for option, %s, could not be parsed as %s.'
-                        % (value, name, type))
+                        f"The value, {value}, for option, {name}, could not be parsed as {type}."
+                        )
+                    
         self.__dict__[name] = value
 
     def abstract(self):
@@ -125,7 +126,7 @@ class AbstractPlugin:
             http://norvig.com/python-iaq.html """
         import inspect
         caller = inspect.getouterframes(inspect.currentframe())[1][3]
-        raise NotImplementedError('%s must be implemented in subclass' % caller)
+        raise NotImplementedError(f'{caller} must be implemented in subclass' )
 
 
 class AbstractMessagePlugin(AbstractPlugin):

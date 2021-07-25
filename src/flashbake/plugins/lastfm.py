@@ -37,31 +37,20 @@ class LastFM(AbstractMessagePlugin):
         """ Add the matching items to the commit context. """
 
         # last n items for m creator
-        url = "%suser.getrecentTracks&user=%s&api_key=%s&limit=%s&format=json" % (LASTFM, self.user_name, self.api_key, self.limit)
-        logging.debug('API call: %s' % url)
+        url = f"{LASTFM}user.getrecentTracks&user={self.user_name}&api_key={self.api_key}&limit={self.limit}&format=json" 
+        logging.debug(f'API call: {url}')
         raw_data = self._fetch_data(url)
 
-        if raw_data:
-            tracks = raw_data['recenttracks']['track']
-            if not type(tracks) == list:
-                tracks = [tracks]
-            for trackdic in tracks:
-                track =  (trackdic['name']).encode("utf-8").decode("utf-8")
-                artist = (trackdic['artist']['#text']).encode("utf-8").decode("utf-8")
-                message_file.write("Track from Last.fm: %s by %s\n" % (track, artist))
-        else:
-            message_file.write('Couldn\'t fetch data from lastfm, %s.\n' % url)
+        tracks = raw_data['recenttracks']['track']
+        if not type(tracks) == list:
+            tracks = [tracks]
+        for trackdic in tracks:
+            track =  (trackdic['name']).encode("utf-8").decode("utf-8")
+            artist = (trackdic['artist']['#text']).encode("utf-8").decode("utf-8")
+            message_file.write(f"Track from Last.fm: {track} by {artist}\n" )
 
     def _fetch_data(self, url):
-        try:
-            raw_data = urllib.request.urlopen(url)
-            data = json.loads(raw_data.read())
+        raw_data = urllib.request.urlopen(url)
+        data = json.loads(raw_data.read())
 
-            return data
-        except urllib.error.HTTPError as e:
-            logging.error('Failed with HTTP status code %d' % e.code)
-            return None
-        except urllib.error.URLError as e:
-            logging.error('Plugin, %s, failed to connect with network.' % self.__class__)
-            logging.debug('Network failure reason, %s.' % e.reason)
-            return None
+        return data

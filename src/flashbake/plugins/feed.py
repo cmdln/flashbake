@@ -46,8 +46,8 @@ class Feed(AbstractMessagePlugin):
                     % {'item_count' : len(last_items), 'feed_title' : title, 'author' or 'dc:creator' : self.author})
             for item in last_items:
                 # edit the '%s' if you want to add a label, like 'Title %s' to the output
-                message_file.write('%s\n' % item['title'])
-                message_file.write('%s\n' % item['link'])
+                message_file.write(f'{item["title"]}\n')
+                message_file.write(f'{item["link"]}\n')
         else:
             message_file.write('Couldn\'t fetch entries from feed, %s.\n' % self.url)
 
@@ -83,9 +83,9 @@ class Feed(AbstractMessagePlugin):
 
             return (feed_title, by_creator)
         except urllib.error.HTTPError as e:
-            logging.error('Failed with HTTP status code %d' % e.code)
+            logging.error(f'Failed with HTTP status code {e.code}')
             return (None, {})
         except urllib.error.URLError as e:
-            logging.error('Plugin, %s, failed to connect with network.' % self.__class__)
-            logging.debug('Network failure reason, %s.' % e.reason)
+            logging.error(f'Plugin, {self.__class__}, failed to connect with network.')
+            logging.debug('Network failure reason, {e.reason}.')
             return (None, {})

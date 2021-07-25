@@ -65,11 +65,11 @@ def __fallback_next(*args):
 
     args_len = len(args)
     if (args_len < 1):
-        raise TypeError("expected at least 1 argument, got %d" %
-                        args_len)
+        raise TypeError(f"expected at least 1 argument, got {args_len}" 
+                        )
     if (args_len > 2):
-        raise TypeError("expected at most 2 arguments, got %d" %
-                        args_len)
+        raise TypeError(f"expected at most 2 arguments, got {args_len}" 
+                        )
     iterator = args[0]
 
     try:
@@ -78,8 +78,8 @@ def __fallback_next(*args):
         elif hasattr(iterator, 'next'):
             return iterator.next()
         else:
-            raise TypeError('%s object is not an iterator' 
-                            % type(iterator).__name__)
+            raise TypeError(f'{type(iterator).__name__} object is not an iterator' 
+                            )
     except StopIteration:
         if args_len == 2:
             return args[1]

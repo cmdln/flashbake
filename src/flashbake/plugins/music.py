@@ -50,7 +50,7 @@ class Music(AbstractMessagePlugin):
         if info is None:
             message_file.write('Couldn\'t get current track.\n')
         else:
-            message_file.write('Currently playing in Music:\n%s' % info)
+            message_file.write(f'Currently playing in Music:\n{info}')
 
         return True
 

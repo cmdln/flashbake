@@ -101,7 +101,7 @@ class Weather(AbstractMessagePlugin):
 
             return weather
         except urllib.error.HTTPError as e:
-            logging.error('Failed with HTTP status code %d' % e.code)
+            logging.error(f'Failed with HTTP status code {e.code}')
             return {}
         except urllib.error.URLError as e:
             logging.error('Plugin, {}, failed to connect with network.'.format(self.__class__))

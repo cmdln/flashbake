@@ -7,19 +7,19 @@ class FilesTestCase(unittest.TestCase):
     def setUp(self):
         test_dir = os.path.join(os.getcwd(), 'test')
         test_zip = os.path.join(test_dir, 'project.zip')
-        subprocess.getoutput('unzip -d %s %s' % (test_dir, test_zip))
+        subprocess.getoutput(f'unzip -d {test_dir} {test_zip}' )
         self.files = flashbake.HotFiles(os.path.join(test_dir, 'project'))
         self.project_files = [ 'todo.txt', 'stickies.txt', 'my stuff.txt',
         'bar/novel.txt', 'baz/novel.txt', 'quux/novel.txt' ]
 
     def tearDown(self):
-        subprocess.getoutput('rm -rf %s' % self.files.project_dir)
+        subprocess.getoutput(f'rm -rf {self.files.project_dir}')
 
     def testrelative(self):
         for file in self.project_files:
             self.files.addfile(file)
             self.assertTrue(file in self.files.control_files,
-                    'Should contain relative file, %s' % file)
+                    f'Should contain relative file, {file}')
         count = len(self.files.control_files)
         self.files.addfile('*add*')
         self.assertEqual(len(self.files.control_files), count + 3,
@@ -30,8 +30,8 @@ class FilesTestCase(unittest.TestCase):
             abs_file = os.path.join(self.files.project_dir, file)
             self.files.addfile(abs_file)
             self.assertTrue(file in self.files.control_files,
-                    'Should contain absolute file, %s, as relative path, %s.'
-                    % (abs_file, file))
+                    f'Should contain absolute file, {abs_file}, as relative path, {file}.'
+                   )
         count = len(self.files.control_files)
         self.files.addfile(os.path.join(self.files.project_dir, '*add*'))
         self.assertEqual(len(self.files.control_files), count + 3,
