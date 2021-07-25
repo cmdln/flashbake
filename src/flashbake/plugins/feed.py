@@ -46,8 +46,8 @@ class Feed(AbstractMessagePlugin):
                     % {'item_count' : len(last_items), 'feed_title' : title, 'author' or 'dc:creator' : self.author})
             for item in last_items:
                 # edit the '%s' if you want to add a label, like 'Title %s' to the output
-                message_file.write(f'{item['title']}\n')
-                message_file.write(f'{item['link']}\n')
+                message_file.write(f'{item["title"]}\n')
+                message_file.write(f'{item["link"]}\n')
         else:
             message_file.write('Couldn\'t fetch entries from feed, %s.\n' % self.url)
 
