@@ -129,7 +129,7 @@ def multiple_projects():
     try:
         (test_options, test_args) = main_parser.parse_args(test_argv)
     except ParserError as err:
-        msg = "error with arguments passed to main flashbake: %s\n%s" % (
+        msg = "error with arguments passed to main flashbake: {}\n{}".format(
             "'" + "' '".join(
                 flashbake_opts + ['<project_dir>'] + args[1:]) + "'",
             err.msg.replace(parser.get_prog_name() + ':', '> '))
