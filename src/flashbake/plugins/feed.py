@@ -40,16 +40,16 @@ class Feed(AbstractMessagePlugin):
         if len(last_items) > 0:
             if self.author == None:
                 message_file.write('Last {} entries from {}:\n'\
-                    .format(*{len(last_items), title}))
+                    .format(*[len(last_items), title]))
             else:
                 message_file.write('Last {} entries from {} by {}:\n'\
-                    .format(*{len(last_items), title, self.author}))
+                    .format(*[len(last_items), title, self.author]))
             for item in last_items:
                 
                 message_file.write(f'{item["title"]}\n')
                 message_file.write(f'{item["link"]}\n')
         else:
-            message_file.write('Couldn\'t fetch entries from feed, {}.\n'.format(self.url))
+            message_file.write('Couldn\'t fetch entries from feed, {}\n'.format(self.url))
 
         return len(last_items) > 0
 
