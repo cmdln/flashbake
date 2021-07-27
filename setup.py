@@ -6,7 +6,7 @@ from setuptools import setup, find_packages
 
 
 setup(name='flashbake',
-        version='0.27.1',
+        version='0.30.0',
         author="Thomas Gideon",
         author_email="cmdln@thecommandline.net",
         maintainer="Thomas Gideon",
