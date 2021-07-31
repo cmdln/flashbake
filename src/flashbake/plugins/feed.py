@@ -39,17 +39,17 @@ class Feed(AbstractMessagePlugin):
 
         if len(last_items) > 0:
             if self.author == None:
-                message_file.write('Last %(item_count)d entries from %(feed_title)s:\n'\
-                    % {'item_count' : len(last_items), 'feed_title' : title})
+                message_file.write('Last {} entries from {}:\n'\
+                    .format(*[len(last_items), title]))
             else:
-                message_file.write('Last %(item_count)d entries from %(feed_title)s by %(author)s:\n'\
-                    % {'item_count' : len(last_items), 'feed_title' : title, 'author' or 'dc:creator' : self.author})
+                message_file.write('Last {} entries from {} by {}:\n'\
+                    .format(*[len(last_items), title, self.author]))
             for item in last_items:
-                # edit the '%s' if you want to add a label, like 'Title %s' to the output
+                
                 message_file.write(f'{item["title"]}\n')
                 message_file.write(f'{item["link"]}\n')
         else:
-            message_file.write('Couldn\'t fetch entries from feed, %s.\n' % self.url)
+            message_file.write('Couldn\'t fetch entries from feed, {}\n'.format(self.url))
 
         return len(last_items) > 0
 
