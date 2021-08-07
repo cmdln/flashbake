@@ -18,8 +18,7 @@
 
 '''A plugin that scrapes your mastodon profile for n public toots. '''
 
-from bs4 import BeautifulSoup 
-#from requests import get
+from bs4 import BeautifulSoup
 from urllib.request import urlopen
 import urllib.error
 import logging
@@ -28,7 +27,7 @@ from flashbake.plugins import AbstractMessagePlugin
 class Mastodon(AbstractMessagePlugin):
 	def __init__(self, plugin_spec):
 		AbstractMessagePlugin.__init__(self, plugin_spec, True)
-		self.define_property('account_url', required=True)
+		self.define_property('url', required=True)
 		self.define_property('limit', int, False, 3)
 
 	def addcontext(self, message_file, config):
@@ -43,8 +42,7 @@ class Mastodon(AbstractMessagePlugin):
 	def fetch_soup(self):
 		""" grab the Mastdon user's profile page in HTML"""
 		try:
-			url = self.account_url
-			response = urlopen(url)
+			response = urlopen(self.url)
 			soup = BeautifulSoup(response.read(), 'html.parser')
 			return soup
 		except urllib.error.HTTPError as e:
