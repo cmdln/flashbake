@@ -19,6 +19,7 @@
 
 import os.path
 import random
+import logging
 
 
 
@@ -45,8 +46,8 @@ def buildmessagefile(config):
                 connectable = True
                 connected = connected or plugin_success
         if connectable and not connected:
-            message_file.write('All of the plugins that use the network failed.\n')
-            message_file.write('Your computer may not be connected to the network.')
+            logging.error('All of the plugins that use the network failed.\n')
+            logging.error('Your computer may not be connected to the network.')
     finally:
         message_file.close()
     return msg_filename
