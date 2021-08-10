@@ -38,7 +38,7 @@ class Mastodon(AbstractMessagePlugin):
 			print (f'By {key.strip()} : {final_toots[key].strip()}')
 
 	def fetch_soup(self):
-		""" grab the Mastodon user's profile page in HTML"""
+		""" Grab the Mastodon user's profile page in HTML"""
 		try:
 			response = urlopen(self.url)
 			soup = BeautifulSoup(response.read(), 'html.parser')
@@ -52,7 +52,7 @@ class Mastodon(AbstractMessagePlugin):
 			return (None, {})
 
 	def fetch_usernames(self):
-		""" grab the username/author for each toot """
+		""" Grab the username/author for each toot and put them in a list."""
 		name_soup = self.fetch_soup()
 		user_names = name_soup.find_all('span', class_= 'display-name__account')
 		name_list = [] 
@@ -63,7 +63,7 @@ class Mastodon(AbstractMessagePlugin):
 		return name_list
 
 	def fetch_toots(self):
-		""" grab the actual toots """
+		""" Grab the actual toots and put them in a list."""
 		toot_soup = self.fetch_soup()
 		toot = toot_soup.find_all('div', class_="status__content")
 		toot_list=[]
@@ -72,7 +72,7 @@ class Mastodon(AbstractMessagePlugin):
 		return toot_list
 
 	def make_dict(self):
-		""" Take the usernames and toos and create a dictionary from them. Then apply the user limit. """
+		""" Combine the username and toot lists into a dictionary. Then create a second dictionary applying the user limit. """
 		name_list = self.fetch_usernames()
 		toot_list = self.fetch_toots()
 		res = {name_list[i]: toot_list[i] for i in range(len(name_list))}
