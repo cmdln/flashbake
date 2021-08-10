@@ -40,7 +40,6 @@ class Mastodon(AbstractMessagePlugin):
 			message_file.write(f'By {name_list.pop(0).strip()}: {toot_list.pop(0).strip()} \n')
 			toot_print += 1
 
-
 	def fetch_soup(self):
 		""" Grab the Mastodon user's profile page in HTML"""
 		try:
