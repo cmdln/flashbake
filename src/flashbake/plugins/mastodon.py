@@ -20,6 +20,7 @@
 
 from bs4 import BeautifulSoup
 from urllib.request import urlopen
+import itertools
 import urllib.error
 import logging
 from flashbake.plugins import AbstractMessagePlugin
@@ -32,15 +33,12 @@ class Mastodon(AbstractMessagePlugin):
 
 	def addcontext(self, message_file, config):
 		""" Add the specified number of toots to the commit context. """
-		name_list = self.fetch_usernames()
-		toot_list = self.fetch_toots()
-		toot_print = 0
-		while toot_print != self.limit:
-			message_file.write(f'By {name_list.pop(0).strip()}: {toot_list.pop(0).strip()} \n')
-			toot_print += 1
-	
+		final_toots = self.make_dict()
+		for key in final_toots:
+			print (f'By {key.strip()} : {final_toots[key].strip()}')
+
 	def fetch_soup(self):
-		""" grab the Mastdon user's profile page in HTML"""
+		""" grab the Mastodon user's profile page in HTML"""
 		try:
 			response = urlopen(self.url)
 			soup = BeautifulSoup(response.read(), 'html.parser')
@@ -72,3 +70,11 @@ class Mastodon(AbstractMessagePlugin):
 		for i in toot:
 			toot_list.append(i.text)
 		return toot_list
+
+	def make_dict(self):
+		""" Take the usernames and toos and create a dictionary from them. Then apply the user limit. """
+		name_list = self.fetch_usernames()
+		toot_list = self.fetch_toots()
+		res = {name_list[i]: toot_list[i] for i in range(len(name_list))}
+		final_toots = dict(itertools.islice(res.items(), self.limit))
+		return final_toots
