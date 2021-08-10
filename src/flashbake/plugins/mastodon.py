@@ -33,9 +33,13 @@ class Mastodon(AbstractMessagePlugin):
 
 	def addcontext(self, message_file, config):
 		""" Add the specified number of toots to the commit context. """
-		final_toots = self.make_dict()
-		for key in final_toots:
-			print (f'By {key.strip()} : {final_toots[key].strip()}')
+		name_list = self.fetch_usernames()
+		toot_list = self.fetch_toots()
+		toot_print = 0
+		while toot_print != self.limit:
+			message_file.write(f'By {name_list.pop(0).strip()}: {toot_list.pop(0).strip()} \n')
+			toot_print += 1
+
 
 	def fetch_soup(self):
 		""" Grab the Mastodon user's profile page in HTML"""
@@ -70,11 +74,3 @@ class Mastodon(AbstractMessagePlugin):
 		for i in toot:
 			toot_list.append(i.text)
 		return toot_list
-
-	def make_dict(self):
-		""" Combine the username and toot lists into a dictionary. Then create a second dictionary applying the user limit. """
-		name_list = self.fetch_usernames()
-		toot_list = self.fetch_toots()
-		res = {name_list[i]: toot_list[i] for i in range(len(name_list))}
-		final_toots = dict(itertools.islice(res.items(), self.limit))
-		return final_toots
