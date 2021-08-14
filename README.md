@@ -27,7 +27,7 @@ If you'd like to install Flashbake and use it for your projects check out the [w
 
 If you'd like to contribute to Flashbake by helping with code or documentation, [check out our contributor's guide](https://github.com/cmdln/flashbake/wiki/Contributor's-Guide). 
 
-## Further Reading
+## Further reading
 
 Cory Doctorow's [initial blog post about the inspiration for Flashbake](https://craphound.com/news/2009/02/13/flashbake-free-version-control-for-writers-using-git/).
 
