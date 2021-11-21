@@ -120,7 +120,7 @@ def main():
     try:
         (hot_files, control_config) = control.parse_control(project_dir, control_file, control_config, hot_files)
         if options.message:
-            special_message = str(sys.argv[2])
+            special_message = str(sys.argv[1])
             message_file.write(special_message)
             commit.commit(control_config, hot_files, quiet_period)
     except (flashbake.git.VCError, flashbake.ConfigError) as error:
