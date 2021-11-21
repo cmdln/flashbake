@@ -111,6 +111,25 @@ def main():
         _handle_bad_plugin(error)
         sys.exit(1)
 
+    if len(args) == 3:
+        try: 
+            quiet_period = int(args[1])
+        except:
+            parser.error(f'Quite minutes, "{args[1]}", must be a valid number.' )
+            sys.exit(1)
+    try:
+        (hot_files, control_config) = control.parse_control(project_dir, control_file, control_config, hot_files)
+        if options.message:
+            special_message = str(sys.argv[2])
+            message_file.write(special_message)
+            commit.commit(control_config, hot_files, quiet_period)
+    except (flashbake.git.VCError, flashbake.ConfigError) as error:
+        logging.error(f'Error: {str(error)}' )
+        sys.exit(1)
+    except PluginError as error:
+        _handle_bad_plugin(error)
+        sys.exit(1)
+
 
 def multiple_projects():
     parser = _build_multi_parser()
@@ -196,6 +215,9 @@ def _build_main_parser():
     parser.add_option('-c', '--context', dest='context_only',
             action='store_true', default=False,
             help='just generate and show the commit message, don\'t check for changes')
+    parser.add_option('-m', '--message', dest='message',
+             action='store_true', default=False, 
+             help='add a message to the commit')
     parser.add_option('-v', '--verbose', dest='verbose',
             action='store_true', default=False,
             help='include debug information in the output')
