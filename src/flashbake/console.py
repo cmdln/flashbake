@@ -99,6 +99,10 @@ def main():
             commit.purge(control_config, hot_files)
         else:
             commit.commit(control_config, hot_files, quiet_period)
+        if options.message:
+            special_message = str(sys.argv[1])
+            message_file.write(special_message)
+            commit.commit(control_config, hot_files, quiet_period)
         if (options.dryrun):
             logging.info('\n\n========================================')
             logging.info('!!! Running in dry run mode.         !!!')
@@ -110,26 +114,6 @@ def main():
     except PluginError as error:
         _handle_bad_plugin(error)
         sys.exit(1)
-
-    if len(args) == 3:
-        try: 
-            quiet_period = int(args[1])
-        except:
-            parser.error(f'Quite minutes, "{args[1]}", must be a valid number.' )
-            sys.exit(1)
-    try:
-        (hot_files, control_config) = control.parse_control(project_dir, control_file, control_config, hot_files)
-        if options.message:
-            special_message = str(sys.argv[1])
-            message_file.write(special_message)
-            commit.commit(control_config, hot_files, quiet_period)
-    except (flashbake.git.VCError, flashbake.ConfigError) as error:
-        logging.error(f'Error: {str(error)}' )
-        sys.exit(1)
-    except PluginError as error:
-        _handle_bad_plugin(error)
-        sys.exit(1)
-
 
 def multiple_projects():
     parser = _build_multi_parser()
