@@ -22,6 +22,7 @@
 
 from flashbake import commit, context, control
 from flashbake.plugins import PluginError, PLUGIN_ERRORS
+from flashbake.plugins import AbstractMessagePlugin
 from optparse import OptionParser
 from os.path import join, realpath
 import flashbake.git
@@ -80,11 +81,18 @@ def main():
 
     quiet_period = 0
     if len(args) == 2:
-        try:
-            quiet_period = int(args[1])
-        except:
-            parser.error(f'Quiet minutes, "{args[1]}", must be a valid number.' )
-            sys.exit(1)
+        if args[1].isdigit():
+            try:
+                quiet_period = int(args[1])
+            except:
+                parser.error(f'Quiet minutes, "{args[1]}", must be a valid number.' )
+                sys.exit(1)
+        else:
+            try:
+                special_message = str(args[1])
+            except:
+                parser.error(f'Messages, "{args[1]}", must be a string.')
+                sys.exit(1)
     try:
         (hot_files, control_config) = control.parse_control(project_dir, control_file, control_config, hot_files)
         control_config.context_only = options.context_only
@@ -100,8 +108,7 @@ def main():
         else:
             commit.commit(control_config, hot_files, quiet_period)
         if options.message:
-            special_message = str(sys.argv[1])
-            message_file.write(special_message)
+            context.message_file.write(special_message)
             commit.commit(control_config, hot_files, quiet_period)
         if (options.dryrun):
             logging.info('\n\n========================================')
