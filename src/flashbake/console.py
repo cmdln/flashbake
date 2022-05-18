@@ -39,6 +39,8 @@ def main():
     ''' Entry point used by the setup.py installation script. '''
     # handle options and arguments
     parser = _build_main_parser()
+    global special_message
+    special_message = ""
 
     (options, args) = parser.parse_args()
 
@@ -106,9 +108,6 @@ def main():
         if options.purge:
             commit.purge(control_config, hot_files)
         else:
-            commit.commit(control_config, hot_files, quiet_period)
-        if options.message:
-            context.message_file.write(special_message)
             commit.commit(control_config, hot_files, quiet_period)
         if (options.dryrun):
             logging.info('\n\n========================================')
@@ -208,7 +207,7 @@ def _build_main_parser():
             help='just generate and show the commit message, don\'t check for changes')
     parser.add_option('-m', '--message', dest='message',
              action='store_true', default=False, 
-             help='add a message to the commit')
+             help='to use this switch add the following to your .flashbake config file: plugins:flashbake.plugins.default:Default')
     parser.add_option('-v', '--verbose', dest='verbose',
             action='store_true', default=False,
             help='include debug information in the output')

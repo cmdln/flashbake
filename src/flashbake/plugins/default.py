@@ -18,8 +18,9 @@
 '''  default.py - Stock plugin to add in some statically configured text into a commit message.'''
 
 from flashbake.plugins import AbstractMessagePlugin
-import flashbake
+from flashbake import console
 
+PLUGIN_SPEC = 'flashbake.plugins.default:Default'
 
 class Default(AbstractMessagePlugin):
     def __init__(self, plugin_spec):
@@ -29,7 +30,8 @@ class Default(AbstractMessagePlugin):
     def addcontext(self, message_file, config):
         """ Add a static message to the commit context. """
 
-        if self.message is not None:
+        if console.special_message is not None:
+            self.message = console.special_message
             message_file.write(f'{self.message}\n' )
 
         return True
