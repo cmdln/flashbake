@@ -22,7 +22,6 @@
 
 from flashbake import commit, context, control
 from flashbake.plugins import PluginError, PLUGIN_ERRORS
-from flashbake.plugins import AbstractMessagePlugin
 from optparse import OptionParser
 from os.path import join, realpath
 import flashbake.git
