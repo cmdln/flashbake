@@ -38,6 +38,8 @@ def main():
     ''' Entry point used by the setup.py installation script. '''
     # handle options and arguments
     parser = _build_main_parser()
+    global special_message
+    special_message = ""
 
     (options, args) = parser.parse_args()
 
@@ -80,11 +82,18 @@ def main():
 
     quiet_period = 0
     if len(args) == 2:
-        try:
-            quiet_period = int(args[1])
-        except:
-            parser.error(f'Quiet minutes, "{args[1]}", must be a valid number.' )
-            sys.exit(1)
+        if args[1].isdigit():
+            try:
+                quiet_period = int(args[1])
+            except:
+                parser.error(f'Quiet minutes, "{args[1]}", must be a valid number.' )
+                sys.exit(1)
+        else:
+            try:
+                special_message = str(args[1])
+            except:
+                parser.error(f'Messages, "{args[1]}", must be a string.')
+                sys.exit(1)
     try:
         (hot_files, control_config) = control.parse_control(project_dir, control_file, control_config, hot_files)
         control_config.context_only = options.context_only
@@ -110,7 +119,6 @@ def main():
     except PluginError as error:
         _handle_bad_plugin(error)
         sys.exit(1)
-
 
 def multiple_projects():
     parser = _build_multi_parser()
@@ -196,6 +204,9 @@ def _build_main_parser():
     parser.add_option('-c', '--context', dest='context_only',
             action='store_true', default=False,
             help='just generate and show the commit message, don\'t check for changes')
+    parser.add_option('-m', '--message', dest='message',
+             action='store_true', default=False, 
+             help='to use this switch add the following to your .flashbake config file: plugins:flashbake.plugins.default:Default')
     parser.add_option('-v', '--verbose', dest='verbose',
             action='store_true', default=False,
             help='include debug information in the output')
