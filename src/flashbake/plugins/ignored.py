@@ -39,7 +39,7 @@ class Ignored(AbstractMessagePlugin):
                 return False
         
         t = self.addignored(self.ignored)
-        message_file.write(t)
+        message_file.write(t + "\n")
 
     def addignored(self, ignored):
         ''' Use the git command to obtain the file names, turn it into a list,
