@@ -39,10 +39,10 @@ class Ignored(AbstractMessagePlugin):
                 return False
         
         t = self.addignored(self.ignored)
-        message_file.write(t + "\n")
+        message_file.write("Present files currently ignored by git:" + "\n" + t + "\n")
 
     def addignored(self, ignored):
-        ''' Use the git command to obtain the file names, turn it into a list,
+        ''' Use the git status command to obtain the file names, turn it into a list,
         sort the list for only ignored files, return those files as a 
         single string with each filename separated by a comma.'''
 
