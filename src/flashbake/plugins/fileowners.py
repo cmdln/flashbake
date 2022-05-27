@@ -18,7 +18,7 @@
 
 ''' This plugin was inspired by a suggestion from @xtaran on GitHub.  
     It adds information to the commit message about file owners and groups,  
-    and last modified time stamps, for files in the project directory. '''
+    and last modified time stamps for files in the project directory. '''
 
 from flashbake.plugins import AbstractMessagePlugin
 import subprocess

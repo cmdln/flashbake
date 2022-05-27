@@ -17,8 +17,8 @@
 #    along with flashbake.  If not, see <http://www.gnu.org/licenses/>.
 
 ''' This plugin was inspired by a suggestion from @xtaran on GitHub. 
-It adds information to the commit message about files in the specified 
-directory that are present and being ignored by git. '''
+    It adds information to the commit message about files in the specified 
+    directory that are present and being ignored by git. '''
 
 from flashbake.plugins import AbstractMessagePlugin
 import subprocess
