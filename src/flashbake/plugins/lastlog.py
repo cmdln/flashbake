@@ -1,3 +1,26 @@
+#    Copyright 2022 Ian Paul
+#    Copyright 2009 Thomas Gideon
+#
+#    This file is part of flashbake.
+#
+#    flashbake is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    flashbake is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with flashbake.  If not, see <http://www.gnu.org/licenses/>.
+
+''' This plugin was inspired by a suggestion from @xtaran on Github.
+    It adds information from the lastlog to the commit message. By default this
+    includes who logged in to the system in the past 24 hours. That period can
+    be modified to suit different needs.'''
+
 from flashbake.plugins import AbstractMessagePlugin
 import subprocess
 import datetime
