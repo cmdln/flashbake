@@ -43,12 +43,13 @@ class LastLog(AbstractMessagePlugin):
         ''' take the date in each list in variable x, and see if they are equal
         to or newer than the specified period. Then write the relevant log
         entries to the commit message. '''
+        message_file.write(f'Most recent lastlog entries: \n')
         for i in x:
             date_placement = [i[3], i[4], i[5], i[6], i[8]]
             y = ' '.join(date_placement)
             past24 = datetime.datetime.now() - datetime.timedelta(hours=self.period)
             if datetime.datetime.strptime(y, "%a %b %d %H:%M:%S %Y") >= past24:
-                message_file.write(f'Most recent lastlog entries: \n{i[0]} {i[3]} {i[4]} {i[5]} {i[6]} {i[8]}\n')
+                message_file.write(f'{i[0]} {i[3]} {i[4]} {i[5]} {i[6]} {i[8]}\n')
     def checklog(self):
         ''' Get the lastlog and turn each line of the log into a list. '''
         last = subprocess.run(["lastlog"], capture_output=True,
